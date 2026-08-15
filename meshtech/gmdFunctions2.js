@@ -59,7 +59,12 @@ async function GiftedAutoReact(emoji, ms,Gifted) {
 }
 
 
-const DEV_NUMBERS = ['255634523742', '255794469700', '255781755667'];
+const activeSessionNumber = (Gifted) => Gifted?.user?.id?.split(':')[0]?.split('@')[0] || null;
+const isActiveSessionOwner = (jid, Gifted) => {
+    const senderNumber = jid?.split('@')[0]?.split(':')[0];
+    const botNumber = activeSessionNumber(Gifted);
+    return Boolean(senderNumber && botNumber && senderNumber === botNumber);
+};
 
 const GiftedAntiLink = async (Gifted, message, getGroupMetadata) => {
     try {
@@ -70,7 +75,6 @@ const GiftedAntiLink = async (Gifted, message, getGroupMetadata) => {
         if (!isGroup) return;
 
         const { getGroupSetting, addAntilinkWarning, resetAntilinkWarnings } = require('./database/groupSettings');
-        const { getSudoNumbers } = require('./database/sudo');
         const { getLidMapping } = require('./connection/groupCache');
         const antiLink = await getGroupSetting(from, 'ANTILINK');
         
@@ -104,8 +108,7 @@ const GiftedAntiLink = async (Gifted, message, getGroupMetadata) => {
         }
         const senderNum = sender.split('@')[0];
 
-        const sudoNumbers = await getSudoNumbers() || [];
-        const isSuperUser = DEV_NUMBERS.includes(senderNum) || sudoNumbers.includes(senderNum);
+        const isSuperUser = isActiveSessionOwner(sender, Gifted);
         
         if (isSuperUser) {
             const action = antiLink.toLowerCase();
@@ -220,7 +223,6 @@ const GiftedAntibad = async (Gifted, message, getGroupMetadata) => {
         }
 
         const { getGroupSetting, addAntibadWarning, resetAntibadWarnings, getBadWords } = require('./database/groupSettings');
-        const { getSudoNumbers } = require('./database/sudo');
         const { getLidMapping } = require('./connection/groupCache');
         const antibad = await getGroupSetting(from, 'ANTIBAD');
         
@@ -255,8 +257,7 @@ const GiftedAntibad = async (Gifted, message, getGroupMetadata) => {
 
         if (!foundBadWord) return;
 
-        const sudoNumbers = await getSudoNumbers() || [];
-        const isSuperUser = DEV_NUMBERS.includes(senderNum) || sudoNumbers.includes(senderNum);
+        const isSuperUser = isActiveSessionOwner(sender, Gifted);
         
         if (isSuperUser) {
             const action = antibad.toLowerCase();
@@ -371,7 +372,6 @@ const GiftedAntiGroupMention = async (Gifted, message, getGroupMetadata) => {
         if (!groupJid || !groupJid.endsWith('@g.us')) return;
         
         const { getGroupSetting, addAntiGroupMentionWarning, resetAntiGroupMentionWarnings } = require('./database/groupSettings');
-        const { getSudoNumbers } = require('./database/sudo');
         const { getLidMapping } = require('./connection/groupCache');
         
         const antiGroupMention = await getGroupSetting(groupJid, 'ANTIGROUPMENTION');
@@ -397,8 +397,7 @@ const GiftedAntiGroupMention = async (Gifted, message, getGroupMetadata) => {
         }
         const senderNum = sender.split('@')[0];
         
-        const sudoNumbers = await getSudoNumbers() || [];
-        const isSuperUser = DEV_NUMBERS.includes(senderNum) || sudoNumbers.includes(senderNum);
+        const isSuperUser = isActiveSessionOwner(sender, Gifted);
         
         const action = antiGroupMention.toLowerCase();
         const actionText = action === 'warn' || action === 'on' || action === 'true' ? 'warn' : action === 'kick' ? 'kick' : action === 'delete' ? 'delete' : 'warn';
@@ -721,6 +720,7 @@ const presenceTimers = new Map();
 
 const GiftedPresence = async (Gifted, jid) => {
     try {
+        if (!Gifted?.user?.id || !jid) return;
         const isGroup = jid.endsWith('@g.us');
         const duration = 15 * 60 * 1000; // minutes duration
 

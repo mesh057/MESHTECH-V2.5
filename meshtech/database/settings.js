@@ -32,7 +32,7 @@ const SettingsDB = DATABASE.define(
 const DEFAULT_SETTINGS = {
     PREFIX: ".",
     OWNER_NAME: "Mesh Tech",
-    OWNER_NUMBER: "255794469700",
+    OWNER_NUMBER: "",
     BOT_NAME: "MESH TECH MD",
     FOOTER: "ᴘᴏᴡᴇʀᴇᴅ ʙʏ Mesh Tech",
     CAPTION: "©2026 MESHTECH MD BOT v2.5",

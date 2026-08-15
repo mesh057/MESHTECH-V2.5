@@ -2,7 +2,12 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-const DB_PATH = path.join(process.cwd(), 'meshtech/session', 'store.db');
+const configuredDataFile = process.env.DATA_FILE || process.env.MESH_DATA_FILE;
+const configuredStoreFile = process.env.MESSAGE_STORE_FILE;
+const defaultStoreDir = configuredDataFile
+    ? path.dirname(path.resolve(configuredDataFile))
+    : path.resolve(process.env.AUTH_DIR || process.env.MULTI_USER_AUTH_DIR || path.join(process.cwd(), 'meshtech/session'));
+const DB_PATH = path.resolve(configuredStoreFile || path.join(defaultStoreDir, 'store.db'));
 
 function safeStringify(obj) {
     return JSON.stringify(obj, (_, v) => {

@@ -8,7 +8,11 @@ module.exports = {
     TIME_ZONE: process.env.TIME_ZONE,
     AUTO_READ_STATUS: process.env.AUTO_READ_STATUS,
     AUTO_LIKE_STATUS: process.env.AUTO_LIKE_STATUS,
-    DATABASE_URL: process.env.DATABASE_URL, // Postress(Get one for free from neon.tech/supabase/render/heroku builtin postgress)...will fallback to path: ./meshtech/database/database.db if not provided
+    DATABASE_URL: process.env.DATABASE_URL,
+    AUTH_DIR: process.env.AUTH_DIR || process.env.MULTI_USER_AUTH_DIR,
+    SESSION_DB_FILE: process.env.SESSION_DB_FILE,
+    DATA_FILE: process.env.DATA_FILE || process.env.MESH_DATA_FILE,
+    MESSAGE_STORE_FILE: process.env.MESSAGE_STORE_FILE,
 };
 
 let fileName = require.resolve(__filename);

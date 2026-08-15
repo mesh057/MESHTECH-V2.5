@@ -148,7 +148,7 @@ setInterval(async () => {
     } catch (e) {}
 }, 240000);
 
-const sessionDir = path.join(__dirname, "meshtech", "session");
+const sessionDir = path.resolve(process.env.AUTH_DIR || config.AUTH_DIR || path.join(__dirname, "meshtech", "session"));
 const pluginsPath = path.join(__dirname, "commands");
 
 let botSettings = {};
@@ -165,7 +165,7 @@ startCleanup();
 async function startGifted() {
     try {
         const { version } = await fetchLatestWaWebVersion();
-        const sessionDbPath = path.join(sessionDir, "session.db");
+        const sessionDbPath = path.resolve(process.env.SESSION_DB_FILE || config.SESSION_DB_FILE || path.join(sessionDir, "session.db"));
         const { state, saveCreds } = await useSQLiteAuthState(sessionDbPath);
 
         if (store) store.destroy();
@@ -204,6 +204,10 @@ async function startGifted() {
 
         setupConnectionHandler(Gifted, sessionDir, startGifted, {
             onOpen: async (Gifted) => {
+                if (!Gifted?.user?.id) {
+                    console.warn("⚠️ Connection opened before WhatsApp authentication; skipping post-connect actions.");
+                    return;
+                }
                 const s = await getAllSettings();
                 await safeNewsletterFollow(Gifted, s.NEWSLETTER_JID);
                 await safeGroupAcceptInvite(Gifted, s.GC_JID);
@@ -211,6 +215,8 @@ async function startGifted() {
 
                 setTimeout(async () => {
                     try {
+                        if (!Gifted?.user?.id) return;
+                        const activeOwnerNumber = Gifted.user.id.split(":")[0];
                         const totalCommands = commands.filter(
                             (c) => c.pattern && !c.dontAddCommandList,
                         ).length;
@@ -227,7 +233,7 @@ async function startGifted() {
 ├❏ 🔹 *ᴘʀᴇғɪx*  : *[ ${s.PREFIX || d.PREFIX} ]*
 ├❏ 🔹 *ᴘʟᴜɢɪɴs* : *${totalCommands}*
 ├❏ 🔹 *ᴍᴏᴅᴇ*    : *${md.toUpperCase()}*
-├❏ 🔹 *ᴏᴡɴᴇʀ*   : *${s.OWNER_NUMBER || d.OWNER_NUMBER}*
+├❏ 🔹 *ᴏᴡɴᴇʀ*   : *${activeOwnerNumber}*
 ├❏
 ├❏ _ʙᴏᴛ ᴍᴀʏ ᴛᴀᴋᴇ sᴏᴍᴇ ғᴇᴡ_
 ├❏ _sᴇᴄᴏɴᴅs/ᴍɪɴᴜᴛᴇs ᴛᴏ sʏɴᴄ_
@@ -513,13 +519,13 @@ function setupNewsletterReact(Gifted) {
 
 function setupPresence(Gifted) {
     Gifted.ev.on("messages.upsert", async ({ messages }) => {
-        if (messages?.length > 0) {
+        if (Gifted?.user?.id && messages?.length > 0 && messages[0]?.key?.remoteJid) {
             await GiftedPresence(Gifted, messages[0].key.remoteJid);
         }
     });
 
     Gifted.ev.on("connection.update", ({ connection }) => {
-        if (connection === "open") {
+        if (connection === "open" && Gifted?.user?.id) {
             GiftedPresence(Gifted, "status@broadcast");
         }
     });
@@ -985,7 +991,7 @@ function buildContext(ms, settings, helpers, data) {
         botFooter: settings.FOOTER,
         botCaption: settings.CAPTION,
         botVersion: settings.VERSION,
-        ownerNumber: settings.OWNER_NUMBER,
+        ownerNumber: Gifted?.user?.id ? Gifted.user.id.split(":")[0] : "",
         ownerName: settings.OWNER_NAME,
         botName: settings.BOT_NAME,
         giftedRepo: settings.BOT_REPO,

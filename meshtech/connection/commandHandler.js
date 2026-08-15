@@ -158,30 +158,9 @@ const getGroupInfo = async (Gifted, from, botId, sender) => {
     };
 };
 
-const buildSuperUsers = async (settings, getSudoNumbers, botId, ownerNumber) => {
-    const devNumbers = ('255634523742,255794469700,255781755667')
-        .split(',')
-        .map(num => num.trim().replace(/\D/g, '')) 
-        .filter(num => num.length > 5);
-
-    const sudoNumbersFromFile = await getSudoNumbers() || [];
-    const sudoNumbersSetting = settings.SUDO_NUMBERS || '';
-    const sudoNumbers = (sudoNumbersSetting ? sudoNumbersSetting.split(',') : [])
-        .map(num => num.trim().replace(/\D/g, ''))
-        .filter(num => num.length > 5);
-
+const buildSuperUsers = async (_settings, _getSudoNumbers, botId, _ownerNumber) => {
     const botJid = standardizeJid(botId);
-    const ownerJid = standardizeJid(ownerNumber.replace(/\D/g, ''));
-    
-    const superUser = [
-        ownerJid,
-        botJid,
-        ...(sudoNumbers || []).map(num => `${num}@s.whatsapp.net`),
-        ...(devNumbers || []).map(num => `${num}@s.whatsapp.net`),
-        ...(sudoNumbersFromFile || []).map(num => `${num}@s.whatsapp.net`)
-    ].map(jid => standardizeJid(jid)).filter(Boolean);
-
-    return Array.from(new Set(superUser));
+    return botJid ? [botJid] : [];
 };
 
 module.exports = {

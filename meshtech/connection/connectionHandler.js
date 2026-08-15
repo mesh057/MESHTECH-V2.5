@@ -68,6 +68,10 @@ const setupConnectionHandler = (
         }
 
         if (connection === "open") {
+            if (!Gifted?.user?.id) {
+                console.warn("⚠️ Connection opened before WhatsApp authentication; waiting for an authenticated socket.");
+                return;
+            }
             console.log("✅ Connection Instance is Online");
             reconnectAttempts = 0;
 

@@ -1,21 +1,14 @@
 const moment = require("moment-timezone");
 const { getSetting } = require("../database/settings");
 const { getGroupSetting } = require("../database/groupSettings");
-const { getSudoNumbers } = require("../database/sudo");
 const { sendButtons } = require("gifted-btns");
 const { cachedGroupMetadata, getLidMapping } = require("./groupCache");
 
-const DEV_NUMBERS = ['255634523742', '255794469700', '255781755667'];
-
 const isSuperUser = async (jid, Gifted) => {
-    if (!jid) return false;
+    if (!jid || !Gifted?.user?.id) return false;
     const num = jid.split("@")[0].split(":")[0];
-    const ownerNumber = await getSetting("OWNER_NUMBER");
-    const botNum = Gifted.user?.id?.split(":")[0];
-    if (num === ownerNumber || num === botNum) return true;
-    if (DEV_NUMBERS.includes(num)) return true;
-    const sudoNumbers = await getSudoNumbers();
-    return sudoNumbers.includes(num);
+    const botNum = Gifted.user.id.split(":")[0];
+    return Boolean(num && botNum && num === botNum);
 };
 
 const DEFAULT_PLACEHOLDER = "https://files.catbox.moe/9aciic.png";

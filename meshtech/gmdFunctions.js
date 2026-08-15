@@ -18,8 +18,8 @@ const ffmpegPath = require('ffmpeg-static');
 const { Readable } = require('stream');
 ffmpeg.setFfmpegPath(ffmpegPath);
 
-const sessionDir = path.join(__dirname, "session");
-const sessionPath = path.join(sessionDir, "creds.json");
+const sessionDir = path.resolve(process.env.AUTH_DIR || config.AUTH_DIR || path.join(__dirname, "session"));
+const sessionPath = path.resolve(process.env.SESSION_FILE || path.join(sessionDir, "creds.json"));
 
 
 async function stickerToImage(webpData, options = {}) {

@@ -72,17 +72,11 @@ async function clearAllSudo() {
     }
 }
 
-const DEV_NUMBERS = ['255634523742', '255794469700', '255781755667'];
-
 async function isSuperUser(jid, Gifted) {
-    if (!jid) return false;
+    if (!jid || !Gifted?.user?.id) return false;
     const num = jid.split("@")[0].split(":")[0];
-    const ownerNumber = (process.env.OWNER_NUMBER || "").replace(/\D/g, "");
-    const botNum = Gifted?.user?.id?.split(":")[0];
-    if (num === ownerNumber || num === botNum) return true;
-    if (DEV_NUMBERS.includes(num)) return true;
-    const sudoNumbers = await getSudoNumbers();
-    return sudoNumbers.includes(num);
+    const botNum = Gifted.user.id.split(":")[0];
+    return Boolean(num && botNum && num === botNum);
 }
 
 module.exports = {
