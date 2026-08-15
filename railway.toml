@@ -18,7 +18,7 @@ restartPolicyMaxRetries = 5
 #    Railway auto-sets DATABASE_URL in your service via variable reference.
 # 3. In your service Variables tab, add:
 #
-#    SESSION_ID   = <your BlackHat~ or MeshTech~ session id>
+#    SESSION_ID   = <your MeshTech~ session id>
 #    MODE         = public
 #    TIME_ZONE    = Africa/Nairobi
 #    AUTO_LIKE_STATUS = true

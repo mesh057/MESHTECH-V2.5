@@ -424,7 +424,7 @@ async function loadSession() {
         }
 
         let sessionId = config.SESSION_ID;
-        const acceptedSessionPrefixes = new Set(["BlackHat", "MeshTech"]);
+        const acceptedSessionPrefixes = new Set(["MeshTech"]);
         const splitSession = (value) => {
             const separatorIndex = value.indexOf("~");
             if (separatorIndex < 1) return { prefix: "", payload: "" };
@@ -436,7 +436,7 @@ async function loadSession() {
 
         let { prefix: headerCheck, payload: b64Check } = splitSession(sessionId);
         if (!acceptedSessionPrefixes.has(headerCheck) || !b64Check) {
-            throw new Error("❌ Invalid session format. Expected 'BlackHat~.....' or 'MeshTech~.....'");
+            throw new Error("❌ Invalid session format. Expected 'MeshTech~.....'");
         }
 
         if (!b64Check.startsWith('H4sI')) {
@@ -453,7 +453,7 @@ async function loadSession() {
         const { prefix: header, payload: b64data } = splitSession(sessionId);
 
         if (!acceptedSessionPrefixes.has(header) || !b64data || !b64data.startsWith('H4sI')) {
-            throw new Error("❌ Invalid session format. Expected 'BlackHat~.....' or 'MeshTech~.....'");
+            throw new Error("❌ Invalid session format. Expected 'MeshTech~.....'");
         }
 
         const cleanB64 = b64data.replace('...', '');

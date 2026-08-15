@@ -72,8 +72,8 @@
 
 </p>
 <p align="center">
-⚠️ Session ID must start with either  
-<b>BlackHat~</b> or <b>MeshTech~</b>
+⚠️ Session ID must start with  
+<b>MeshTech~</b>
 </p>
 
 </details>
