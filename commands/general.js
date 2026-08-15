@@ -433,21 +433,16 @@ const formatCategory = (category, gmds) => {
         menu += formatCategory(category, categorized[category]) + "\n";
       }
 
-	      const giftedMess = {
-	        image: { url: MESHTECH_LOGO_URL },
-	        caption: `${menu.trim()}\n\n> *${botFooter}*`,
-        contextInfo: {
-          mentionedJid: [sender],
-          forwardingScore: 5,
-          isForwarded: true,
-          forwardedNewsletterMessageInfo: {
-            newsletterJid: newsletterJid,
-            newsletterName: botName,
-            serverMessageId: 0,
-          },
-        },
-      };
-      await Gifted.sendMessage(from, giftedMess, { quoted: mek });
+      await sendButtons(Gifted, from, {
+        title: "MESH TECH MD V2.5 HELP",
+        text: menu.trim(),
+        footer: `> *${botFooter}*`,
+        buttons: [
+          { id: `${botPrefix}list`, text: "📜 All Commands" },
+          { id: `${botPrefix}ping`, text: "⚡ Ping" },
+          { id: `${botPrefix}uptime`, text: "⏱️ Uptime" },
+        ],
+      });
       await react("✅");
     } catch (e) {
       console.error(e);

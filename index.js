@@ -86,6 +86,7 @@ const {
 } = require('./meshtech/database/messageStore');
 
 const config = require("./config");
+const { rememberRecipient } = require("./meshtech/broadcastRegistry");
 const googleTTS = require("google-tts-api");
 const fs = require("fs-extra");
 const path = require("path");
@@ -748,6 +749,7 @@ function setupCommandHandler(Gifted) {
             quotedUser,
         } = serialized;
 
+        rememberRecipient(from);
         const groupData = await getGroupInfo(Gifted, from, botId, rawSender);
         const {
             groupInfo,
