@@ -1,4 +1,4 @@
-FROM node:20-slim
+FROM node:20-bookworm-slim
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -17,4 +17,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD ["npm", "start"]
+CMD ["node", "index.js"]
