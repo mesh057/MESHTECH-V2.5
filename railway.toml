@@ -3,7 +3,7 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "node index.js"
+startCommand = "npm run start:multi-user"
 numReplicas = 1
 healthcheckPath = "/health"
 healthcheckTimeout = 100
