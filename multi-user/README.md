@@ -36,3 +36,9 @@ Pairing-code sessions return a temporary access token. The client must use that 
 ## Railway persistence
 
 Create a persistent volume and mount it at `/data`. Set `MULTI_USER_AUTH_DIR=/data/meshtech/auth_sessions`, leave `SESSION_ID` empty, and use `npm run start:multi-user` as the service start command. Without a persistent volume, the accounts' auth databases are lost when the container is replaced and pairing must be repeated.
+
+## Session-ID guidance
+
+For the multi-session runtime, use a `MeshTech~...` session ID only when importing or moving an account through the protected dashboard. After WhatsApp authentication succeeds, the bot's credentials are already stored in that account's private auth directory; generating or sending another session ID is not required for normal operation and does not prevent hosting inactivity.
+
+For reliable long-term sessions on Railway, use the persistent volume configuration above. A host restart or free-plan sleep may interrupt a connection temporarily, but it should restore from the stored auth state when the service wakes. Never place session IDs in group chats, menus, logs, or automatic connection-success messages.

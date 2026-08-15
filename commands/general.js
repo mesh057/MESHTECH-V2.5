@@ -16,6 +16,7 @@ const { gmd, commands, monospace, formatBytes } = require("../meshtech"),
   readmore = more.repeat(4001),
   ram = `${formatBytes(freeMemoryBytes)}/${formatBytes(totalMemoryBytes)}`;
 const { sendButtons } = require("gifted-btns");
+const MESHTECH_LOGO_URL = "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
 
 gmd(
   {
@@ -182,32 +183,29 @@ gmd(
         (command) => command.pattern && !command.dontAddCommandList,
       ).length;
 
-	      let menus = `╭━━━〔 ${toBold(botName.toUpperCase())} 〕━━━┈⊷
-┃ 👋 *Welcome to the Interactive Help!*
-┃ 
-┃ 🦄 *Uptime :* ${monospace(uptime)}
-┃ 🍁 *Date Today:* ${monospace(date)}
-┃ 🎗 *Time Now:* ${monospace(time)}
-┃ 
-┃ ➮ *Founder:* Mesh Tech
-┃ ➮ *User:* ${monospace(pushName)}
-┃ ➮ *Memory:* ${monospace(ram)}
-┃ 
-┃ *🧑‍💻 :* ${monospace(botName)} Is Available
-┃ 
-┃ ╭──❰ *ALL MENU* ❱
-┃ │🏮 List
-┃ │🏮 Category
-┃ │🏮 Help
-┃ │🏮 Alive
-┃ │🏮 Uptime
-┃ │🏮 Repo
-┃ ╰─────────────⦁
-╰━━━━━━━━━━━━━━━━━━━━━━━━━━┈⊷`;
+	      let menus = `╭━━━〔 ${toBold("MESH TECH MD V2.5")} 〕━━━┈⊷
+	┃ 🛡️ *WHATSAPP MULTI-DEVICE COMMAND CENTER*
+	┃
+	┃ 👋 *Welcome:* ${monospace(pushName)}
+	┃ ⚙️ *Mode:* ${monospace(botMode)}
+	┃ ⏱️ *Uptime:* ${monospace(uptime)}
+	┃ 🧠 *Memory:* ${monospace(ram)}
+	┃ 📅 *Date:* ${monospace(date)}
+	┃ 🕒 *Time:* ${monospace(time)}
+	┃
+	┃ ╭──❰ *QUICK HELP* ❱
+	┃ │ ${botPrefix}menu  — Full command guide
+	┃ │ ${botPrefix}list  — Every command with usage
+	┃ │ ${botPrefix}ping  — Check response speed
+	┃ │ ${botPrefix}uptime — Check bot uptime
+	┃ ╰─────────────⦁
+	┃
+	┃ _Use the command prefix before every command._
+	╰━━━━━━━━━━━━━━━━━━━━━━━━━━┈⊷`;
 
-      const giftedMess = {
-        image: { url: botPic },
-        caption: menus.trim(),
+	      const giftedMess = {
+	        image: { url: MESHTECH_LOGO_URL },
+	        caption: menus.trim(),
         contextInfo: {
           mentionedJid: [sender],
           forwardingScore: 5,
@@ -284,7 +282,7 @@ gmd(
         (command) => command.pattern && !command.dontAddCommandList,
       ).length;
 
-	      let list = `╭━━━〔 ${toBold(botName.toUpperCase())} 〕━━━┈⊷
+	      let list = `╭━━━〔 ${toBold("MESH TECH MD V2.5")} 〕━━━┈⊷
 ┃ *𝑴𝒐𝒅𝒆:*  ${monospace(botMode)}
 ┃ *𝑷𝒓𝒆𝒇𝒊𝒙:*  [ ${monospace(botPrefix)} ]
 ┃ *𝑼𝒔𝒆𝒓:*  ${monospace(pushName)}
@@ -303,9 +301,9 @@ gmd(
 	        }
 	      });
 
-      const giftedMess = {
-        image: { url: botPic },
-        caption: list.trim(),
+	      const giftedMess = {
+	        image: { url: MESHTECH_LOGO_URL },
+	        caption: list.trim(),
         contextInfo: {
           mentionedJid: [sender],
           forwardingScore: 5,
@@ -400,18 +398,19 @@ gmd(
         categorized[cat].sort((a, b) => a.pattern.localeCompare(b.pattern));
       }
 
-      let header = `╭━━━〔 ${toBold(botName.toUpperCase())} 〕━━━┈⊷
-┃ *𝑴𝒐𝒅𝒆:*  ${monospace(botMode)}
-┃ *𝑷𝒓𝒆𝒇𝒊𝒙:*  [ ${monospace(botPrefix)} ]
-┃ *𝑼𝒔𝒆𝒓:*  ${monospace(pushName)}
-┃ *𝑷𝒍𝒖𝒈𝒊𝒏𝒔:*  ${monospace(totalCommands.toString())}
-┃ *𝑽𝒆𝒓𝒔𝒊𝒐𝒏:*  ${monospace(botVersion)}
-┃ *𝑼𝒑𝒕𝒊𝒎𝒆:*  ${monospace(uptime)}
-┃ *𝑻𝒊𝒎𝒆 𝑵𝒐𝒘:*  ${monospace(time)}
-┃ *𝑫𝒂𝒕𝒆 𝑻𝒐𝒅𝒂𝒚:*  ${monospace(date)}
-┃ *𝑻𝒊𝒎𝒆.𝒁𝒐𝒏𝒆:*  ${monospace(timeZone)}
-┃ *𝑺𝒆𝒓𝒗𝒆𝒓 𝑹𝒂𝒎:*  ${monospace(ram)}
-╰━━━━━━━━━━━━━━━━━━━━━━━━━━┈⊷\n${readmore}\n`;
+	      let header = `╭━━━〔 ${toBold("MESH TECH MD V2.5 HELP")} 〕━━━┈⊷
+	┃ *STATUS:* ${monospace("ONLINE")}
+	┃ *MODE:* ${monospace(botMode)}
+	┃ *PREFIX:* [ ${monospace(botPrefix)} ]
+	┃ *USER:* ${monospace(pushName)}
+	┃ *COMMANDS:* ${monospace(totalCommands.toString())}
+	┃ *VERSION:* ${monospace(botVersion)}
+	┃ *UPTIME:* ${monospace(uptime)}
+	┃ *SERVER RAM:* ${monospace(ram)}
+	┃
+	┃ _Each category below contains commands you can run._
+	┃ _Use ${botPrefix}list for a command-by-command explanation._
+	╰━━━━━━━━━━━━━━━━━━━━━━━━━━┈⊷\n${readmore}\n`;
 
 const formatCategory = (category, gmds) => {
   const categoryTitle = `╔═❖•⊰ ${toBold(category.toUpperCase())} MENU ⊱•❖═╗\n`;
@@ -434,9 +433,9 @@ const formatCategory = (category, gmds) => {
         menu += formatCategory(category, categorized[category]) + "\n";
       }
 
-      const giftedMess = {
-        image: { url: botPic },
-        caption: `${menu.trim()}\n\n> *${botFooter}*`,
+	      const giftedMess = {
+	        image: { url: MESHTECH_LOGO_URL },
+	        caption: `${menu.trim()}\n\n> *${botFooter}*`,
         contextInfo: {
           mentionedJid: [sender],
           forwardingScore: 5,

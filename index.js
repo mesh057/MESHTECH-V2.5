@@ -92,6 +92,11 @@ const path = require("path");
 const axios = require('axios');
 const express = require("express");
 
+const MESHTECH_LOGO_URL = "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
+const MESHTECH_PAIRING_URL = "https://meshtech.tunupublishers.com/";
+const MESHTECH_CHANNEL_URL = "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R";
+const MESHTECH_GROUP_URL = "https://chat.whatsapp.com/DM1JxxnOJFp0vsTHpej89M";
+
 /**
  * Resolves any JID to a real phone JID (@s.whatsapp.net).
  * Returns the original jid unchanged if it is already a real JID.
@@ -251,31 +256,35 @@ async function startGifted() {
                             const d = DEFAULT_SETTINGS;
                             const md =
                                 s.MODE === "public" ? "public" : "private";
-                            const connectionMsg = `
-┌─⧭⊷
-├⍟❏ *${(s.BOT_NAME || d.BOT_NAME).toUpperCase()}*
-├❏
-├❏ 🔹 *ᴘʀᴇғɪx*  : *[ ${s.PREFIX || d.PREFIX} ]*
-├❏ 🔹 *ᴘʟᴜɢɪɴs* : *${totalCommands}*
-├❏ 🔹 *ᴍᴏᴅᴇ*    : *${md.toUpperCase()}*
-├❏ 🔹 *ᴏᴡɴᴇʀ*   : *${activeOwnerNumber}*
-├❏
-├❏ _ʙᴏᴛ ᴍᴀʏ ᴛᴀᴋᴇ sᴏᴍᴇ ғᴇᴡ_
-├❏ _sᴇᴄᴏɴᴅs/ᴍɪɴᴜᴛᴇs ᴛᴏ sʏɴᴄ_
-├❏ _ʙᴇ ғᴏʀᴇ ʙᴇɪɴɢ ʀᴇᴀᴅʏ ᴛᴏ ᴜsᴇ._
-├❏
-├❏ 🥷 _${s.CAPTION || d.CAPTION}_
-└─❏
-`;
-await sendButtons(Gifted, Gifted.user.id, {
-    text: connectionMsg,
+	                        const connectionMsg = `
+╭━━━〔 *MESH TECH MD V2.5* 〕━━━┈⊷
+┃ ✅ *CONNECTION SUCCESSFUL*
+┃
+┃ 📱 *Owner:* ${activeOwnerNumber}
+┃ ⚙️ *Mode:* ${md.toUpperCase()}
+┃ 🔑 *Prefix:* [ ${s.PREFIX || d.PREFIX} ]
+								┃ 🧩 *Commands:* ${totalCommands}
+								┃
+								┃ _Your bot is authenticated and syncing._
+								┃ _Use ${s.PREFIX || d.PREFIX}menu for the full help guide._
+								┃ _Your session is stored in its private bot directory._
+								┃ _No new session ID is needed while this service keeps its persistent volume._
+								┃
+┃ 🔗 *Pairing dashboard:*
+┃ ${MESHTECH_PAIRING_URL}
+┃ 📢 *Channel:* ${MESHTECH_CHANNEL_URL}
+┃ 👥 *Community:* ${MESHTECH_GROUP_URL}
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━┈⊷`;
+	await sendButtons(Gifted, Gifted.user.id, {
+	    image: { url: MESHTECH_LOGO_URL },
+	    text: connectionMsg,
 
     buttons: [
         {
             name: "cta_url",
             buttonParamsJson: JSON.stringify({
-                display_text: "📘 Tutorials",
-                url: s.YT || d.YT,
+	                display_text: "🌐 Open Dashboard",
+	                url: MESHTECH_PAIRING_URL,
             }),
         },
 
@@ -284,9 +293,7 @@ await sendButtons(Gifted, Gifted.user.id, {
             buttonParamsJson: JSON.stringify({
                 display_text: "📢 Updates",
                 url:
-                    s.NEWSLETTER_URL ||
-                    d.NEWSLETTER_URL ||
-                    "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R",
+	                    MESHTECH_CHANNEL_URL,
             }),
         },
     ],
