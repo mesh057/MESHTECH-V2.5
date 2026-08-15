@@ -266,3 +266,12 @@ pm2 restart MESHTECH-V2.5
 [![MESH TECH MD](https://api.star-history.com/svg?repos=mesh057/MESHTECH-V2.5&type=Timeline)](#)
 
 <a><img src='https://i.postimg.cc/vHZz7VWG/bot-logo.png'/></a>
+
+
+## TRUE MULTI-SESSION DEPLOYMENT
+
+The original `npm start` command remains available for one private `MeshTech~...` session. For multiple independent WhatsApp accounts in one service, leave `SESSION_ID` empty and set the service start command to `npm run start:multi-user`.
+
+Set `MAX_BOT_INSTANCES=unlimited` and point `MULTI_USER_AUTH_DIR` to a persistent volume such as `/data/meshtech/auth_sessions`. The multi-session service exposes `/dashboard`, `/pairing.html`, `/api/request-pairing`, `/api/pairing-code`, `/api/restore-session`, `/api/status`, and `/api/stop`. Each account is isolated under its own phone-number directory and registered sessions are restored automatically after restart.
+
+On Railway, mount a persistent volume at `/data`, set `MULTI_USER_AUTH_DIR=/data/meshtech/auth_sessions`, leave `SESSION_ID` blank, and override the service start command to `npm run start:multi-user`. Without persistent storage, auth state is lost when the service is replaced and affected accounts must be paired again.

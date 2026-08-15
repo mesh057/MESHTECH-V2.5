@@ -412,15 +412,17 @@ function formatBytes(bytes) {
 
 async function loadSession() {
     try {
+        const hasImportedSession = typeof config.SESSION_ID === 'string' && config.SESSION_ID.trim().length > 0;
+        if (!hasImportedSession) {
+            console.log("ℹ️ No SESSION_ID supplied; using the configured durable auth state.");
+            return;
+        }
+
         if (fs.existsSync(sessionDir)) {
             const allFiles = fs.readdirSync(sessionDir);
             allFiles.forEach(f => {
                 try { fs.unlinkSync(path.join(sessionDir, f)); } catch (e) {}
             });
-        }
-
-        if (!config.SESSION_ID || typeof config.SESSION_ID !== 'string') {
-            throw new Error("❌ SESSION_ID is missing or invalid");
         }
 
         let sessionId = config.SESSION_ID;

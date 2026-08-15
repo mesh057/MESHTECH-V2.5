@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "node index.js",
     "start": "pm2 start index.js --name meshtech-md-v2.5 --watch",
+    "start:multi-user": "node multi-user/server.js",
     "stop": "pm2 stop meshtech-md-v2.5",
     "restart": "pm2 restart meshtech-md-v2.5",
     "logs": "pm2 logs meshtech-md-v2.5",

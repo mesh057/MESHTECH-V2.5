@@ -183,6 +183,24 @@ async function startGifted() {
         Gifted = giftedConnect(socketConfig);
         store.bind(Gifted.ev);
 
+        Gifted.ev.on("connection.update", ({ qr }) => {
+            if (qr && process.env.MESH_PAIRING_MODE === "qr") {
+                console.log(`PAIRING_QR ${qr}`);
+            }
+        });
+
+        if (!state.creds.registered && process.env.MESH_PAIRING_PHONE_NUMBER && process.env.MESH_PAIRING_MODE !== "qr") {
+            setTimeout(async () => {
+                try {
+                    if (Gifted?.user?.id) return;
+                    const pairingCode = await Gifted.requestPairingCode(process.env.MESH_PAIRING_PHONE_NUMBER);
+                    console.log(`PAIRING_CODE ${pairingCode}`);
+                } catch (pairingError) {
+                    console.error(`PAIRING_ERROR ${pairingError.message}`);
+                }
+            }, 3000);
+        }
+
         Gifted.ev.process(async (events) => {
             if (events["creds.update"]) await saveCreds();
         });

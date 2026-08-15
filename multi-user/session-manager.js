@@ -1,0 +1,233 @@
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const { spawn } = require('child_process');
+
+function extractPairingCode(output) {
+  const match = String(output || '').match(/\bPAIRING_CODE\s+([A-Z0-9]{4,8}(?:-[A-Z0-9]{4,8})?)\b/i);
+  return match ? match[1].toUpperCase() : null;
+}
+
+function extractPairingQr(output) {
+  const match = String(output || '').match(/\bPAIRING_QR\s+([^\n\r]+)/i);
+  return match ? match[1].trim() : null;
+}
+
+function extractPairingError(output) {
+  const match = String(output || '').match(/\bPAIRING_ERROR\s+([^\n\r]+)/i);
+  return match ? match[1].trim().slice(0, 240) : null;
+}
+
+function isRegisteredSession(authInfoDir) {
+  const credsPath = path.join(authInfoDir, 'creds.json');
+  try {
+    const creds = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
+    if (creds && typeof creds.registered === 'boolean') return creds.registered;
+  } catch (_) {}
+
+  const databasePath = path.join(authInfoDir, 'session.db');
+  if (!fs.existsSync(databasePath)) return false;
+  try {
+    const Database = require('better-sqlite3');
+    const db = new Database(databasePath, { readonly: true });
+    const row = db.prepare('SELECT value FROM session WHERE id = ?').get('creds');
+    db.close();
+    if (!row?.value) return false;
+    const creds = JSON.parse(row.value);
+    return Boolean(creds?.registered);
+  } catch (_) {
+    return false;
+  }
+}
+
+class MultiUserSessionManager {
+  constructor(options = {}) {
+    this.rootDir = path.resolve(options.rootDir || process.env.MULTI_USER_AUTH_DIR || process.env.AUTH_DIR || path.join(process.cwd(), 'auth_sessions'));
+    this.botEntry = path.resolve(options.botEntry || path.join(__dirname, '..', 'index.js'));
+    this.sessions = new Map();
+
+    const rawLimit = String(options.maxInstances ?? process.env.MAX_BOT_INSTANCES ?? 'unlimited').trim().toLowerCase();
+    const parsedLimit = Number(rawLimit);
+    this.maxInstances = ['unlimited', 'infinite', 'infinity', '0', '-1', ''].includes(rawLimit)
+      ? Infinity
+      : (Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.floor(parsedLimit) : Infinity);
+
+    fs.mkdirSync(this.rootDir, { recursive: true });
+  }
+
+  normalizePhoneNumber(value) {
+    const digits = String(value || '').replace(/\D/g, '');
+    if (digits.length < 8 || digits.length > 15) throw new Error('Enter a valid phone number with country code.');
+    return digits;
+  }
+
+  sessionDir(number) {
+    return path.join(this.rootDir, this.normalizePhoneNumber(number));
+  }
+
+  listRestorableSessions() {
+    try {
+      return fs.readdirSync(this.rootDir, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && /^\d{8,15}$/.test(entry.name))
+        .map((entry) => entry.name)
+        .filter((number) => isRegisteredSession(path.join(this.sessionDir(number), 'auth_info')));
+    } catch (error) {
+      console.error('[mesh-multi-user] Could not inspect stored sessions:', error.message);
+      return [];
+    }
+  }
+
+  async restoreSavedSessions() {
+    const restored = [];
+    for (const number of this.listRestorableSessions()) {
+      try {
+        await this.start(number, false, true);
+        restored.push(number);
+      } catch (error) {
+        console.error(`[mesh-multi-user] Could not restore ${number}:`, error.message);
+      }
+    }
+    return restored;
+  }
+
+  get(number) {
+    return this.sessions.get(this.normalizePhoneNumber(number));
+  }
+
+  count() {
+    return this.sessions.size;
+  }
+
+  hasSessionCapacity(number) {
+    const normalized = this.normalizePhoneNumber(number);
+    return this.sessions.has(normalized) || this.sessions.size < this.maxInstances;
+  }
+
+  async start(number, useQr = false, restoring = false, importedSessionId = '') {
+    const normalized = this.normalizePhoneNumber(number);
+    const existing = this.sessions.get(normalized);
+    if (existing && existing.child && !existing.child.killed) return this.publicSession(existing);
+    if (existing) this.sessions.delete(normalized);
+
+    if (!this.hasSessionCapacity(normalized)) {
+      const error = new Error(`Maximum active sessions reached (${this.maxInstances}).`);
+      error.code = 'SESSION_CAPACITY_REACHED';
+      throw error;
+    }
+
+    const authDir = this.sessionDir(normalized);
+    const authInfoDir = path.join(authDir, 'auth_info');
+    const dataDir = path.join(authDir, 'data');
+    fs.mkdirSync(authInfoDir, { recursive: true });
+    fs.mkdirSync(dataDir, { recursive: true });
+
+    const record = {
+      number: normalized,
+      accessToken: crypto.randomBytes(32).toString('hex'),
+      authDir,
+      status: restoring ? 'restoring' : 'starting',
+      code: null,
+      qr: null,
+      error: null,
+      startedAt: new Date().toISOString(),
+      lastOutput: '',
+      outputBuffer: '',
+      child: null,
+    };
+
+    const child = spawn(process.execPath, [this.botEntry], {
+      cwd: authDir,
+      env: {
+        ...process.env,
+        // Do not let a parent SESSION_ID overwrite this isolated account.
+        SESSION_ID: importedSessionId || '',
+        MESH_PAIRING_PHONE_NUMBER: normalized,
+        MESH_MULTI_USER_SESSION_OWNER: normalized,
+        MESH_MULTI_USER_SESSION_MODE: 'public',
+        MESH_MULTI_USER_SESSION_DIR: authDir,
+        MULTI_USER_AUTH_DIR: this.rootDir,
+        AUTH_DIR: authInfoDir,
+        SESSION_DB_FILE: path.join(authInfoDir, 'session.db'),
+        DATA_FILE: path.join(dataDir, 'bot.db'),
+        MESSAGE_STORE_FILE: path.join(dataDir, 'store.db'),
+        MESH_PAIRING_MODE: useQr ? 'qr' : 'code',
+      },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    record.child = child;
+    record.pid = child.pid;
+    this.sessions.set(normalized, record);
+
+    const consume = (chunk) => {
+      const output = String(chunk);
+      record.lastOutput = output.trim().slice(-2000);
+      record.outputBuffer = `${record.outputBuffer}${output}`.slice(-5000);
+
+      const code = extractPairingCode(record.outputBuffer);
+      if (code) {
+        record.code = code;
+        record.error = null;
+        record.status = 'pairing_code_ready';
+      }
+
+      const qr = extractPairingQr(record.outputBuffer);
+      if (qr) {
+        record.qr = qr;
+        record.error = null;
+        record.status = 'pairing_qr_ready';
+      }
+
+      const pairingError = extractPairingError(record.outputBuffer);
+      if (pairingError && !record.code && !record.qr) {
+        record.error = pairingError;
+        record.status = 'error';
+      }
+
+      if (/Connecting Bot|Connecting\.\.\./i.test(output)) record.status = 'connecting';
+      if (/Reconnection attempt/i.test(output)) record.status = 'retrying';
+      if (/Connection Instance is Online|Connected to Whatsapp/i.test(output) && !record.code && !record.qr) record.status = 'running';
+    };
+
+    child.stdout.on('data', consume);
+    child.stderr.on('data', consume);
+    child.on('error', (error) => {
+      record.status = 'error';
+      record.error = error.message;
+      record.lastOutput = error.message;
+    });
+    child.on('exit', (code, signal) => {
+      if (record.status !== 'stopped') record.status = code === 0 ? 'stopped' : 'error';
+      record.exitCode = code;
+      record.signal = signal;
+      if (record.status === 'error' && !record.error) record.error = record.lastOutput || 'The WhatsApp pairing session stopped unexpectedly.';
+    });
+
+    return this.publicSession(record);
+  }
+
+  stop(number) {
+    const normalized = this.normalizePhoneNumber(number);
+    const record = this.sessions.get(normalized);
+    if (!record) return false;
+    record.status = 'stopped';
+    if (record.child && !record.child.killed) record.child.kill('SIGTERM');
+    this.sessions.delete(normalized);
+    return true;
+  }
+
+  publicSession(record) {
+    return {
+      number: record.number,
+      accessToken: record.accessToken,
+      status: record.status,
+      code: record.code,
+      qr: record.qr,
+      error: record.error,
+      pid: record.pid,
+      authDir: record.authDir,
+    };
+  }
+}
+
+module.exports = { MultiUserSessionManager, extractPairingCode, extractPairingQr, extractPairingError, isRegisteredSession };
