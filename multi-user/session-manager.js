@@ -146,6 +146,10 @@ class MultiUserSessionManager {
         MESH_MULTI_USER_SESSION_MODE: 'public',
         MESH_MULTI_USER_SESSION_DIR: authDir,
         MULTI_USER_AUTH_DIR: this.rootDir,
+        // The multi-session dashboard owns the host's public PORT. Child bot
+        // processes do not expose HTTP routes and must not compete for it.
+        MESH_DISABLE_HTTP_SERVER: 'true',
+        PORT: '0',
         AUTH_DIR: authInfoDir,
         SESSION_DB_FILE: path.join(authInfoDir, 'session.db'),
         DATA_FILE: path.join(dataDir, 'bot.db'),

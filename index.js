@@ -122,6 +122,7 @@ async function resolveRealJid(Gifted, jid) {
 const { sendButtons } = require("gifted-btns");
 const { SESSION_ID: sessionId } = config;
 const PORT = process.env.PORT || 5000;
+const embeddedHttpServerEnabled = process.env.MESH_DISABLE_HTTP_SERVER !== "true";
 const app = express();
 let Gifted;
 let store;
@@ -132,7 +133,11 @@ app.get("/", (req, res) => res.sendFile(__dirname + "/meshtech/meshtech.html"));
 app.get("/health", (req, res) =>
     res.status(200).json({ status: "alive", uptime: process.uptime() }),
 );
-app.listen(PORT, () => console.log(`✅ Server Running on Port: ${PORT}`));
+if (embeddedHttpServerEnabled) {
+    app.listen(PORT, () => console.log(`✅ Server Running on Port: ${PORT}`));
+} else {
+    console.log("ℹ️ Embedded HTTP server disabled for isolated multi-session bot process.");
+}
 
 setInterval(() => {
     const used = process.memoryUsage();
@@ -141,12 +146,14 @@ setInterval(() => {
     }
 }, 60000);
 
-setInterval(async () => {
-    try {
-        const http = require("http");
-        http.get(`http://localhost:${PORT}/health`, () => {});
-    } catch (e) {}
-}, 240000);
+if (embeddedHttpServerEnabled) {
+    setInterval(async () => {
+        try {
+            const http = require("http");
+            http.get(`http://localhost:${PORT}/health`, () => {});
+        } catch (e) {}
+    }, 240000);
+}
 
 const sessionDir = path.resolve(process.env.AUTH_DIR || config.AUTH_DIR || path.join(__dirname, "meshtech", "session"));
 const pluginsPath = path.join(__dirname, "commands");
