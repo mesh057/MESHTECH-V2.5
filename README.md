@@ -46,35 +46,20 @@
 
 <br>
 
-<div align="center">
+> **Important:** Do not use third-party pairing websites. They are not part of this repository and may generate codes that WhatsApp rejects.
 
-<a href="https://session.clevertech.qzz.io" target="_blank">
-  <img src="https://img.shields.io/badge/PAIRING_CODE_SERVER_1-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" alt="Server 1"/>
-</a>
+For a self-hosted pairing page, deploy the bot in multi-session mode:
 
-&nbsp;&nbsp;&nbsp;
+```bash
+npm install
+npm run start:multi-user
+```
 
-<a href="https://meshtech-session.up.railway.app" target="_blank">
-  <img src="https://img.shields.io/badge/PAIRING_CODE_SERVER_2-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" alt="Server 2"/>
-</a>
+Then open your own service URL at `/pairing.html`, enter the full international phone number using digits only, and generate a fresh code. On WhatsApp, use **Linked devices → Link a device → Link with phone number instead**.
 
-<a href="https://meshtech-session.up.railway.app" target="_blank">
-  <img src="https://img.shields.io/badge/PAIRING_CODE_SERVER_3-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" alt="Server 3"/>
-</a>
+For a single-session deployment, generate or import a complete `MeshTech~...` session through your own trusted deployment and set it as `SESSION_ID`. The session must be created by the same MESHTECH service; do not copy codes or session values from unrelated bot websites.
 
-</div>
-
-<br>
-
-<p align="center">
-  <b>👉 Click any server above to generate your Session ID</b>
-</p>
-
-</p>
-<p align="center">
-⚠️ Session ID must start with  
-<b>MeshTech~</b>
-</p>
+⚠️ A deployed multi-session service requires persistent storage for `MULTI_USER_AUTH_DIR`; otherwise the account must be paired again after every restart.
 
 </details>
 

@@ -94,7 +94,7 @@ const axios = require('axios');
 const express = require("express");
 
 const MESHTECH_LOGO_URL = "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
-const MESHTECH_PAIRING_URL = "https://meshtech.tunupublishers.com/";
+const MESHTECH_PAIRING_URL = process.env.MESH_PAIRING_URL || "";
 const MESHTECH_CHANNEL_URL = "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R";
 const MESHTECH_GROUP_URL = "https://chat.whatsapp.com/DM1JxxnOJFp0vsTHpej89M";
 
@@ -224,8 +224,10 @@ async function startGifted() {
             if (qr && process.env.MESH_PAIRING_MODE === "qr") {
                 console.log(`PAIRING_QR ${qr}`);
             }
-            // WhatsApp accepts the pairing request after the socket has started connecting.
-            if (connection === "connecting") setTimeout(requestPairingCode, 1500);
+            // The QR-ready event means the socket is ready for the pairing IQ.
+            // WhatsApp may emit this event even when QR rendering is disabled.
+            if (qr) setTimeout(requestPairingCode, 500);
+            if (connection === "connecting") setTimeout(requestPairingCode, 2500);
         });
 
         if (!state.creds.registered && process.env.MESH_PAIRING_PHONE_NUMBER && process.env.MESH_PAIRING_MODE !== "qr") {
@@ -291,7 +293,7 @@ async function startGifted() {
 								┃ _No new session ID is needed while this service keeps its persistent volume._
 								┃
 ┃ 🔗 *Pairing dashboard:*
-┃ ${MESHTECH_PAIRING_URL}
+┃ ${MESHTECH_PAIRING_URL || "Deploy npm run start:multi-user, then open /pairing.html"}
 ┃ 📢 *Channel:* ${MESHTECH_CHANNEL_URL}
 ┃ 👥 *Community:* ${MESHTECH_GROUP_URL}
 ╰━━━━━━━━━━━━━━━━━━━━━━━━━━┈⊷`;
@@ -299,21 +301,19 @@ async function startGifted() {
 	    image: { url: MESHTECH_LOGO_URL },
 	    text: connectionMsg,
 
-    buttons: [
-        {
+                    buttons: [
+        ...(MESHTECH_PAIRING_URL ? [{
             name: "cta_url",
             buttonParamsJson: JSON.stringify({
-	                display_text: "🌐 Open Dashboard",
-	                url: MESHTECH_PAIRING_URL,
+                display_text: "🌐 Open Dashboard",
+                url: MESHTECH_PAIRING_URL,
             }),
-        },
-
+        }] : []),
         {
             name: "cta_url",
             buttonParamsJson: JSON.stringify({
                 display_text: "📢 Updates",
-                url:
-	                    MESHTECH_CHANNEL_URL,
+                url: MESHTECH_CHANNEL_URL,
             }),
         },
     ],

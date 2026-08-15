@@ -9,15 +9,17 @@ const createSocketConfig = (version, state, logger) => {
     return {
         version,
         logger: pino({ level: 'silent' }),
-        browser: ['Ubuntu', 'Chrome', '22.04.4'],
+        // WhatsApp pairing is sensitive to the browser fingerprint. Keep this
+        // on a stable Ubuntu/Chrome identity rather than the host OS version.
+        browser: ['Ubuntu', 'Chrome', '20.0.04'],
         auth: {
             creds: state.creds,
             keys: makeCacheableSignalKeyStore(state.keys, logger)
         },
         cachedGroupMetadata,
         userDevicesCache: _userDevicesCache,
-        connectTimeoutMs: 15000,
-        defaultQueryTimeoutMs: 20000,
+        connectTimeoutMs: 60000,
+        defaultQueryTimeoutMs: 30000,
         keepAliveIntervalMs: 20000,
         fireInitQueries: false,
         markOnlineOnConnect: true,

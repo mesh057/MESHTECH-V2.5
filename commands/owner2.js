@@ -413,77 +413,16 @@ gmd(
     on: "text",
     react: "🔗",
     category: "owner",
-    description: "Generate WhatsApp pairing code",
+    description: "Show the self-hosted WhatsApp pairing instructions",
   },
   async (from, Gifted, conText) => {
-    const { body, reply, react, botName, botFooter } = conText;
-
-    const number = body.split(" ")[1];
-    if (!number) return reply("Usage: pair 2557XXXXXXX");
-
-    const cleanNumber = number.replace(/[^0-9]/g, "");
-    if (cleanNumber.length < 10) {
-      return reply("❌ Invalid number");
-    }
-
-    await react("⏳");
-
-    try {
-      const url = `https://session.clevertech.qzz.io/code?number=${cleanNumber}&type=short`;
-
-      const { data } = await axios.get(url, { timeout: 60000 });
-
-      if (!data || !data.code) {
-        await react("❌");
-        return reply("❌ No pairing code returned");
-      }
-
-      const code = data.code;
-      const fallback = data.fallback;
-
-      let msg =
-`╭══〘〘 🔗 PAIRING CODE 〙〙═⊷
-┃ 📱 Number: ${cleanNumber}
-┃ 🔑 Code: ${code}
-┃ ⚙️ Mode: ${fallback ? "Fallback" : "Short"}
-╰━━━━━━━━━━━━━━━━━━━⬣`;
-
-      await react("✅");
-
-      await sendButtons(Gifted, from, {
-        title: "🔗 WHATSAPP PAIRING SYSTEM",
-        text: msg,
-        footer: botFooter || botName || "Bot",
-
-        buttons: [
-          {
-            name: "cta_copy",
-            buttonParamsJson: JSON.stringify({
-              display_text: "📋 Copy Code",
-              copy_code: code,
-            }),
-          },
-          {
-            name: "cta_copy",
-            buttonParamsJson: JSON.stringify({
-              display_text: "📱 Copy Number",
-              copy_code: cleanNumber,
-            }),
-          },
-          {
-            name: "cta_url",
-            buttonParamsJson: JSON.stringify({
-              display_text: "🌐 Open API",
-              url: url,
-            }),
-          },
-        ],
-      });
-
-    } catch (err) {
-      console.error(err);
-      await react("❌");
-      return reply("❌ Error generating pairing code");
-    }
+    const { reply, react } = conText;
+    await react("ℹ️");
+    return reply(
+      "🔗 *Use the MESHTECH pairing service*\n\n" +
+      "This bot no longer uses third-party pairing websites because their codes may be rejected by WhatsApp.\n\n" +
+      "Deploy with `npm run start:multi-user`, then open your own service URL at `/pairing.html`.\n\n" +
+      "Enter the full international number using digits only, generate a fresh code, and use WhatsApp → Linked devices → Link a device → Link with phone number instead."
+    );
   }
 );
