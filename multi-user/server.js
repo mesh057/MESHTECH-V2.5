@@ -81,7 +81,8 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     const ip = req.socket.remoteAddress || 'unknown';
 
-    if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/dashboard' || url.pathname === '/dashboard.html')) return page(res, 'dashboard.html');
+    if (req.method === 'GET' && url.pathname === '/') return page(res, 'pairing.html');
+    if (req.method === 'GET' && (url.pathname === '/dashboard' || url.pathname === '/dashboard.html')) return page(res, 'dashboard.html');
     if (req.method === 'GET' && url.pathname === '/pairing.html') return page(res, 'pairing.html');
     if (req.method === 'GET' && url.pathname === '/health') return json(res, 200, { status: 'alive', multiUser: true, active: manager.count(), uptime: process.uptime() });
 
