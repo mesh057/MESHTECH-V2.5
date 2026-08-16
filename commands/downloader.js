@@ -359,7 +359,7 @@ gmd(
             ];
 
             const t0 = Date.now();
-            const result = await Promise.any(
+            let result = await Promise.any(
                 endpoints.map(endpoint => {
                     const apiUrl = `${GiftedTechApi}/api/download/${endpoint}?apikey=${GiftedApiKey}&url=${encodeURIComponent(q)}`;
                     return axios.get(apiUrl, { timeout: 20000 }).then(res => {
@@ -370,6 +370,27 @@ gmd(
                     });
                 })
             ).catch(() => null);
+
+            if (!result) {
+                try {
+                    const linked = await axios.get("https://tikwm.com/api/", {
+                        params: { url: q },
+                        timeout: 40000,
+                    });
+                    const data = linked.data?.code === 0 ? linked.data.data : null;
+                    if (data?.play) {
+                        result = {
+                            title: data.title || data.content_desc?.join(" ") || "TikTok Video",
+                            video: data.play,
+                            music: data.music_info?.play || data.music || null,
+                            cover: data.cover || data.origin_cover,
+                            author: { name: data.author?.nickname || data.author?.unique_id || "Unknown" },
+                        };
+                    }
+                } catch (fallbackError) {
+                    console.error("TikWM fallback error:", fallbackError.message);
+                }
+            }
 
             if (!result) {
                 await react("❌");
