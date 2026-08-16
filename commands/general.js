@@ -535,7 +535,8 @@ gmd(
       const uptime = formatUptime(process.uptime());
       const hour = Number(new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone }).format(now));
       const greeting = hour >= 5 && hour < 12 ? "🌅 Good Morning" : hour >= 12 && hour < 17 ? "☀️ Good Afternoon" : hour >= 17 && hour < 21 ? "🌆 Good Evening" : "🌙 Good Night";
-      const ownerName = String((await getSetting("OWNER_NAME")) || botName || "MESH");
+      const configuredOwnerName = String((await getSetting("OWNER_NAME")) || "").trim();
+      const ownerName = configuredOwnerName && configuredOwnerName.toLowerCase() !== "mesh tech" ? configuredOwnerName : "MESHACK N";
       const ownerNumber = String((await getSetting("OWNER_NUMBER")) || Gifted?.user?.id?.split(":")?.[0] || "Not Set").replace(/\D/g, "") || "Not Set";
       const activeUsers = getActiveUserCount();
       const connectedBots = Gifted?.user?.id ? "1 Live" : "0 Offline";
