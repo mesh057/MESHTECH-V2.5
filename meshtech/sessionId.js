@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const zlib = require('zlib');
 
 function readPersistedCredentials(authInfoDir) {
   const credsPath = path.join(authInfoDir, 'creds.json');
@@ -23,10 +22,12 @@ function readPersistedCredentials(authInfoDir) {
   }
 }
 
+// V2.2-compatible format: raw creds.json bytes encoded as Base64.
+// The prefix is intentionally preserved exactly for restore compatibility.
 function createMeshTechSessionId(authInfoDir) {
   const raw = readPersistedCredentials(authInfoDir);
   if (!raw || !raw.length) return null;
-  return `MeshTech~${zlib.gzipSync(raw).toString('base64')}`;
+  return `MESH-TECH-MD:~${raw.toString('base64')}`;
 }
 
 module.exports = { readPersistedCredentials, createMeshTechSessionId };
