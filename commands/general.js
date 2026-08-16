@@ -345,7 +345,7 @@ gmd(
     const body = categoryCommands
       .map((command, index) => {
         const prefix = command.on === "body" ? "" : botPrefix;
-        return `║${String(index + 1).padStart(2, "0")} ⟿ ${toBold(`${prefix}${command.pattern}`)} ୧⍤⃝${commandEmoji(command)}`;
+        return `║${String(index + 1).padStart(2, "0")} ⟿ ୧⍤⃝${commandEmoji(command)} ${toBold(`${prefix}${command.pattern}`)} ୧⍤⃝${commandEmoji(command)}`;
       })
       .join("\n");
 
@@ -498,7 +498,7 @@ gmd(
 
 	      commands.forEach((gmd, index) => {
 	        if (gmd.pattern && gmd.description) {
-	          list += `║ ${String(index + 1).padStart(3, "0")} ⟿ ${toBold(`${botPrefix}${gmd.pattern}`)} ${commandEmoji(gmd)} — ${gmd.description}\n`;
+	          list += `║ ${String(index + 1).padStart(3, "0")} ⟿ ୧⍤⃝${commandEmoji(gmd)} ${toBold(`${botPrefix}${gmd.pattern}`)} ୧⍤⃝${commandEmoji(gmd)} — ${gmd.description}\n`;
 	        }
 	      });
 
@@ -652,7 +652,7 @@ gmd(
         const rows = categorized[category].map((command) => {
           commandNumber += 1;
           const prefix = command.isBody ? "" : botPrefix;
-          return `║${String(commandNumber).padStart(3, "0")} ⟿ ${toBold(`${prefix}${command.pattern}`)} ୧⍤⃝${meta.emoji}`;
+          return `║${String(commandNumber).padStart(3, "0")} ⟿ ୧⍤⃝${meta.emoji} ${toBold(`${prefix}${command.pattern}`)} ୧⍤⃝${meta.emoji}`;
         }).join("\n");
         return `║୧⍤⃝${meta.emoji} ${toBold(meta.label)}\n${rows}`;
       }).join("\n╟──────────────────\n");
