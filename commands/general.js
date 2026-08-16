@@ -786,13 +786,23 @@ gmd(
       const connection = Gifted?.user?.id ? "1 Live" : "0 Offline";
       const number = String(ownerNumber || Gifted?.user?.id?.split(":")?.[0] || "Not Set").replace(/\D/g, "") || "Not Set";
       const memory = `${formatBytes(process.memoryUsage().rss)}/${formatBytes(totalMemoryBytes)}`;
-      const text = `╭━━━〔 *${botName || "MESH-TECH MD BOT"}* 〕━━━┈⊷
+      const text = `╔══════════════════════╗
+      👾 *${botName || "MESH-TECH MD"}* 👾
+╚══════════════════════╝
+
+😈 *I'M ALIVE MATE!* 😡
+
+☠️ *WE ARE LEGION*
+☠️ *WE DO NOT FORGIVE*
+☠️ *WE DO NOT FORGET*
+🔥 *EXPECT US ALWAYS* 🔥
+
+━━━━━━━━━━━━━━━━━━━━━━━
 ┃ ${greeting}
-┃ 🔥 *Mode:* ${String(botMode || "PUBLIC").toUpperCase()}|FULL POWER
-┃ 💀 *Protocol:* PHANTOM CORE
 ┃ 👑 *Owner:* ${ownerName || "MESHACK N"}
 ┃ 📞 *Number:* ${number}
 ┃ ⚙️ *Version:* ${botVersion || "V2.5"}
+┃ 🔥 *Mode:* ${String(botMode || "PUBLIC").toUpperCase()} | FULL POWER
 ┃ ⏳ *Uptime:* ${days}d ${hours}h ${minutes}m ${seconds}s
 ┃ 📅 *Date:* ${formattedDate}
 ┃ 🕒 *Time:* ${formattedTime}
@@ -801,7 +811,9 @@ gmd(
 ┃ 🤖 *Bots Connected:* ${connection}
 ┃ 📱 *Device:* ${process.env.DEVICE_NAME || "ANDROID-CORE"}
 ┃ 🧠 *RAM:* ${memory}
-╰━━━━━━━━━━━━━━━━━━━━━━━━━━┈⊷`;
+━━━━━━━━━━━━━━━━━━━━━━━
+💀 *Ready for your next command...*
+━━━━━━━━━━━━━━━━━━━━━━━`;
       await Gifted.sendMessage(from, { text }, { quoted: mek });
       await react("✅");
     } catch (error) {
