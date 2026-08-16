@@ -530,7 +530,7 @@ gmd(
 gmd(
   {
     pattern: "menu",
-    aliases: ["help", "men", "allmenu"],
+    aliases: ["men", "allmenu"],
     react: "🪀",
     category: "general",
     description: "Fetch bot main menu",
