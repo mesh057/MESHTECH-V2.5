@@ -111,7 +111,7 @@ const server = http.createServer(async (req, res) => {
       fs.mkdirSync(authDir, { recursive: true });
       if (manager.get(phoneNumber)) manager.stop(phoneNumber);
 
-      const importedMeshTechSession = /^(?:MESH-TECH-MD:~|MeshTech~).+/i.test(sessionText) ? sessionText : '';
+      const importedMeshTechSession = /^MeshTech~.+/i.test(sessionText) ? sessionText : '';
       if (!importedMeshTechSession) writeRawCredentials(authDir, sessionText);
       const session = await manager.start(phoneNumber, false, true, importedMeshTechSession);
       return json(res, 200, { success: true, message: 'Session restored successfully!', phoneNumber, status: session.status });
