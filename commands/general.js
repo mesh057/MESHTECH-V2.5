@@ -19,6 +19,31 @@ const { sendButtons } = require("gifted-btns");
 const { getSetting } = require("../meshtech/database/settings");
 const MESHTECH_LOGO_URL = "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
 
+const COMMAND_EMOJIS = {
+  owner: "🐦‍🔥",
+  download: "📷",
+  group: "👥",
+  auto: "⚙️",
+  ai: "🧠",
+  github: "🐙",
+  logo: "🎨",
+  tools: "🛠️",
+  text: "📝",
+  utility: "🔧",
+  exploits: "⚡",
+  photo: "🖼️",
+  react: "💐",
+  game: "🎮",
+  fun: "🎉",
+  anime: "🌸",
+  general: "✨",
+};
+
+function commandEmoji(command) {
+  const category = String(command.category || "general").toLowerCase();
+  return COMMAND_EMOJIS[category] || "୧⍤⃝💐";
+}
+
 gmd(
   {
     pattern: "join",
@@ -275,13 +300,13 @@ gmd(
     const body = categoryCommands
       .map((command, index) => {
         const prefix = command.on === "body" ? "" : botPrefix;
-        return `║ ${String(index + 1).padStart(2, "0")} ⟿ ${toBold(`${prefix}${command.pattern}`)}`;
+        return `║ ${String(index + 1).padStart(2, "0")} ⟿ ${toBold(`${prefix}${command.pattern}`)} ${commandEmoji(command)}`;
       })
       .join("\n");
 
     await sendButtons(Gifted, from, {
       title: `📂 ${categoryTitle} MENU`,
-      text: `╔═❖•⊰ *${toBold(`${categoryTitle} COMMANDS`)}* ⊱•❖═╗\n${body}\n╚═══════════════════╝`,
+      text: `╔═❖•⊰ *${toBold(`${categoryTitle} COMMANDS`)}* ⊱•❖═╗\n║୧⍤⃝💐 Select a command from this branch\n╚═══════════════════╝\n${readmore}\n${body}\n╚═══════════════════╝`,
       footer: `> *${botFooter}*`,
       buttons: [
         { id: `${botPrefix}menu`, text: "📂 All Categories" },
@@ -428,7 +453,7 @@ gmd(
 
 	      commands.forEach((gmd, index) => {
 	        if (gmd.pattern && gmd.description) {
-	          list += `• ${botPrefix}${gmd.pattern} — ${gmd.description}\n`;
+	          list += `║ ${String(index + 1).padStart(3, "0")} ⟿ ${toBold(`${botPrefix}${gmd.pattern}`)} ${commandEmoji(gmd)} — ${gmd.description}\n`;
 	        }
 	      });
 
@@ -556,8 +581,12 @@ gmd(
         });
       }
 
+      const categoryPreview = sortedCategories
+        .map((category, index) => `║${String(index + 1).padStart(2, "0")} ☞ ${toBold(`${category.toUpperCase()} MENU`)} ${commandEmoji({ category })}`)
+        .join("\n");
+
       const menuMessage = {
-        text: `${header}\n\n╔═❖•⊰ *${toBold("𝗠𝗲𝘀𝗵-𝗧𝗲𝗰𝗵 𝗠𝗱 𝗕𝗼𝘁")}* ⊱•❖═╗\n║୧⍤⃝💐 Select a category below\n╚═══════════════════╝`,
+        text: `${header}\n\n${readmore}\n\n╔═❖•⊰ *${toBold("𝗠𝗲𝘀𝗵-𝗧𝗲𝗰𝗵 𝗠𝗱 𝗕𝗼𝘁")}* ⊱•❖═╗\n${categoryPreview}\n╚═══════════════════╝\n\n୧⍤⃝💐 Open the dropdown below to browse every command branch.`,
         title: "📂 COMMAND DROPDOWN",
         footerText: `> *${botFooter}*`,
         buttonText: "📜 OPEN COMMAND MENUS",
