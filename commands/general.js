@@ -300,7 +300,7 @@ gmd(
     const body = categoryCommands
       .map((command, index) => {
         const prefix = command.on === "body" ? "" : botPrefix;
-        return `║ ${String(index + 1).padStart(2, "0")} ⟿ ${toBold(`${prefix}${command.pattern}`)} ${commandEmoji(command)}`;
+        return `║${String(index + 1).padStart(2, "0")} ⟿ ${toBold(`${prefix}${command.pattern}`)} ୧⍤⃝${commandEmoji(command)}`;
       })
       .join("\n");
 
@@ -582,7 +582,7 @@ gmd(
       }
 
       const categoryPreview = sortedCategories
-        .map((category, index) => `║${String(index + 1).padStart(2, "0")} ☞ ${toBold(`${category.toUpperCase()} MENU`)} ${commandEmoji({ category })}`)
+        .map((category) => `║୧⍤⃝${commandEmoji({ category })} ${toBold(`${category.toUpperCase()} MENU`)}`)
         .join("\n");
 
       const menuMessage = {
