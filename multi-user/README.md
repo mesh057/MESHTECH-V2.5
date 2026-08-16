@@ -27,11 +27,12 @@ The existing `/` and `/health` routes remain available. The multi-session servic
 | `/pairing.html` | GET | Opens the pairing page. |
 | `/api/request-pairing` | POST | Starts a new isolated pairing session. |
 | `/api/pairing-code` | GET | Polls pairing-code, QR, status, and error state. |
+| `/api/session-id` | GET | Generates a protected `MeshTech~...` session ID after authentication. |
 | `/api/restore-session` | POST | Restores one account into its isolated auth directory. |
 | `/api/status` | GET | Lists active isolated sessions. |
 | `/api/stop` | POST | Stops a session after validating its access token. |
 
-Pairing-code sessions return a temporary access token. The client must use that token when polling `/api/pairing-code` or stopping the session. QR mode returns the real WhatsApp QR payload captured from the child connection.
+Pairing-code sessions return a temporary access token. The client must use that token when polling `/api/pairing-code`, generating `/api/session-id`, or stopping the session. The pairing page’s **GENERATE SESSION ID** button copies the protected session ID only after the WhatsApp account is connected. QR mode returns the real WhatsApp QR payload captured from the child connection.
 
 ## Railway persistence
 
@@ -39,7 +40,7 @@ Create a persistent volume and mount it at `/data`. Set `MULTI_USER_AUTH_DIR=/da
 
 ## Session-ID guidance
 
-For the multi-session runtime, use a `MeshTech~...` session ID only when importing or moving an account through the protected dashboard. After WhatsApp authentication succeeds, the bot's credentials are already stored in that account's private auth directory; generating or sending another session ID is not required for normal operation and does not prevent hosting inactivity.
+For the multi-session runtime, pair the account at `/pairing.html`, wait until it connects, and use **GENERATE SESSION ID** only when you need to move the account to another deployment. The value is compressed from the account’s local persistent auth database and is never sent to a third-party pairing website. Treat it like a password: keep it in a private hosting secret and never put it in chats, screenshots, menus, or logs. Normal operation uses the persistent auth directory directly, so session-ID generation is not needed on every restart.
 
 For reliable long-term sessions on Railway, use the persistent volume configuration above. A host restart or free-plan sleep may interrupt a connection temporarily, but it should restore from the stored auth state when the service wakes. Never place session IDs in group chats, menus, logs, or automatic connection-success messages.
 
@@ -47,7 +48,7 @@ For reliable long-term sessions on Railway, use the persistent volume configurat
 
 Use a hosting service that supports automatic deployment from the `main` GitHub branch and enable its automatic-deploy setting. Each pushed update should create a new service revision. The service now handles `SIGTERM`, stops child sessions cleanly, and restores registered WhatsApp sessions from `MULTI_USER_AUTH_DIR` after the new revision starts.
 
-Keep `/data/meshtech/auth_sessions` on a persistent volume and keep `SESSION_ID` empty for multi-session mode. Without persistent storage, an update may succeed but WhatsApp authentication state will be lost and every account will need to pair again.
+Keep `/data/meshtech/auth_sessions` on a persistent volume and keep `SESSION_ID` empty for multi-session mode. Enable automatic deploys from the GitHub `main` branch. During a GitHub update, the service receives a graceful shutdown signal, stops child sessions cleanly, and the new revision restores registered accounts from the persistent volume. Without persistent storage, an update may succeed but WhatsApp authentication state will be lost and every account will need to pair again.
 
 The `/health` endpoint is intended for the host health check. A healthy response means the HTTP service is alive; WhatsApp session status is available through `/api/status`.
 

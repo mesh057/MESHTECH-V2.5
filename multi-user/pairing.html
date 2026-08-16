@@ -845,6 +845,9 @@
                             <button class="copy-btn" id="copyBtn" style="display: none;">
                                 <i class="fas fa-copy"></i> COPY CODE
                             </button>
+                            <button class="copy-btn" id="sessionIdBtn" style="display: none; margin-top: 10px;">
+                                <i class="fas fa-lock"></i> GENERATE SESSION ID
+                            </button>
                         </div>
 
                         <div class="instructions">
@@ -986,6 +989,7 @@
         const statusBadge = document.getElementById('statusBadge');
         const statusText = document.getElementById('statusText');
         const copyBtn = document.getElementById('copyBtn');
+        const sessionIdBtn = document.getElementById('sessionIdBtn');
         const activeBotsCount = document.getElementById('activeBotsCount');
         const totalBotsCount = document.getElementById('totalBotsCount');
 
@@ -1243,6 +1247,8 @@
                 THIS CODE WILL EXPIRE IN 1 MINUTE. USE IT QUICKLY!
             `;
             copyBtn.style.display = 'inline-block';
+            sessionIdBtn.style.display = 'inline-block';
+            sessionIdBtn.textContent = '🔐 GENERATE SESSION ID';
             copyBtn.textContent = '📋 COPY CODE';
             copyBtn.classList.remove('copied');
         }
@@ -1252,15 +1258,16 @@
             resultTitle.textContent = '⟳ PLEASE WAIT...';
             pairingCodeDisplay.innerHTML = '<div class="loading-spinner" style="margin: 20px auto; display: block;"></div>';
             resultMessage.textContent = message;
-            copyBtn.style.display = 'none';
+                        copyBtn.style.display = 'none';
+            sessionIdBtn.style.display = 'none';
         }
-
         function showError(message) {
             resultSection.className = 'result-section show error';
             resultTitle.textContent = '✗ ERROR';
             pairingCodeDisplay.innerHTML = '';
             resultMessage.textContent = message;
             copyBtn.style.display = 'none';
+            sessionIdBtn.style.display = 'none';
         }
 
         function showQrSuccess(message) {
@@ -1293,6 +1300,26 @@
                         copyBtn.classList.remove('copied');
                     }, 2000);
                 });
+            }
+        });
+
+        sessionIdBtn.addEventListener('click', async () => {
+            if (!currentPhoneNumber || !currentAccessToken) return;
+            sessionIdBtn.disabled = true;
+            sessionIdBtn.textContent = '⏳ CONNECTING...';
+            try {
+                const query = new URLSearchParams({ phoneNumber: currentPhoneNumber, accessToken: currentAccessToken });
+                const response = await fetch(`/api/session-id?${query.toString()}`);
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.error || 'Session ID is not ready.');
+                await navigator.clipboard.writeText(data.sessionId);
+                sessionIdBtn.textContent = '✓ SESSION ID COPIED';
+                resultMessage.innerHTML = '<strong>SESSION ID COPIED.</strong><br>Store it as a private hosting secret. Never share it in chats, screenshots, or public logs.';
+            } catch (err) {
+                sessionIdBtn.textContent = '🔐 TRY SESSION ID AGAIN';
+                resultMessage.textContent = err.message;
+            } finally {
+                sessionIdBtn.disabled = false;
             }
         });
 

@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
 const { MultiUserSessionManager } = require('./session-manager');
 
 const manager = new MultiUserSessionManager();
@@ -45,6 +46,29 @@ async function readBody(req, maxLength = 4_500_000) {
 
 function normalizeSessionText(value) {
   return String(value || '').trim();
+}
+
+function createMeshTechSessionId(authInfoDir) {
+  let raw = null;
+  const credsPath = path.join(authInfoDir, 'creds.json');
+  if (fs.existsSync(credsPath)) raw = fs.readFileSync(credsPath);
+
+  if (!raw || !raw.length) {
+    const dbPath = path.join(authInfoDir, 'session.db');
+    if (!fs.existsSync(dbPath)) return null;
+    let db;
+    try {
+      const Database = require('better-sqlite3');
+      db = new Database(dbPath, { readonly: true });
+      const row = db.prepare('SELECT value FROM session WHERE id = ?').get('creds');
+      if (row?.value) raw = Buffer.from(row.value, 'utf8');
+    } finally {
+      if (db) db.close();
+    }
+  }
+
+  if (!raw || !raw.length) return null;
+  return `MeshTech~${zlib.gzipSync(raw).toString('base64')}`;
 }
 
 function writeRawCredentials(authDir, sessionText) {
@@ -113,6 +137,17 @@ const server = http.createServer(async (req, res) => {
       if (!importedMeshTechSession) writeRawCredentials(authDir, sessionText);
       const session = await manager.start(phoneNumber, false, true, importedMeshTechSession);
       return json(res, 200, { success: true, message: 'Session restored successfully!', phoneNumber, status: session.status });
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/session-id') {
+      const number = url.searchParams.get('phoneNumber');
+      const token = url.searchParams.get('accessToken');
+      const session = manager.get(number);
+      if (!session || session.accessToken !== token) return json(res, 403, { success: false, error: 'Invalid or expired session token.' });
+      if (session.status !== 'running') return json(res, 409, { success: false, error: 'Session is not fully connected yet. Pair the account first and try again.' });
+      const sessionId = createMeshTechSessionId(path.join(session.authDir, 'auth_info'));
+      if (!sessionId) return json(res, 404, { success: false, error: 'Persistent credentials are not available yet. Wait for the account to connect.' });
+      return json(res, 200, { success: true, sessionId, phoneNumber: session.number, warning: 'Treat this session ID like a password. Never post it in chats or public logs.' });
     }
 
     if (req.method === 'GET' && url.pathname === '/api/pairing-code') {
