@@ -1,8 +1,8 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const zlib = require('zlib');
 const { MultiUserSessionManager } = require('./session-manager');
+const { createMeshTechSessionId } = require('../meshtech/sessionId');
 
 const manager = new MultiUserSessionManager();
 const port = Number(process.env.MULTI_USER_PORT || process.env.PORT || 5000);
@@ -46,29 +46,6 @@ async function readBody(req, maxLength = 4_500_000) {
 
 function normalizeSessionText(value) {
   return String(value || '').trim();
-}
-
-function createMeshTechSessionId(authInfoDir) {
-  let raw = null;
-  const credsPath = path.join(authInfoDir, 'creds.json');
-  if (fs.existsSync(credsPath)) raw = fs.readFileSync(credsPath);
-
-  if (!raw || !raw.length) {
-    const dbPath = path.join(authInfoDir, 'session.db');
-    if (!fs.existsSync(dbPath)) return null;
-    let db;
-    try {
-      const Database = require('better-sqlite3');
-      db = new Database(dbPath, { readonly: true });
-      const row = db.prepare('SELECT value FROM session WHERE id = ?').get('creds');
-      if (row?.value) raw = Buffer.from(row.value, 'utf8');
-    } finally {
-      if (db) db.close();
-    }
-  }
-
-  if (!raw || !raw.length) return null;
-  return `MeshTech~${zlib.gzipSync(raw).toString('base64')}`;
 }
 
 function writeRawCredentials(authDir, sessionText) {

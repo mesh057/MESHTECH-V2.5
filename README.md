@@ -61,6 +61,8 @@ For a single-session deployment, generate or import a complete `MeshTech~...` se
 
 ⚠️ A deployed multi-session service requires persistent storage for `MULTI_USER_AUTH_DIR`; otherwise the account must be paired again after every restart.
 
+The menu now groups the complete 300+ command catalog into these branches: **AI**, **ConvErTer**, **CpAnEL**, **DownLoADer**, **GAmE**, **GEnErAL**, **Group**, **LoGo**, **notEs**, **ownEr**, **rELIGIon**, **sEArCH**, **sports**, **tEmPmAIL**, **tooLs**, **upLOADEr**, and **utILity**. Use `.menu` for the full grouped catalog, `.alive` for live status, and `.session` as the owner to generate a private recovery session ID.
+
 </details>
 
 

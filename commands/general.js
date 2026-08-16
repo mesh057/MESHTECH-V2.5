@@ -31,6 +31,15 @@ const COMMAND_EMOJIS = {
   tools: "🛠️",
   text: "📝",
   utility: "🔧",
+  converter: "💐",
+  cpanel: "💐",
+  downloader: "💐",
+  notes: "💐",
+  religion: "💐",
+  search: "💐",
+  sports: "💐",
+  tempmail: "💐",
+  uploader: "💐",
   exploits: "⚡",
   photo: "🖼️",
   react: "💐",
@@ -42,7 +51,42 @@ const COMMAND_EMOJIS = {
 
 function commandEmoji(command) {
   const category = String(command.category || "general").toLowerCase();
-  return COMMAND_EMOJIS[category] || "୧⍤⃝💐";
+  return COMMAND_EMOJIS[category] || "💐";
+}
+
+const MENU_CATEGORY_ORDER = [
+  "ai", "converter", "cpanel", "downloader", "game", "general", "group", "logo",
+  "notes", "owner", "religion", "search", "sports", "tempmail", "tools", "uploader", "utility",
+];
+
+const MENU_CATEGORY_META = {
+  ai: { label: "AI mEnu", emoji: "🧠" },
+  converter: { label: "ConvErTer mEnu", emoji: "💐" },
+  cpanel: { label: "CpAnEL mEnu", emoji: "💐" },
+  downloader: { label: "DownLoADer mEnu", emoji: "💐" },
+  game: { label: "GAmE mEnu", emoji: "🎮" },
+  general: { label: "GEnErAL mEnu", emoji: "✨" },
+  group: { label: "Group mEnu", emoji: "👥" },
+  logo: { label: "LoGo mEnu", emoji: "🎨" },
+  notes: { label: "notEs mEnu", emoji: "💐" },
+  owner: { label: "ownEr mEnu", emoji: "🐦‍🔥" },
+  religion: { label: "rELIGIon mEnu", emoji: "💐" },
+  search: { label: "sEArCH mEnu", emoji: "💐" },
+  sports: { label: "sports mEnu", emoji: "💐" },
+  tempmail: { label: "tEmPmAIL mEnu", emoji: "💐" },
+  tools: { label: "tooLs mEnu", emoji: "🛠️" },
+  uploader: { label: "upLOADEr mEnu", emoji: "💐" },
+  utility: { label: "utILity mEnu", emoji: "🔧" },
+};
+
+function menuCategoryKey(value) {
+  const key = String(value || "general").toLowerCase();
+  return MENU_CATEGORY_META[key] ? key : "utility";
+}
+
+function menuCategoryMeta(value) {
+  const key = menuCategoryKey(value);
+  return { key, ...(MENU_CATEGORY_META[key] || MENU_CATEGORY_META.utility) };
 }
 
 gmd(
@@ -546,23 +590,20 @@ gmd(
       const bodyCmds = commands.filter((c) => c.pattern && c.on === "body" && !c.dontAddCommandList);
       const totalCommands = regularCmds.length + bodyCmds.length;
 
-      const categorized = commands.reduce((menu, gmd) => {
-        if (gmd.pattern && !gmd.dontAddCommandList) {
-          if (!menu[gmd.category]) menu[gmd.category] = [];
-          menu[gmd.category].push({
-            pattern: gmd.pattern,
-            isBody: gmd.on === "body",
-          });
-        }
-        return menu;
-      }, {});
-
-      const sortedCategories = Object.keys(categorized).sort((a, b) =>
-        a.localeCompare(b),
-      );
-      for (const cat of sortedCategories) {
-        categorized[cat].sort((a, b) => a.pattern.localeCompare(b.pattern));
+      const categorized = Object.fromEntries(MENU_CATEGORY_ORDER.map((category) => [category, []]));
+      for (const command of commands) {
+        if (!command.pattern || command.dontAddCommandList) continue;
+        const category = menuCategoryKey(command.category);
+        categorized[category].push({
+          pattern: command.pattern,
+          isBody: command.on === "body",
+        });
       }
+
+      for (const category of MENU_CATEGORY_ORDER) {
+        categorized[category].sort((a, b) => a.pattern.localeCompare(b.pattern));
+      }
+      const sortedCategories = MENU_CATEGORY_ORDER.filter((category) => categorized[category].length > 0);
 
       const header = `╭━━━ *${toBold("𝗠𝗘𝗦𝗛-𝗧𝗘𝗖𝗛 𝗠𝗗 𝗕𝗢𝗧")} ━━━╮
 ┃ ${toBold(greeting)}
@@ -581,11 +622,14 @@ gmd(
 ┃ 🧠 *${toBold("RAM:")}* ${monospace(liveRam)}
 ╰━━━━━━━━━━━━━━━━━━╯`;
 
-      const rows = sortedCategories.map((category) => ({
-        title: `୧⍤⃝💐 ${toBold(`${category.toUpperCase()} MENU`)}`,
-        description: `${categorized[category].length} command${categorized[category].length === 1 ? "" : "s"} available`,
-        rowId: `${botPrefix}category ${category}`,
-      }));
+      const rows = sortedCategories.map((category) => {
+        const meta = menuCategoryMeta(category);
+        return {
+          title: `୧⍤⃝${meta.emoji} ${toBold(meta.label)}`,
+          description: `${categorized[category].length} command${categorized[category].length === 1 ? "" : "s"} available`,
+          rowId: `${botPrefix}category ${category}`,
+        };
+      });
 
       const sections = [];
       for (let index = 0; index < rows.length; index += 10) {
@@ -596,17 +640,22 @@ gmd(
       }
 
       const categoryPreview = sortedCategories
-        .map((category) => `║୧⍤⃝${commandEmoji({ category })} ${toBold(`${category.toUpperCase()} MENU`)}`)
-        .join("\n");
-
-      const fullCommandList = commands
-        .filter((command) => command.pattern && !command.dontAddCommandList)
-        .sort((a, b) => String(a.pattern).localeCompare(String(b.pattern)))
-        .map((command, index) => {
-          const prefix = command.on === "body" ? "" : botPrefix;
-          return `║${String(index + 1).padStart(3, "0")} ⟿ ${toBold(`${prefix}${command.pattern}`)} ୧⍤⃝${commandEmoji(command)}`;
+        .map((category) => {
+          const meta = menuCategoryMeta(category);
+          return `║୧⍤⃝${meta.emoji} ${toBold(meta.label)}`;
         })
         .join("\n");
+
+      let commandNumber = 0;
+      const fullCommandList = sortedCategories.map((category) => {
+        const meta = menuCategoryMeta(category);
+        const rows = categorized[category].map((command) => {
+          commandNumber += 1;
+          const prefix = command.isBody ? "" : botPrefix;
+          return `║${String(commandNumber).padStart(3, "0")} ⟿ ${toBold(`${prefix}${command.pattern}`)} ୧⍤⃝${meta.emoji}`;
+        }).join("\n");
+        return `║୧⍤⃝${meta.emoji} ${toBold(meta.label)}\n${rows}`;
+      }).join("\n╟──────────────────\n");
 
       const menuMessage = {
         text: `${header}\n\n${readmore}\n\n╔═❖•⊰ *${toBold("𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗠𝗘𝗡𝗨")}* ⊱•❖═╗\n║୧⍤⃝💐 ${toBold("All loaded commands")}\n╚═══════════════════╝\n${fullCommandList}\n╚═══════════════════╝\n\n${readmore}\n\n╔═❖•⊰ *${toBold("𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗖𝗔𝗧𝗘𝗚𝗢𝗥𝗜𝗘𝗦")}* ⊱•❖═╗\n${categoryPreview}\n╚═══════════════════╝\n\n୧⍤⃝💐 Open the dropdown below to browse every command branch.`,
@@ -706,6 +755,57 @@ gmd(
     } catch (error) {
       console.error("Error processing quoted message:", error);
       await reply(`❌ An error occurred while processing the message.`);
+    }
+  },
+);
+
+gmd(
+  {
+    pattern: "alive",
+    aliases: ["status", "online"],
+    react: "🌐",
+    category: "general",
+    description: "Show live bot status, uptime, activity, and resources.",
+  },
+  async (from, Gifted, conText) => {
+    const { mek, react, reply, botName, botMode, botVersion, ownerName, ownerNumber, timeZone, botPrefix } = conText;
+    try {
+      const now = new Date();
+      const hour = Number(new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone }).format(now));
+      const greeting = hour >= 5 && hour < 12 ? "🌅 Good Morning" : hour >= 12 && hour < 17 ? "☀️ Good Afternoon" : hour >= 17 && hour < 21 ? "🌆 Good Evening" : "🌙 Good Night";
+      const formattedDate = new Intl.DateTimeFormat("en-GB", { timeZone, day: "2-digit", month: "short", year: "numeric" }).format(now).toUpperCase();
+      const formattedTime = new Intl.DateTimeFormat("en-US", { timeZone, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }).format(now);
+      const uptimeSeconds = Math.floor(process.uptime());
+      const days = Math.floor(uptimeSeconds / 86400);
+      const hours = Math.floor((uptimeSeconds % 86400) / 3600);
+      const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+      const seconds = uptimeSeconds % 60;
+      const totalCommands = commands.filter((command) => command.pattern && !command.dontAddCommandList).length;
+      const activeUsers = getActiveUserCount();
+      const connection = Gifted?.user?.id ? "1 Live" : "0 Offline";
+      const number = String(ownerNumber || Gifted?.user?.id?.split(":")?.[0] || "Not Set").replace(/\D/g, "") || "Not Set";
+      const memory = `${formatBytes(process.memoryUsage().rss)}/${formatBytes(totalMemoryBytes)}`;
+      const text = `╭━━━〔 *${botName || "MESH-TECH MD BOT"}* 〕━━━┈⊷
+┃ ${greeting}
+┃ 🔥 *Mode:* ${String(botMode || "PUBLIC").toUpperCase()}|FULL POWER
+┃ 💀 *Protocol:* PHANTOM CORE
+┃ 👑 *Owner:* ${ownerName || "MESHACK N"}
+┃ 📞 *Number:* ${number}
+┃ ⚙️ *Version:* ${botVersion || "V2.5"}
+┃ ⏳ *Uptime:* ${days}d ${hours}h ${minutes}m ${seconds}s
+┃ 📅 *Date:* ${formattedDate}
+┃ 🕒 *Time:* ${formattedTime}
+┃ 📌 *Commands:* ${totalCommands} Loaded
+┃ 👥 *Users:* ${activeUsers} Active (real-time)
+┃ 🤖 *Bots Connected:* ${connection}
+┃ 📱 *Device:* ${process.env.DEVICE_NAME || "ANDROID-CORE"}
+┃ 🧠 *RAM:* ${memory}
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━┈⊷`;
+      await Gifted.sendMessage(from, { text }, { quoted: mek });
+      await react("✅");
+    } catch (error) {
+      console.error("Error processing alive command:", error);
+      await reply(`❌ Alive status failed: ${error.message}`);
     }
   },
 );
