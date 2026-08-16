@@ -59,6 +59,7 @@ const {
     initializeSettings,
     initializeGroupSettings,
     getAllSettings,
+    getSetting,
     DEFAULT_SETTINGS,
     standardizeJid,
     serializeMessage,
@@ -377,7 +378,7 @@ function setupAutoReact(Gifted) {
 
 function setupAntiDelete(Gifted) {
     const botJid = `${Gifted.user?.id.split(":")[0]}@s.whatsapp.net`;
-    const botOwnerJid = botJid;
+    let botOwnerJid = botJid;
 
     const getSender = (ms) => {
         const key = ms.key;
@@ -432,6 +433,8 @@ function setupAntiDelete(Gifted) {
     };
 
     Gifted.ev.on("messages.upsert", async ({ messages }) => {
+        const configuredOwner = String((await getSetting("OWNER_NUMBER")) || "").replace(/\D/g, "");
+        botOwnerJid = configuredOwner ? `${configuredOwner}@s.whatsapp.net` : botJid;
         for (const ms of messages) {
             try {
                 if (!ms?.message) continue;

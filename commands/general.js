@@ -16,7 +16,29 @@ const { gmd, commands, monospace, formatBytes } = require("../meshtech"),
   readmore = more.repeat(4001),
   ram = `${formatBytes(freeMemoryBytes)}/${formatBytes(totalMemoryBytes)}`;
 const { sendButtons } = require("gifted-btns");
+const { getSetting } = require("../meshtech/database/settings");
 const MESHTECH_LOGO_URL = "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
+
+gmd(
+  {
+    pattern: "join",
+    aliases: ["joinus", "groupinvite"],
+    react: "🔗",
+    category: "general",
+    description: "Request the owner’s group invite link",
+  },
+  async (from, Gifted, conText) => {
+    const { reply, react, botName, botFooter } = conText;
+    const inviteLink = await getSetting("GROUP_INVITE_LINK");
+    if (!inviteLink) {
+      return reply("ℹ️ The owner has not configured a group invite yet.");
+    }
+    await Gifted.sendMessage(from, {
+      text: `🔗 *${botName || "MESH TECH MD"} GROUP INVITE*\n\nYou requested to join the owner’s group. Tap the link below to join voluntarily:\n\n${inviteLink}\n\n> *${botFooter || "Please join only if you agree."}*`,
+    });
+    await react("✅");
+  },
+);
 
 gmd(
   {
@@ -264,6 +286,71 @@ gmd(
       buttons: [
         { id: `${botPrefix}menu`, text: "📂 All Categories" },
         { id: `${botPrefix}list`, text: "📜 Full List" },
+      ],
+    });
+    await react("✅");
+  },
+);
+
+const toggleHelpEntries = [
+  { key: "setautoreact", title: "Auto React", usage: "setautoreact on|off|all|dm|groups", detail: "Controls automatic reactions to incoming messages." },
+  { key: "setantidelete", title: "Anti Delete", usage: "setantidelete inchat|indm|off", detail: "Restores deleted messages in chat or forwards them to the owner inbox." },
+  { key: "setantiedit", title: "Anti Edit", usage: "setantiedit on|off|indm|inchat", detail: "Shows edited-message information in the selected destination." },
+  { key: "setchatbot", title: "Chatbot", usage: "setchatbot on|off|audio", detail: "Turns the chatbot response mode on, off, or audio." },
+  { key: "setstartmsg", title: "Start Message", usage: "setstartmsg on|off", detail: "Controls the startup/status message." },
+  { key: "setanticall", title: "Anti Call", usage: "setanticall on|off|block|decline", detail: "Controls incoming WhatsApp call handling." },
+  { key: "setwelcome", title: "Welcome", usage: "setwelcome on|off", detail: "Enables or disables welcome messages in the current group." },
+  { key: "setgoodbye", title: "Goodbye", usage: "setgoodbye on|off", detail: "Enables or disables goodbye messages in the current group." },
+  { key: "setantilink", title: "Anti Link", usage: "setantilink on|warn|delete|kick|off", detail: "Controls link protection in the current group." },
+  { key: "setantibad", title: "Anti Bad Words", usage: "setantibad on|warn|delete|kick|off", detail: "Controls bad-word protection in the current group." },
+];
+
+gmd(
+  {
+    pattern: "togglemenu",
+    aliases: ["toggles", "togglehelp"],
+    description: "Open toggle commands and usage details",
+    react: "🎛️",
+    category: "general",
+  },
+  async (from, Gifted, conText) => {
+    const { botPrefix, botFooter, react, mek } = conText;
+    const rows = toggleHelpEntries.map((entry) => ({
+      title: `🎛️ ${entry.title}`,
+      description: entry.usage,
+      rowId: `${botPrefix}toggleinfo ${entry.key}`,
+    }));
+    await Gifted.sendMessage(from, {
+      text: `╔═❖•⊰ *${toBold("TOGGLE COMMANDS")}* ⊱•❖═╗\n║ Select a feature to view its usage.\n╚═══════════════════╝`,
+      title: "🎛️ TOGGLE HELP",
+      footerText: `> *${botFooter}*`,
+      buttonText: "📋 OPEN TOGGLE COMMANDS",
+      sections: [{ title: "Feature switches", rows }],
+      listType: 1,
+    }, { quoted: mek });
+    await react("✅");
+  },
+);
+
+gmd(
+  {
+    pattern: "toggleinfo",
+    aliases: ["toggleusage"],
+    description: "Show usage for one toggle command",
+    react: "📖",
+    category: "general",
+  },
+  async (from, Gifted, conText) => {
+    const { args, botPrefix, botFooter, react, reply } = conText;
+    const entry = toggleHelpEntries.find((item) => item.key === String(args?.[0] || "").toLowerCase());
+    if (!entry) return reply(`Use ${botPrefix}togglemenu to select a toggle.`);
+    await sendButtons(Gifted, from, {
+      title: `🎛️ ${entry.title}`,
+      text: `╔═❖•⊰ *${toBold(entry.title.toUpperCase())}* ⊱•❖═╗\n\n${entry.detail}\n\n🛠️ *Usage:*\n${botPrefix}${entry.usage}\n╚═══════════════════╝`,
+      footer: `> *${botFooter}*`,
+      buttons: [
+        { id: `${botPrefix}togglemenu`, text: "🎛️ All Toggles" },
+        { id: `${botPrefix}menu`, text: "📂 Main Menu" },
       ],
     });
     await react("✅");

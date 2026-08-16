@@ -137,6 +137,21 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+let shuttingDown = false;
+async function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`[mesh-multi-user] ${signal} received; stopping child sessions safely.`);
+  for (const session of manager.list()) {
+    manager.stop(session.number);
+  }
+  await new Promise((resolve) => server.close(() => resolve()));
+  process.exit(0);
+}
+
+process.once('SIGTERM', () => shutdown('SIGTERM'));
+process.once('SIGINT', () => shutdown('SIGINT'));
+
 async function startServer() {
   const restored = await manager.restoreSavedSessions();
   if (restored.length) console.log(`[mesh-multi-user] Restoring ${restored.length} saved WhatsApp session(s).`);

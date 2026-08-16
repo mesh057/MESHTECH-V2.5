@@ -1147,3 +1147,25 @@ ${
     }
   },
 );
+
+
+gmd(
+  {
+    pattern: "setautoinvite",
+    aliases: ["autoinvite", "groupinvite"],
+    react: "🔗",
+    category: "owner",
+    description: "Set the group invite link used by the opt-in join command",
+  },
+  async (from, Gifted, conText) => {
+    const { q, reply, react, isSuperUser } = conText;
+    if (!isSuperUser) return reply("❌ Owner Only Command!");
+    const link = String(q || "").trim();
+    if (!/^https:\/\/chat\.whatsapp\.com\/[A-Za-z0-9_-]+$/.test(link)) {
+      return reply("❌ Usage: .setautoinvite https://chat.whatsapp.com/INVITE_CODE");
+    }
+    await setSetting("GROUP_INVITE_LINK", link);
+    await react("✅");
+    return reply("✅ Group invite saved. Users can request it with .join.");
+  },
+);

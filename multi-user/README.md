@@ -42,3 +42,15 @@ Create a persistent volume and mount it at `/data`. Set `MULTI_USER_AUTH_DIR=/da
 For the multi-session runtime, use a `MeshTech~...` session ID only when importing or moving an account through the protected dashboard. After WhatsApp authentication succeeds, the bot's credentials are already stored in that account's private auth directory; generating or sending another session ID is not required for normal operation and does not prevent hosting inactivity.
 
 For reliable long-term sessions on Railway, use the persistent volume configuration above. A host restart or free-plan sleep may interrupt a connection temporarily, but it should restore from the stored auth state when the service wakes. Never place session IDs in group chats, menus, logs, or automatic connection-success messages.
+
+## Keeping the bot online during updates
+
+Use a hosting service that supports automatic deployment from the `main` GitHub branch and enable its automatic-deploy setting. Each pushed update should create a new service revision. The service now handles `SIGTERM`, stops child sessions cleanly, and restores registered WhatsApp sessions from `MULTI_USER_AUTH_DIR` after the new revision starts.
+
+Keep `/data/meshtech/auth_sessions` on a persistent volume and keep `SESSION_ID` empty for multi-session mode. Without persistent storage, an update may succeed but WhatsApp authentication state will be lost and every account will need to pair again.
+
+The `/health` endpoint is intended for the host health check. A healthy response means the HTTP service is alive; WhatsApp session status is available through `/api/status`.
+
+## User group invitations
+
+The bot does not silently add people to a group. The owner can save an invite link with `.setautoinvite https://chat.whatsapp.com/INVITE_CODE`. A user can then request the link with `.join` and decide whether to join. The bot must remain an administrator of the group for the invite link to remain useful.
