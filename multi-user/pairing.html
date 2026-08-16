@@ -1306,9 +1306,11 @@
             resultSection.className = 'result-section show error';
             resultTitle.textContent = '✗ ERROR';
             pairingCodeDisplay.innerHTML = '';
-            resultMessage.textContent = message;
+            resultMessage.innerHTML = `${message}<br><br><strong>THE STALE SESSION WAS CLEARED. YOU CAN GENERATE A FRESH CODE NOW.</strong>`;
             copyBtn.style.display = 'none';
             sessionIdBtn.style.display = 'none';
+            submitBtn.disabled = false;
+            btnText.innerHTML = '<i class="fas fa-rotate"></i> TRY FRESH PAIRING';
         }
 
         function showQrSuccess(message) {

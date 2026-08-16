@@ -106,8 +106,12 @@ class MultiUserSessionManager {
   async start(number, useQr = false, restoring = false, importedSessionId = '') {
     const normalized = this.normalizePhoneNumber(number);
     const existing = this.sessions.get(normalized);
-    if (existing && existing.child && !existing.child.killed) return this.publicSession(existing);
-    if (existing) this.sessions.delete(normalized);
+    const existingAlive = existing && existing.child && existing.child.exitCode === null && !existing.child.killed;
+    if (existingAlive) return this.publicSession(existing);
+    if (existing) {
+      if (existing.child && !existing.child.killed) existing.child.kill('SIGTERM');
+      this.sessions.delete(normalized);
+    }
 
     if (!this.hasSessionCapacity(normalized)) {
       const error = new Error(`Maximum active sessions reached (${this.maxInstances}).`);
