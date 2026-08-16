@@ -341,7 +341,8 @@ gmd(
 
     if (!categoryCommands.length) return reply(`No commands found for *${categoryName}*.`);
 
-    const categoryTitle = categoryName.toUpperCase();
+    const categoryMeta = menuCategoryMeta(categoryName);
+    const categoryTitle = categoryMeta.label;
     const body = categoryCommands
       .map((command, index) => {
         const prefix = command.on === "body" ? "" : botPrefix;
@@ -350,8 +351,8 @@ gmd(
       .join("\n");
 
     await sendButtons(Gifted, from, {
-      title: `📂 ${categoryTitle} MENU`,
-      text: `╔═❖•⊰ *${toBold(`${categoryTitle} COMMANDS`)}* ⊱•❖═╗\n║୧⍤⃝💐 Select a command from this branch\n╚═══════════════════╝\n${readmore}\n${body}\n╚═══════════════════╝`,
+      title: `୧⍤⃝${categoryMeta.emoji} ${categoryTitle}`,
+      text: `╔═❖•⊰ ୧⍤⃝${categoryMeta.emoji} *${toBold(categoryTitle)}* ⊱•❖═╗\n║୧⍤⃝${categoryMeta.emoji} Commands in this branch\n╚═══════════════════╝\n${readmore}\n${body}\n╚═══════════════════╝`,
       footer: `> *${botFooter}*`,
       buttons: [
         { id: `${botPrefix}menu`, text: "📂 All Categories" },
