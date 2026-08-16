@@ -109,6 +109,10 @@ class MultiUserSessionManager {
     return this.sessions.size;
   }
 
+  list() {
+    return Array.from(this.sessions.values()).map((record) => this.publicSession(record));
+  }
+
   hasSessionCapacity(number) {
     const normalized = this.normalizePhoneNumber(number);
     return this.sessions.has(normalized) || this.sessions.size < this.maxInstances;
