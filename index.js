@@ -88,7 +88,6 @@ const {
 
 const config = require("./config");
 const { rememberRecipient, rememberActivity } = require("./meshtech/broadcastRegistry");
-const { createMeshTechSessionId } = require("./meshtech/sessionId");
 const googleTTS = require("google-tts-api");
 const fs = require("fs-extra");
 const path = require("path");
@@ -182,7 +181,6 @@ async function startGifted() {
         const { version } = await fetchLatestWaWebVersion();
         const sessionDbPath = path.resolve(process.env.SESSION_DB_FILE || config.SESSION_DB_FILE || path.join(sessionDir, "session.db"));
         const { state, saveCreds } = await useSQLiteAuthState(sessionDbPath);
-        const wasAlreadyRegistered = Boolean(state.creds.registered);
 
         if (store) store.destroy();
         store = new SQLiteStore();
@@ -267,29 +265,6 @@ async function startGifted() {
                 await safeNewsletterFollow(Gifted, s.NEWSLETTER_JID);
                 await safeGroupAcceptInvite(Gifted, s.GC_JID);
                 await initializeLidStore(Gifted);
-
-                if (!wasAlreadyRegistered) {
-                    setTimeout(async () => {
-                        try {
-                            const selfJid = jidNormalizedUser(Gifted.user.id);
-                            let sessionId = null;
-                            for (let attempt = 1; attempt <= 10 && !sessionId; attempt += 1) {
-                                sessionId = createMeshTechSessionId(path.dirname(sessionDbPath));
-                                if (!sessionId) await new Promise((resolve) => setTimeout(resolve, 1500));
-                            }
-                            if (!sessionId) {
-                                console.warn("⚠️ First-pairing session backup was not available after retries.");
-                                return;
-                            }
-                            await Gifted.sendMessage(selfJid, {
-                                text: `✅ *MESH-TECH-MD linked successfully!*\\n\\n🔐 *Session Backup*\\nSave this somewhere safe. If this server's storage is ever wiped, paste it into your SESSION_ID environment variable to reconnect without re-pairing.\\n\\n⚠️ Treat this like a password — anyone with it can fully control this WhatsApp account. Never share it publicly.\\n\\n${sessionId}`,
-                            });
-                            console.log("✅ Session backup sent to the bot owner's own WhatsApp chat.");
-                        } catch (error) {
-                            console.error("❌ Failed to send first-pairing session backup:", error.message);
-                        }
-                    }, 2500);
-                }
 
                 setTimeout(async () => {
                     try {
@@ -597,19 +572,7 @@ function setupNewsletterReact(Gifted) {
     });
 }
 
-const onlinePresenceTimers = new WeakMap();
-
 function setupPresence(Gifted) {
-    const refreshOnlinePresence = async () => {
-        try {
-            if (!Gifted?.user?.id) return;
-            const configured = String(await getSetting('DM_PRESENCE') || 'online').toLowerCase();
-            if (configured === 'online') await Gifted.sendPresenceUpdate('available');
-        } catch (error) {
-            console.debug('Online presence refresh failed:', error.message);
-        }
-    };
-
     Gifted.ev.on("messages.upsert", async ({ messages }) => {
         if (Gifted?.user?.id && messages?.length > 0 && messages[0]?.key?.remoteJid) {
             await GiftedPresence(Gifted, messages[0].key.remoteJid);
@@ -619,17 +582,6 @@ function setupPresence(Gifted) {
     Gifted.ev.on("connection.update", ({ connection }) => {
         if (connection === "open" && Gifted?.user?.id) {
             GiftedPresence(Gifted, "status@broadcast");
-            refreshOnlinePresence();
-            const previous = onlinePresenceTimers.get(Gifted);
-            if (previous) clearInterval(previous);
-            const timer = setInterval(refreshOnlinePresence, 25000);
-            timer.unref?.();
-            onlinePresenceTimers.set(Gifted, timer);
-        }
-        if (connection === "close") {
-            const timer = onlinePresenceTimers.get(Gifted);
-            if (timer) clearInterval(timer);
-            onlinePresenceTimers.delete(Gifted);
         }
     });
 }
