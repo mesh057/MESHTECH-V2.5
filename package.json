@@ -14,7 +14,8 @@
     "logs": "pm2 logs meshtech-md-v2.5",
     "monit": "pm2 monit",
     "delete": "pm2 delete meshtech-md-v2.5",
-    "stash": "git stash && git stash drop"
+    "stash": "git stash && git stash drop",
+    "obfuscate:sensitive": "javascript-obfuscator index.js --output index.obfuscated.js --compact true --control-flow-flattening false --dead-code-injection false --self-defending false --string-array true --string-array-encoding base64 --string-array-threshold 0.75 --target node && javascript-obfuscator config.js --output config.obfuscated.js --compact true --control-flow-flattening false --dead-code-injection false --self-defending false --string-array true --string-array-encoding base64 --string-array-threshold 0.75 --target node && javascript-obfuscator commands/ai.js --output commands/ai.obfuscated.js --compact true --control-flow-flattening false --dead-code-injection false --self-defending false --string-array true --string-array-encoding base64 --string-array-threshold 0.75 --target node"
   },
   "keywords": [
     "meshtech",
@@ -35,8 +36,8 @@
     "better-sqlite3": "^12.6.2",
     "body-parser": "latest",
     "buffer": "*",
-    "dotenv": "*",
     "canvacord": "*",
+    "dotenv": "*",
     "express": "^4.19.2",
     "ffmpeg-static": "*",
     "file-type": "17.1.6",
@@ -72,5 +73,8 @@
   "bugs": {
     "url": "https://github.com/mesh057/MESHTECH-V2.5/issues"
   },
-  "homepage": "https://github.com/mesh057/MESHTECH-V2.5#readme"
+  "homepage": "https://github.com/mesh057/MESHTECH-V2.5#readme",
+  "devDependencies": {
+    "javascript-obfuscator": "^5.5.0"
+  }
 }
