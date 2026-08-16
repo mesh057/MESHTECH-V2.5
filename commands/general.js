@@ -654,11 +654,11 @@ gmd(
           const prefix = command.isBody ? "" : botPrefix;
           return `║${String(commandNumber).padStart(3, "0")} ⟿ ୧⍤⃝${meta.emoji} ${toBold(`${prefix}${command.pattern}`)} ୧⍤⃝${meta.emoji}`;
         }).join("\n");
-        return `║୧⍤⃝${meta.emoji} ${toBold(meta.label)}\n${rows}`;
-      }).join("\n╟──────────────────\n");
+        return `╔═❖•⊰ ୧⍤⃝${meta.emoji} ${toBold(meta.label)} ⊱•❖═╗\n${rows}\n╚═══════════════════╝`;
+      }).join("\n\n");
 
       const menuMessage = {
-        text: `${header}\n\n${readmore}\n\n╔═❖•⊰ *${toBold("𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗠𝗘𝗡𝗨")}* ⊱•❖═╗\n║୧⍤⃝💐 ${toBold("All loaded commands")}\n╚═══════════════════╝\n${fullCommandList}\n╚═══════════════════╝\n\n${readmore}\n\n╔═❖•⊰ *${toBold("𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗖𝗔𝗧𝗘𝗚𝗢𝗥𝗜𝗘𝗦")}* ⊱•❖═╗\n${categoryPreview}\n╚═══════════════════╝\n\n୧⍤⃝💐 Open the dropdown below to browse every command branch.`,
+        text: `${header}\n\n${readmore}\n\n╔═❖•⊰ *${toBold("𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗠𝗘𝗡𝗨")}* ⊱•❖═╗\n║୧⍤⃝💐 ${toBold("All loaded commands")}\n╚═══════════════════╝\n${fullCommandList}\n\n${readmore}\n\n╔═❖•⊰ *${toBold("𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗖𝗔𝗧𝗘𝗚𝗢𝗥𝗜𝗘𝗦")}* ⊱•❖═╗\n${categoryPreview}\n╚═══════════════════╝\n\n୧⍤⃝💐 Open the dropdown below to browse every command branch.`,
         title: "📂 COMMAND DROPDOWN",
         footerText: `> *${botFooter}*`,
         buttonText: "📜 OPEN COMMAND MENUS",
