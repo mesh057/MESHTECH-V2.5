@@ -17,6 +17,7 @@ const { gmd, commands, monospace, formatBytes } = require("../meshtech"),
   ram = `${formatBytes(freeMemoryBytes)}/${formatBytes(totalMemoryBytes)}`;
 const { sendButtons } = require("gifted-btns");
 const { getSetting } = require("../meshtech/database/settings");
+const { getActiveUserCount } = require("../meshtech/broadcastRegistry");
 const MESHTECH_LOGO_URL = "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
 
 const COMMAND_EMOJIS = {
@@ -532,6 +533,14 @@ gmd(
       }).format(now);
 
       const uptime = formatUptime(process.uptime());
+      const hour = Number(new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone }).format(now));
+      const greeting = hour >= 5 && hour < 12 ? "🌅 Good Morning" : hour >= 12 && hour < 17 ? "☀️ Good Afternoon" : hour >= 17 && hour < 21 ? "🌆 Good Evening" : "🌙 Good Night";
+      const ownerName = String((await getSetting("OWNER_NAME")) || botName || "MESH");
+      const ownerNumber = String((await getSetting("OWNER_NUMBER")) || Gifted?.user?.id?.split(":")?.[0] || "Not Set").replace(/\D/g, "") || "Not Set";
+      const activeUsers = getActiveUserCount();
+      const connectedBots = Gifted?.user?.id ? "1 Live" : "0 Offline";
+      const deviceName = process.env.DEVICE_NAME || "ANDROID-CORE";
+      const liveRam = `${formatBytes(process.memoryUsage().rss)}/${formatBytes(totalMemoryBytes)}`;
       const regularCmds = commands.filter((c) => c.pattern && !c.on && !c.dontAddCommandList);
       const bodyCmds = commands.filter((c) => c.pattern && c.on === "body" && !c.dontAddCommandList);
       const totalCommands = regularCmds.length + bodyCmds.length;
@@ -555,16 +564,20 @@ gmd(
       }
 
       const header = `╭━━━ *${toBold("𝗠𝗘𝗦𝗛-𝗧𝗘𝗖𝗛 𝗠𝗗 𝗕𝗢𝗧")} ━━━╮
-┃ 🌆 *${toBold("Good Evening")}*
-┃ 🔥 *${toBold("Mode:")}* ${monospace(String(botMode || "PUBLIC").toUpperCase())}
+┃ ${toBold(greeting)}
+┃ 🔥 *${toBold("Mode:")}* ${monospace(String(botMode || "PUBLIC").toUpperCase())}|FULL POWER
 ┃ 💀 *${toBold("Protocol:")}* PHANTOM CORE
-┃ 👑 *${toBold("Owner:")}* ${monospace(pushName || "MESH USER")}
+┃ 👑 *${toBold("Owner:")}* ${monospace(ownerName)}
+┃ 📞 *${toBold("Number:")}* ${monospace(ownerNumber)}
 ┃ ⚙️ *${toBold("Version:")}* ${monospace(botVersion || "V2.5")}
 ┃ ⏳ *${toBold("Uptime:")}* ${monospace(uptime)}
 ┃ 📅 *${toBold("Date:")}* ${monospace(date)}
 ┃ 🕒 *${toBold("Time:")}* ${monospace(time)}
 ┃ 📌 *${toBold("Commands:")}* ${monospace(`${totalCommands} Loaded`)}
-┃ 🧠 *${toBold("Menus:")}* ${monospace(`${sortedCategories.length} Categories`)}
+┃ 👥 *${toBold("Users:")}* ${monospace(`${activeUsers} Active (real-time)`)}` + `
+┃ 🤖 *${toBold("Bots Connected:")}* ${monospace(connectedBots)}
+┃ 📱 *${toBold("Device:")}* ${monospace(deviceName)}
+┃ 🧠 *${toBold("RAM:")}* ${monospace(liveRam)}
 ╰━━━━━━━━━━━━━━━━━━╯`;
 
       const rows = sortedCategories.map((category) => ({
