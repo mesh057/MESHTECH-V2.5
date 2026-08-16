@@ -42,7 +42,10 @@ function isRegisteredSession(authInfoDir) {
 
 class MultiUserSessionManager {
   constructor(options = {}) {
-    this.rootDir = path.resolve(options.rootDir || process.env.MULTI_USER_AUTH_DIR || process.env.AUTH_DIR || path.join(process.cwd(), 'auth_sessions'));
+    const configuredRoot = options.rootDir || process.env.MULTI_USER_AUTH_DIR || process.env.AUTH_DIR;
+    const mountedRoot = fs.existsSync('/data') ? '/data/meshtech/auth_sessions' : path.join(process.cwd(), 'auth_sessions');
+    this.rootDir = path.resolve(configuredRoot || mountedRoot);
+    this.usingPersistentPath = this.rootDir === path.resolve('/data/meshtech/auth_sessions') || this.rootDir.startsWith(`${path.resolve('/data')}${path.sep}`);
     this.botEntry = path.resolve(options.botEntry || path.join(__dirname, '..', 'index.js'));
     this.sessions = new Map();
 
@@ -53,6 +56,9 @@ class MultiUserSessionManager {
       : (Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.floor(parsedLimit) : Infinity);
 
     fs.mkdirSync(this.rootDir, { recursive: true });
+    if (!this.usingPersistentPath) {
+      console.warn(`[mesh-multi-user] WARNING: auth root is ${this.rootDir}; configure MULTI_USER_AUTH_DIR=/data/meshtech/auth_sessions on a persistent volume to survive updates.`);
+    }
   }
 
   normalizePhoneNumber(value) {
@@ -80,11 +86,16 @@ class MultiUserSessionManager {
   async restoreSavedSessions() {
     const restored = [];
     for (const number of this.listRestorableSessions()) {
-      try {
-        await this.start(number, false, true);
-        restored.push(number);
-      } catch (error) {
-        console.error(`[mesh-multi-user] Could not restore ${number}:`, error.message);
+      let restoredThisSession = false;
+      for (let attempt = 1; attempt <= 3 && !restoredThisSession; attempt += 1) {
+        try {
+          await this.start(number, false, true);
+          restored.push(number);
+          restoredThisSession = true;
+        } catch (error) {
+          console.error(`[mesh-multi-user] Could not restore ${number} (attempt ${attempt}/3):`, error.message);
+          if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 3000));
+        }
       }
     }
     return restored;

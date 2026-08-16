@@ -18,11 +18,15 @@ restartPolicyMaxRetries = 5
 #    Railway auto-sets DATABASE_URL in your service via variable reference.
 # 3. In your service Variables tab, add:
 #
-#    SESSION_ID   = <your MeshTech~ session id>
+#    SESSION_ID   =  (leave empty in multi-user mode)
+#    MULTI_USER_AUTH_DIR = /data/meshtech/auth_sessions
 #    MODE         = public
 #    TIME_ZONE    = Africa/Nairobi
 #    AUTO_LIKE_STATUS = true
 #    AUTO_READ_STATUS = true
 #
 #    DATABASE_URL is automatically linked from the Postgres plugin.
+#
+# 4. Add a Railway Volume mounted at /data. Without it, auth_sessions are
+#    lost whenever an update replaces the container and WhatsApp goes inactive.
 # ─────────────────────────────────────────────────────────────

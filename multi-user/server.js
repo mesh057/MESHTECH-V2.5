@@ -84,11 +84,34 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && url.pathname === '/') return page(res, 'pairing.html');
     if (req.method === 'GET' && (url.pathname === '/dashboard' || url.pathname === '/dashboard.html')) return page(res, 'dashboard.html');
     if (req.method === 'GET' && url.pathname === '/pairing.html') return page(res, 'pairing.html');
-    if (req.method === 'GET' && url.pathname === '/health') return json(res, 200, { status: 'alive', multiUser: true, active: manager.count(), uptime: process.uptime() });
+    if (req.method === 'GET' && url.pathname === '/health') {
+      const active = manager.list();
+      const connected = active.filter((item) => item.status === 'running').length;
+      return json(res, 200, {
+        status: 'alive',
+        multiUser: true,
+        active: active.length,
+        connected,
+        whatsapp: connected > 0 ? 'connected' : 'not_connected',
+        persistentAuth: manager.usingPersistentPath,
+        uptime: process.uptime(),
+      });
+    }
 
     if (req.method === 'GET' && url.pathname === '/api/status') {
       const active = manager.list();
-      return json(res, 200, { ok: true, multiUser: true, active, botStatus: active.length ? 'initialized' : 'waiting', totalActive: active.length, registered: active.some((item) => item.status === 'running') });
+      const connected = active.filter((item) => item.status === 'running').length;
+      const botStatus = connected > 0 ? 'connected' : (active.length ? 'reconnecting' : 'waiting');
+      return json(res, 200, {
+        ok: true,
+        multiUser: true,
+        active,
+        botStatus,
+        totalActive: active.length,
+        connected,
+        registered: connected > 0,
+        persistentAuth: manager.usingPersistentPath,
+      });
     }
 
     if (req.method === 'POST' && url.pathname === '/api/request-pairing') {
@@ -166,8 +189,13 @@ process.once('SIGTERM', () => shutdown('SIGTERM'));
 process.once('SIGINT', () => shutdown('SIGINT'));
 
 async function startServer() {
+  console.log(`[mesh-multi-user] Auth root: ${manager.rootDir}`);
+  if (!manager.usingPersistentPath) {
+    console.warn('[mesh-multi-user] Persistent storage is not configured; updates can remove WhatsApp auth state.');
+  }
+  const restorable = manager.listRestorableSessions();
   const restored = await manager.restoreSavedSessions();
-  if (restored.length) console.log(`[mesh-multi-user] Restoring ${restored.length} saved WhatsApp session(s).`);
+  console.log(`[mesh-multi-user] Found ${restorable.length} registered session(s); restored ${restored.length}.`);
   server.listen(port, '0.0.0.0', () => console.log(`[mesh-multi-user] MESHTECH MD BOT v2.5 listening on ${port}`));
 }
 
