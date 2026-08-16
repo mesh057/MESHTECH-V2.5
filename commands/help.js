@@ -1,6 +1,17 @@
 const { gmd, commands } = require('../meshtech/gmdCmds');
 
+// Number examples use the reference number supplied in the user's screenshot.
+const REFERENCE_NUMBER = '255794469700';
+
 const USAGE_OVERRIDES = {
+  accept: `accept ${REFERENCE_NUMBER}`,
+  add: `add ${REFERENCE_NUMBER}`,
+  block: `block ${REFERENCE_NUMBER}`,
+  demote: `demote ${REFERENCE_NUMBER}`,
+  kick: `kick ${REFERENCE_NUMBER}`,
+  promote: `promote ${REFERENCE_NUMBER}`,
+  unblock: `unblock ${REFERENCE_NUMBER}`,
+  warn: `warn ${REFERENCE_NUMBER}`,
   alive: 'alive',
   menu: 'menu',
   list: 'list',
@@ -23,13 +34,16 @@ const USAGE_OVERRIDES = {
 function cleanDescription(command) {
   return String(command.description || 'No explanation has been added yet.')
     .replace(/\s+/g, ' ')
+    .replace(/\s*(?:usage|how to use|example)\s*:\s*.*$/i, '')
+    .replace(/\s*aliases?\s*:\s*.*$/i, '')
     .trim();
 }
 
 function usageFor(command, prefix) {
   const name = String(command.pattern || '').toLowerCase();
-  const usage = command.usage || USAGE_OVERRIDES[name] || name;
-  return usage.startsWith(prefix) ? usage : `${prefix}${usage}`;
+  const rawUsage = command.usage || USAGE_OVERRIDES[name] || name;
+  const usage = String(rawUsage).replace(/^[.!#/]/, '');
+  return `${prefix}${usage}`;
 }
 
 function uniqueCommands() {
@@ -45,11 +59,15 @@ function uniqueCommands() {
     .sort((a, b) => String(a.pattern).localeCompare(String(b.pattern)));
 }
 
-function commandExplanation(command, prefix) {
+function helpHeader(pageNumber, totalPages) {
+  return `┌─❖•ঌ *DETAILED COMMAND HELP* ঌ•❖─┐\n│ Page ${pageNumber}/${totalPages}\n│ Meaning + usage for every loaded command\n└────────────────────────────`;
+}
+
+function commandExplanation(command, prefix, number) {
   const aliases = Array.isArray(command.aliases) && command.aliases.length
-    ? `\nAliases: ${command.aliases.map((alias) => `${prefix}${alias}`).join(', ')}`
+    ? `\n│ Aliases: ${command.aliases.map((alias) => `${prefix}${alias}`).join(', ')}`
     : '';
-  return `╭─ *${prefix}${command.pattern}*\n│ Meaning: ${cleanDescription(command)}\n│ Usage: ${usageFor(command, prefix)}${aliases}\n╰────────────`;
+  return `${number}. ┌─ *${prefix}${command.pattern}*\n│ Meaning: ${cleanDescription(command)}\n│ Usage: ${usageFor(command, prefix)}${aliases}\n└────────────────────`;
 }
 
 gmd(
@@ -72,17 +90,18 @@ gmd(
         (Array.isArray(item.aliases) && item.aliases.some((alias) => String(alias).toLowerCase() === requested))
       );
       if (!command) return reply(`❌ No explanation found for *${prefix}${requested}*. Use ${prefix}help all to browse every command.`);
+      const body = `${helpHeader(1, 1)}\n\n${commandExplanation(command, prefix, 1)}\n\n📂 Use ${prefix}menu for the categorized command browser.`;
       await Gifted.sendMessage(from, {
-        text: `╔═❖•⊰ *COMMAND EXPLANATION* ⊱•❖═╗\n${commandExplanation(command, prefix)}\n\n💡 Use ${prefix}menu for the categorized command browser.\n╚═══════════════════╝\n> *${botFooter || 'MESHTECH MD BOT'}*`,
+        text: `${body}\n> *${botFooter || 'MESHTECH MD BOT'}*`,
       }, { quoted: mek });
       return react('📖');
     }
 
-    const entries = allCommands.map((command, index) => `${index + 1}. ${commandExplanation(command, prefix)}`);
+    const entries = allCommands.map((command, index) => commandExplanation(command, prefix, index + 1));
     const pages = [];
     let page = '';
     for (const entry of entries) {
-      if ((page + '\n\n' + entry).length > 3600 && page) {
+      if ((page + '\n\n' + entry).length > 3500 && page) {
         pages.push(page);
         page = '';
       }
@@ -91,13 +110,13 @@ gmd(
     if (page) pages.push(page);
 
     if (!pages.length) return reply('❌ No command explanations are currently available.');
-    await Gifted.sendMessage(from, {
-      text: `╔═❖•⊰ *DETAILED COMMAND HELP* ⊱•❖═╗\n│ Page 1/${pages.length}\n│ Meaning + usage for every loaded command\n╚═══════════════════╝\n\n${pages[0]}\n\n📌 Use ${prefix}help <command> for one command.\n📂 Use ${prefix}menu for the categorized menu.\n> *${botFooter || 'MESHTECH MD BOT'}*`,
-    }, { quoted: mek });
-    for (let index = 1; index < pages.length; index += 1) {
+    for (let index = 0; index < pages.length; index += 1) {
+      const footer = index === 0
+        ? `\n\n📌 Use ${prefix}help <command> for one command.\n📂 Use ${prefix}menu for the categorized menu.`
+        : '';
       await Gifted.sendMessage(from, {
-        text: `╔═❖•⊰ *DETAILED COMMAND HELP* ⊱•❖═╗\n│ Page ${index + 1}/${pages.length}\n╚═══════════════════╝\n\n${pages[index]}`,
-      });
+        text: `${helpHeader(index + 1, pages.length)}\n\n${pages[index]}${footer}${index === pages.length - 1 ? `\n> *${botFooter || 'MESHTECH MD BOT'}*` : ''}`,
+      }, index === 0 ? { quoted: mek } : undefined);
     }
     await react('📖');
   },
