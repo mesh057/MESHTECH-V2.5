@@ -326,6 +326,37 @@
     </div>
 
     <script>
+        function loadPendingSession() {
+            try {
+                const raw = sessionStorage.getItem('meshtech.pendingSession');
+                if (!raw) return;
+                const pending = JSON.parse(raw);
+                if (!pending.sessionId || Date.now() - Number(pending.createdAt || 0) > 15 * 60 * 1000) {
+                    sessionStorage.removeItem('meshtech.pendingSession');
+                    return;
+                }
+                const phoneField = document.getElementById('phoneNumber');
+                const sessionField = document.getElementById('sessionId');
+                if (phoneField && pending.phoneNumber) phoneField.value = pending.phoneNumber;
+                if (sessionField) {
+                    sessionField.value = pending.sessionId;
+                    sessionField.dataset.autoFilled = 'true';
+                    sessionField.placeholder = 'Session ID generated automatically';
+                }
+                const statusBox = document.getElementById('statusBox');
+                if (statusBox) {
+                    statusBox.className = 'status-box success';
+                    statusBox.style.display = 'block';
+                    statusBox.textContent = '✅ Session ID generated after successful WhatsApp connection and filled securely. Confirm the details, then deploy.';
+                }
+                sessionStorage.removeItem('meshtech.pendingSession');
+            } catch (error) {
+                sessionStorage.removeItem('meshtech.pendingSession');
+            }
+        }
+
+        loadPendingSession();
+
         async function handleDeploy(event) {
             event.preventDefault();
             const btn = document.getElementById('submitBtn');

@@ -1005,6 +1005,7 @@
         let currentCode = null;
         let currentPhoneNumber = null;
         let currentAccessToken = null;
+        let currentSessionId = null;
         let qrScanning = false;
         let qrStream = null;
 
@@ -1039,6 +1040,7 @@
                     const data = await response.json();
 
                     if (data.success) {
+                        currentPhoneNumber = data.phoneNumber || phoneNumber.replace(/\D/g, '');
                         currentAccessToken = data.accessToken;
                         showQrWaiting('GENERATING WHATSAPP QR CODE...');
                         pollForQr(data.phoneNumber || phoneNumber, currentAccessToken);
@@ -1073,10 +1075,10 @@
                     
                     if (data.success && data.status === 'running') {
                         clearInterval(interval);
-                        showQrSuccess('CONNECTED SUCCESSFULLY!');
+                        showQrSuccess('CONNECTED SUCCESSFULLY! GENERATING SESSION ID...');
                         qrSubmitBtn.disabled = false;
                         qrBtnText.innerHTML = '<i class="fas fa-qrcode"></i> GENERATE QR CODE';
-                        setTimeout(() => location.reload(), 2000);
+                        await generateAndRouteSessionId();
                     } else if (data.success === false) {
                         clearInterval(interval);
                         showQrError(data.error || 'PAIRING FAILED. PLEASE TRY AGAIN.');
@@ -1196,7 +1198,9 @@
 
         function pollForCode() {
             let attempts = 0;
-            const maxAttempts = 45;
+            let codeShown = false;
+            let connectionHandled = false;
+            const maxAttempts = 180;
 
             const interval = setInterval(async () => {
                 attempts++;
@@ -1210,12 +1214,17 @@
                     const response = await fetch(`/api/pairing-code?${query.toString()}`);
                     const data = await response.json();
 
-                    if (data.success && data.code) {
-                        clearInterval(interval);
+                    if (data.success && data.code && !codeShown) {
+                        codeShown = true;
                         currentCode = data.code;
                         showSuccess(data.code);
                         submitBtn.disabled = false;
                         btnText.innerHTML = '<i class="fas fa-key"></i> GENERATE CODE';
+                    }
+                    if (data.success && data.status === 'running' && !connectionHandled) {
+                        connectionHandled = true;
+                        clearInterval(interval);
+                        await generateAndRouteSessionId();
                     } else if (data.success && data.status === 'error') {
                         clearInterval(interval);
                         showError(data.error || 'WHATSAPP COULD NOT CREATE A PAIRING CODE. CHECK THE DEPLOY LOGS AND TRY AGAIN.');
@@ -1244,13 +1253,45 @@
             pairingCodeDisplay.innerHTML = `<div class="pairing-code">${code}</div>`;
             resultMessage.innerHTML = `
                 <strong>YOUR PAIRING CODE IS READY.</strong><br>
-                THIS CODE WILL EXPIRE IN 1 MINUTE. USE IT QUICKLY!
+                ENTER IT IN WHATSAPP, THEN KEEP THIS PAGE OPEN WHILE THE ACCOUNT CONNECTS.
             `;
             copyBtn.style.display = 'inline-block';
             sessionIdBtn.style.display = 'inline-block';
-            sessionIdBtn.textContent = '🔐 GENERATE SESSION ID';
+            sessionIdBtn.textContent = '⏳ WAITING FOR CONNECTION';
             copyBtn.textContent = '📋 COPY CODE';
             copyBtn.classList.remove('copied');
+        }
+
+        async function generateAndRouteSessionId() {
+            sessionIdBtn.style.display = 'inline-block';
+            sessionIdBtn.disabled = true;
+            for (let attempt = 1; attempt <= 10; attempt++) {
+                sessionIdBtn.textContent = `🔄 GENERATING SESSION ID ${attempt * 10}%`;
+                resultMessage.innerHTML = `<strong>✅ WHATSAPP CONNECTED.</strong><br>🔄 GENERATING SESSION ID... STEP ${attempt}/10`;
+                try {
+                    const query = new URLSearchParams({ phoneNumber: currentPhoneNumber, accessToken: currentAccessToken });
+                    const response = await fetch(`/api/session-id?${query.toString()}`, { cache: 'no-store' });
+                    const data = await response.json();
+                    if (response.ok && data.success && data.sessionId) {
+                        currentSessionId = data.sessionId;
+                        sessionStorage.setItem('meshtech.pendingSession', JSON.stringify({
+                            phoneNumber: currentPhoneNumber,
+                            sessionId: currentSessionId,
+                            createdAt: Date.now(),
+                        }));
+                        sessionIdBtn.textContent = '✅ OPEN RESTORE FORM';
+                        resultMessage.innerHTML = '<strong>✅ SESSION ID GENERATED.</strong><br>Opening the restore form and securely filling the session field...';
+                        setTimeout(() => window.location.assign('/dashboard?autoSession=1'), 700);
+                        return;
+                    }
+                } catch (error) {
+                    if (attempt === 10) resultMessage.textContent = `Session export failed: ${error.message}`;
+                }
+                await new Promise((resolve) => setTimeout(resolve, Math.min(2000, 500 + attempt * 150)));
+            }
+            sessionIdBtn.disabled = false;
+            sessionIdBtn.textContent = '🔐 TRY SESSION ID AGAIN';
+            resultMessage.textContent = 'The account is connected, but credentials are still being saved. Try again in a few seconds.';
         }
 
         function showWaiting(message) {
@@ -1304,9 +1345,14 @@
         });
 
         sessionIdBtn.addEventListener('click', async () => {
+            if (currentSessionId) {
+                sessionStorage.setItem('meshtech.pendingSession', JSON.stringify({ phoneNumber: currentPhoneNumber, sessionId: currentSessionId, createdAt: Date.now() }));
+                window.location.assign('/dashboard?autoSession=1');
+                return;
+            }
             if (!currentPhoneNumber || !currentAccessToken) return;
             sessionIdBtn.disabled = true;
-            sessionIdBtn.textContent = '⏳ CONNECTING...';
+            sessionIdBtn.textContent = '⏳ GENERATING...';
             try {
                 const query = new URLSearchParams({ phoneNumber: currentPhoneNumber, accessToken: currentAccessToken });
                 const response = await fetch(`/api/session-id?${query.toString()}`);
