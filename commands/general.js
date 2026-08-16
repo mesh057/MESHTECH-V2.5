@@ -228,6 +228,50 @@ gmd(
 
 gmd(
   {
+    pattern: "category",
+    aliases: ["cat"],
+    description: "Open a command category from the dropdown",
+    react: "📂",
+    category: "general",
+  },
+  async (from, Gifted, conText) => {
+    const { args, botPrefix, botFooter, react, reply } = conText;
+    const categoryName = String(args?.[0] || "").toLowerCase();
+    if (!categoryName) return reply(`Use ${botPrefix}menu and select a category.`);
+
+    const categoryCommands = commands
+      .filter((command) =>
+        command.pattern &&
+        !command.dontAddCommandList &&
+        String(command.category || "general").toLowerCase() === categoryName
+      )
+      .sort((a, b) => String(a.pattern).localeCompare(String(b.pattern)));
+
+    if (!categoryCommands.length) return reply(`No commands found for *${categoryName}*.`);
+
+    const categoryTitle = categoryName.toUpperCase();
+    const body = categoryCommands
+      .map((command, index) => {
+        const prefix = command.on === "body" ? "" : botPrefix;
+        return `║ ${String(index + 1).padStart(2, "0")} ⟿ ${toBold(`${prefix}${command.pattern}`)}`;
+      })
+      .join("\n");
+
+    await sendButtons(Gifted, from, {
+      title: `📂 ${categoryTitle} MENU`,
+      text: `╔═❖•⊰ *${toBold(`${categoryTitle} COMMANDS`)}* ⊱•❖═╗\n${body}\n╚═══════════════════╝`,
+      footer: `> *${botFooter}*`,
+      buttons: [
+        { id: `${botPrefix}menu`, text: "📂 All Categories" },
+        { id: `${botPrefix}list`, text: "📜 Full List" },
+      ],
+    });
+    await react("✅");
+  },
+);
+
+gmd(
+  {
     pattern: "list",
     aliases: ["listmenu", "listmen"],
     description: "Show All Commands and their Usage",
@@ -398,51 +442,43 @@ gmd(
         categorized[cat].sort((a, b) => a.pattern.localeCompare(b.pattern));
       }
 
-	      let header = `╭━━━〔 ${toBold("MESH TECH MD V2.5 HELP")} 〕━━━┈⊷
-	┃ *STATUS:* ${monospace("ONLINE")}
-	┃ *MODE:* ${monospace(botMode)}
-	┃ *PREFIX:* [ ${monospace(botPrefix)} ]
-	┃ *USER:* ${monospace(pushName)}
-	┃ *COMMANDS:* ${monospace(totalCommands.toString())}
-	┃ *VERSION:* ${monospace(botVersion)}
-	┃ *UPTIME:* ${monospace(uptime)}
-	┃ *SERVER RAM:* ${monospace(ram)}
-	┃
-	┃ _Each category below contains commands you can run._
-	┃ _Use ${botPrefix}list for a command-by-command explanation._
-	╰━━━━━━━━━━━━━━━━━━━━━━━━━━┈⊷\n${readmore}\n`;
+      const header = `╭━━━ *${toBold("𝗠𝗘𝗦𝗛-𝗧𝗘𝗖𝗛 𝗠𝗗 𝗕𝗢𝗧")} ━━━╮
+┃ 🌆 *${toBold("Good Evening")}*
+┃ 🔥 *${toBold("Mode:")}* ${monospace(String(botMode || "PUBLIC").toUpperCase())}
+┃ 💀 *${toBold("Protocol:")}* PHANTOM CORE
+┃ 👑 *${toBold("Owner:")}* ${monospace(pushName || "MESH USER")}
+┃ ⚙️ *${toBold("Version:")}* ${monospace(botVersion || "V2.5")}
+┃ ⏳ *${toBold("Uptime:")}* ${monospace(uptime)}
+┃ 📅 *${toBold("Date:")}* ${monospace(date)}
+┃ 🕒 *${toBold("Time:")}* ${monospace(time)}
+┃ 📌 *${toBold("Commands:")}* ${monospace(`${totalCommands} Loaded`)}
+┃ 🧠 *${toBold("Menus:")}* ${monospace(`${sortedCategories.length} Categories`)}
+╰━━━━━━━━━━━━━━━━━━╯`;
 
-const formatCategory = (category, gmds) => {
-  const categoryTitle = `╔═❖•⊰ ${toBold(category.toUpperCase())} MENU ⊱•❖═╗\n`;
-  const body = gmds
-    .map((gmd) => {
-      const prefix = gmd.isBody ? "" : botPrefix;
-      return `• ${prefix}${gmd.pattern}`;
-    })
-    .join("\n");
-  const footer = `\n╚════════════════════╝`;
+      const rows = sortedCategories.map((category) => ({
+        title: `୧⍤⃝💐 ${toBold(`${category.toUpperCase()} MENU`)}`,
+        description: `${categorized[category].length} command${categorized[category].length === 1 ? "" : "s"} available`,
+        rowId: `${botPrefix}category ${category}`,
+      }));
 
-  return `${categoryTitle}${body}${footer}\n`;
-};
-
-//{separator}${headerLine}
-
-
-      let menu = header;
-      for (const category of sortedCategories) {
-        menu += formatCategory(category, categorized[category]) + "\n";
+      const sections = [];
+      for (let index = 0; index < rows.length; index += 10) {
+        sections.push({
+          title: `୧⍤⃝💐 ${toBold("MESH-TECH COMMAND CATEGORIES")}`,
+          rows: rows.slice(index, index + 10),
+        });
       }
 
-      await sendButtons(Gifted, from, {
-        title: "MESH TECH MD V2.5 HELP",
-        text: menu.trim(),
-        footer: `> *${botFooter}*`,
-        buttons: [
-          { id: `${botPrefix}list`, text: "📜 All Commands" },
-          { id: `${botPrefix}ping`, text: "⚡ Ping" },
-          { id: `${botPrefix}uptime`, text: "⏱️ Uptime" },
-        ],
-      });
+      const menuMessage = {
+        text: `${header}\n\n╔═❖•⊰ *${toBold("𝗠𝗲𝘀𝗵-𝗧𝗲𝗰𝗵 𝗠𝗱 𝗕𝗼𝘁")}* ⊱•❖═╗\n║୧⍤⃝💐 Select a category below\n╚═══════════════════╝`,
+        title: "📂 COMMAND DROPDOWN",
+        footerText: `> *${botFooter}*`,
+        buttonText: "📜 OPEN COMMAND MENUS",
+        sections,
+        listType: 1,
+      };
+
+      await Gifted.sendMessage(from, menuMessage, { quoted: mek });
       await react("✅");
     } catch (e) {
       console.error(e);
