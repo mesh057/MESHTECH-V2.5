@@ -8,6 +8,7 @@ const { gmd, commands, monospace, formatBytes } = require("../meshtech"),
     return text.split('').map(c => boldChars[c] || c).join('');
   },
   fs = require("fs"),
+  path = require("path"),
   axios = require("axios"),
   BOT_START_TIME = Date.now(),
   { totalmem: totalMemoryBytes, freemem: freeMemoryBytes } = require("os"),
@@ -815,6 +816,20 @@ gmd(
 💀 *Ready for your next command...*
 ━━━━━━━━━━━━━━━━━━━━━━━`;
       await Gifted.sendMessage(from, { text }, { quoted: mek });
+
+      const audioPath = path.join(__dirname, "../assets/alive.m4a");
+      if (fs.existsSync(audioPath)) {
+        await Gifted.sendMessage(
+          from,
+          {
+            audio: fs.readFileSync(audioPath),
+            mimetype: "audio/mp4",
+            ptt: false,
+          },
+          { quoted: mek },
+        );
+      }
+
       await react("✅");
     } catch (error) {
       console.error("Error processing alive command:", error);
