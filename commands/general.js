@@ -598,8 +598,17 @@ gmd(
         .map((category) => `║୧⍤⃝${commandEmoji({ category })} ${toBold(`${category.toUpperCase()} MENU`)}`)
         .join("\n");
 
+      const fullCommandList = commands
+        .filter((command) => command.pattern && !command.dontAddCommandList)
+        .sort((a, b) => String(a.pattern).localeCompare(String(b.pattern)))
+        .map((command, index) => {
+          const prefix = command.on === "body" ? "" : botPrefix;
+          return `║${String(index + 1).padStart(3, "0")} ⟿ ${toBold(`${prefix}${command.pattern}`)} ୧⍤⃝${commandEmoji(command)}`;
+        })
+        .join("\n");
+
       const menuMessage = {
-        text: `${header}\n\n${readmore}\n\n╔═❖•⊰ *${toBold("𝗠𝗲𝘀𝗵-𝗧𝗲𝗰𝗵 𝗠𝗱 𝗕𝗼𝘁")}* ⊱•❖═╗\n${categoryPreview}\n╚═══════════════════╝\n\n୧⍤⃝💐 Open the dropdown below to browse every command branch.`,
+        text: `${header}\n\n${readmore}\n\n╔═❖•⊰ *${toBold("𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗠𝗘𝗡𝗨")}* ⊱•❖═╗\n║୧⍤⃝💐 ${toBold("All loaded commands")}\n╚═══════════════════╝\n${fullCommandList}\n╚═══════════════════╝\n\n${readmore}\n\n╔═❖•⊰ *${toBold("𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗖𝗔𝗧𝗘𝗚𝗢𝗥𝗜𝗘𝗦")}* ⊱•❖═╗\n${categoryPreview}\n╚═══════════════════╝\n\n୧⍤⃝💐 Open the dropdown below to browse every command branch.`,
         title: "📂 COMMAND DROPDOWN",
         footerText: `> *${botFooter}*`,
         buttonText: "📜 OPEN COMMAND MENUS",
