@@ -619,10 +619,16 @@ function setupPresence(Gifted) {
         }
     };
 
-    Gifted.ev.on("messages.upsert", async ({ messages }) => {
-        if (Gifted?.user?.id && messages?.length > 0 && messages[0]?.key?.remoteJid) {
-            await GiftedPresence(Gifted, messages[0].key.remoteJid);
-        }
+    Gifted.ev.on("messages.upsert", ({ messages }) => {
+        const jid = messages?.[0]?.key?.remoteJid;
+        if (!Gifted?.user?.id || !jid) return;
+
+        // Avoid sending chat-targeted presence stanzas to groups on every message.
+        // Baileys/WhatsApp can treat those group-scoped writes as transient socket
+        // work; the global heartbeat below is sufficient to keep the account online.
+        // DM-specific presence modes remain unchanged.
+        void (jid.endsWith("@g.us") ? sendOnlineHeartbeat() : GiftedPresence(Gifted, jid))
+            .catch((error) => logger.debug(`Message presence update skipped: ${error.message}`));
     });
 
     Gifted.ev.on("connection.update", ({ connection }) => {
