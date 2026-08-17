@@ -940,7 +940,7 @@ const GiftedAntiDelete = async (Gifted, deletedMsg, key, deleter, sender, botOwn
     try {
         const promises = [];
         
-        if (antiDelete === 'inchat') {
+        if (antiDelete === 'inchat' || antiDelete === 'all') {
             promises.push((async () => {
                 try {
                     const baseAlert = `*𝙰𝙽𝚃𝙸𝙳𝙴𝙻𝙴𝚃𝙴 𝙼𝙴𝚂𝚂𝙰𝙶𝙴 𝚂𝚈𝚂𝚃𝙴𝙼*\n\n` +
@@ -1011,7 +1011,7 @@ const GiftedAntiDelete = async (Gifted, deletedMsg, key, deleter, sender, botOwn
             })());
         }
 
-        if (antiDelete === 'indm') {
+        if (antiDelete === 'indm' || antiDelete === 'all') {
             promises.push((async () => {
                 try {
                     const ownerContext = `*👤 Sent By:* ${finalSenderDisplay}\n*👤 Deleted By:* ${finalDeleterDisplay}\n${chatInfo}`;

@@ -536,15 +536,15 @@ gmd(
     aliases: ["antidelete", "antidel"],
     react: "⚙️",
     category: "owner",
-    description: "Set antidelete (inchat/indm/off)",
+    description: "Set antidelete (inchat/indm/all/off)",
   },
   async (from, Gifted, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
-    const valid = ["inchat", "indm", "false"];
+    const valid = ["inchat", "indm", "all", "false"];
     const value = parseBooleanInput(q);
     if (!value || !valid.includes(value)) {
-      return reply(`❌ Please specify: inchat, indm or off`);
+      return reply(`❌ Please specify: inchat, indm, all or off`);
     }
     try {
       const current = await getSetting("ANTIDELETE");

@@ -266,7 +266,7 @@ gmd(
 
 const toggleHelpEntries = [
   { key: "setautoreact", title: "Auto React", usage: "setautoreact on|off|all|dm|groups", detail: "Controls automatic reactions to incoming messages." },
-  { key: "setantidelete", title: "Anti Delete", usage: "setantidelete inchat|indm|off", detail: "Restores deleted messages in chat or forwards them to the owner inbox." },
+  { key: "setantidelete", title: "Anti Delete", usage: "setantidelete inchat|indm|all|off", detail: "Restores deleted messages in chat, forwards them to the owner inbox, or does both." },
   { key: "setantiedit", title: "Anti Edit", usage: "setantiedit on|off|indm|inchat", detail: "Shows edited-message information in the selected destination." },
   { key: "setchatbot", title: "Chatbot", usage: "setchatbot on|off|audio", detail: "Turns the chatbot response mode on, off, or audio." },
   { key: "setstartmsg", title: "Start Message", usage: "setstartmsg on|off", detail: "Controls the startup/status message." },
