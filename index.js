@@ -280,7 +280,8 @@ async function startGifted() {
                     console.warn("⚠️ Connection opened before WhatsApp authentication; skipping post-connect actions.");
                     return;
                 }
-                await resolveMeshTechChannel(Gifted);
+                // Resolve channel metadata in the background; connection startup must not wait on an external lookup.
+                void resolveMeshTechChannel(Gifted);
                 const s = await getAllSettings();
                 await safeNewsletterFollow(Gifted, s.NEWSLETTER_JID);
                 await safeGroupAcceptInvite(Gifted, s.GC_JID);
