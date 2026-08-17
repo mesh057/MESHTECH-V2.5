@@ -1120,7 +1120,7 @@ gmd(
         }
       }
 
-      let sourceName = botName || "𝐁𝐋𝐀𝐂𝐊 𝐇𝐀𝐓 𝐌𝐃";
+      let sourceName = botName || "MESH TECH MD";
       if (isGroup && groupName) {
         sourceName = groupName;
       } else if (!isGroup) {
@@ -1130,11 +1130,13 @@ gmd(
       const forwardContextInfo = {
         forwardingScore: 1,
         isForwarded: true,
-        forwardedNewsletterMessageInfo: {
-          newsletterJid: newsletterJid || "120363422524788798@newsletter",
-          newsletterName: sourceName,
-          serverMessageId: -1,
-        },
+        ...(newsletterJid ? {
+          forwardedNewsletterMessageInfo: {
+            newsletterJid,
+            newsletterName: sourceName,
+            serverMessageId: -1,
+          },
+        } : {}),
       };
 
       const customCaption = args.slice(1).join(" ") || null;

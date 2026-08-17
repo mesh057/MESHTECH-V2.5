@@ -61,7 +61,7 @@ const DEFAULT_SETTINGS = {
     AUTO_BIO: "false",
     AUTO_BLOCK: "",
     YT: "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R",
-    NEWSLETTER_JID: "120363422524788798@newsletter",
+    NEWSLETTER_JID: "",
     GC_JID: "FHT9hXCbu1z4XiPbn7HKMw",
     NEWSLETTER_URL: "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R",
     BOT_REPO: "mesh057/MESHTECH-V2.5",

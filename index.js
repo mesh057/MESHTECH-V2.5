@@ -99,6 +99,24 @@ const MESHTECH_PAIRING_URL = process.env.MESH_PAIRING_URL || "";
 const MESHTECH_CHANNEL_URL = "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R";
 const MESHTECH_GROUP_URL = "https://chat.whatsapp.com/DM1JxxnOJFp0vsTHpej89M";
 
+async function resolveMeshTechChannel(Gifted) {
+    const channelUrl = process.env.MESHTECH_CHANNEL_URL || MESHTECH_CHANNEL_URL;
+    const inviteCode = channelUrl.match(/whatsapp\.com\/channel\/([^/?#]+)/i)?.[1];
+    if (!inviteCode || typeof Gifted?.newsletterMetadata !== "function") return null;
+    try {
+        const metadata = await Gifted.newsletterMetadata("invite", inviteCode);
+        const channelJid = metadata?.id;
+        if (channelJid && /@newsletter$/.test(channelJid)) {
+            await setSetting("NEWSLETTER_JID", channelJid);
+            console.log(`✅ MeshTech channel resolved: ${channelJid}`);
+            return channelJid;
+        }
+    } catch (error) {
+        console.warn(`⚠️ MeshTech channel lookup unavailable: ${error.message}`);
+    }
+    return null;
+}
+
 /**
  * Resolves any JID to a real phone JID (@s.whatsapp.net).
  * Returns the original jid unchanged if it is already a real JID.
@@ -127,6 +145,7 @@ async function resolveRealJid(Gifted, jid) {
 }
 
 const { sendButtons } = require("gifted-btns");
+const { setSetting } = require("./meshtech/database/settings");
 const { SESSION_ID: sessionId } = config;
 const PORT = process.env.PORT || 5000;
 const embeddedHttpServerEnabled = process.env.MESH_DISABLE_HTTP_SERVER !== "true";
@@ -261,6 +280,7 @@ async function startGifted() {
                     console.warn("⚠️ Connection opened before WhatsApp authentication; skipping post-connect actions.");
                     return;
                 }
+                await resolveMeshTechChannel(Gifted);
                 const s = await getAllSettings();
                 await safeNewsletterFollow(Gifted, s.NEWSLETTER_JID);
                 await safeGroupAcceptInvite(Gifted, s.GC_JID);

@@ -897,7 +897,7 @@ gmd(
     if (!q || !q.trim()) {
       await react("❌");
       return reply(
-        "❌ Please provide a group name.\nExample: .newgroup 𝑩𝑳𝑨𝑪𝑲 𝑯𝑨𝑻 𝑯𝑨𝑪𝑲𝑬𝑹 🥷🥷",
+        "❌ Please provide a group name.\nExample: .newgroup MeshTech Community",
       );
     }
 

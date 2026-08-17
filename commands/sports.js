@@ -31,17 +31,18 @@ const LEAGUE_CONFIG = {
 
 async function getContextInfo() {
   const botName = (await getSetting("BOT_NAME")) || "MESH TECH MD";
-  const channelJid =
-    (await getSetting("NEWSLETTER_JID")) || "120363422524788798@newsletter";
+  const channelJid = await getSetting("NEWSLETTER_JID");
   return {
     mentionedJid: [],
     forwardingScore: 1,
     isForwarded: true,
-    forwardedNewsletterMessageInfo: {
-      newsletterJid: channelJid,
-      newsletterName: botName,
-      serverMessageId: -1,
-    },
+    ...(channelJid ? {
+      forwardedNewsletterMessageInfo: {
+        newsletterJid: channelJid,
+        newsletterName: botName,
+        serverMessageId: -1,
+      },
+    } : {}),
   };
 }
 

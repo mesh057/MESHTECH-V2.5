@@ -80,8 +80,7 @@ const createContext = async (userJid, options = {}) => {
     const botPic =
         (await getSetting("BOT_PIC")) ||
         "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
-    const newsletterJid =
-        (await getSetting("NEWSLETTER_JID")) || "120363422524788798@newsletter";
+    const newsletterJid = await getSetting("NEWSLETTER_JID");
     const newsletterUrl =
         (await getSetting("NEWSLETTER_URL")) ||
         "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R";
@@ -91,14 +90,16 @@ const createContext = async (userJid, options = {}) => {
             mentionedJid: [userJid],
             forwardingScore: 1,
             isForwarded: true,
-            businessMessageForwardInfo: {
-                businessOwnerJid: newsletterJid,
-            },
-            forwardedNewsletterMessageInfo: {
-                newsletterJid: newsletterJid,
-                newsletterName: botName,
-                serverMessageId: Math.floor(100000 + Math.random() * 900000),
-            },
+            ...(newsletterJid ? {
+                businessMessageForwardInfo: {
+                    businessOwnerJid: newsletterJid,
+                },
+                forwardedNewsletterMessageInfo: {
+                    newsletterJid,
+                    newsletterName: botName,
+                    serverMessageId: Math.floor(100000 + Math.random() * 900000),
+                },
+            } : {}),
             externalAdReply: {
                 title: options.title || botName,
                 body: options.body || "Powered by Mesh Tech",
@@ -118,19 +119,20 @@ const createContext2 = async (userJid, options = {}) => {
     const botPic =
         (await getSetting("BOT_PIC")) ||
         "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
-    const newsletterJid =
-        (await getSetting("NEWSLETTER_JID")) || "120363422524788798@newsletter";
+    const newsletterJid = await getSetting("NEWSLETTER_JID");
 
     return {
         contextInfo: {
             mentionedJid: [userJid],
             forwardingScore: 1,
             isForwarded: true,
-            forwardedNewsletterMessageInfo: {
-                newsletterJid: newsletterJid,
-                newsletterName: botName,
-                serverMessageId: Math.floor(100000 + Math.random() * 900000),
-            },
+            ...(newsletterJid ? {
+                forwardedNewsletterMessageInfo: {
+                    newsletterJid,
+                    newsletterName: botName,
+                    serverMessageId: Math.floor(100000 + Math.random() * 900000),
+                },
+            } : {}),
             externalAdReply: {
                 title: options.title || botName,
                 body: options.body || "Powered by Mesh Tech",

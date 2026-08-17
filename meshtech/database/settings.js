@@ -61,7 +61,7 @@ const DEFAULT_SETTINGS = {
     AUTO_BIO: "false",
     AUTO_BLOCK: "",
     YT: "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R",
-    NEWSLETTER_JID: "120363422524788798@newsletter",
+    NEWSLETTER_JID: "",
     GC_JID: "FHT9hXCbu1z4XiPbn7HKMw",
     NEWSLETTER_URL: "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R",
     BOT_REPO: "mesh057/MESHTECH-V2.5",
@@ -90,13 +90,17 @@ async function initializeSettings() {
         where: { key: GROUP_ONLY_SETTINGS },
     });
 
+        const legacyNewsletterJid = ["120363422524788798", "newsletter"].join("@");
     for (const [key, defaultValue] of Object.entries(DEFAULT_SETTINGS)) {
-        await SettingsDB.findOrCreate({
+        const [record] = await SettingsDB.findOrCreate({
             where: { key },
             defaults: { key, value: defaultValue },
         });
+        if (key === "NEWSLETTER_JID" && record.value === legacyNewsletterJid) {
+            record.value = "";
+            await record.save();
+        }
     }
-
     initialized = true;
     console.log("✅ Bot Settings Initialized");
 }
