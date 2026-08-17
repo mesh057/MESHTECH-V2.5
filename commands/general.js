@@ -121,12 +121,9 @@ gmd(
   },
   async (from, Gifted, conText) => {
     const {
-      mek,
       react,
-      newsletterJid,
       newsletterUrl,
       botFooter,
-      botName,
       botPrefix,
     } = conText;
     const startTime = process.hrtime();
@@ -137,36 +134,39 @@ gmd(
 
     const elapsed = process.hrtime(startTime);
     const responseTime = Math.floor(elapsed[0] * 1000 + elapsed[1] / 1000000);
+    const pingText = `⚡ Pong: ${responseTime}ms`;
+    const pingButtons = [{ id: `${botPrefix}uptime`, text: "⏱️ Uptime" }];
+    const validNewsletterUrl = /^https?:\/\//i.test(String(newsletterUrl || ""));
 
-    await sendButtons(Gifted, from, {
-      title: "Bot Speed",
-      text: `⚡ Pong: ${responseTime}ms`,
-      footer: `> *${botFooter}*`,
-      buttons: [
-        { id: `${botPrefix}uptime`, text: "⏱️ Uptime" },
-        {
-          name: "cta_url",
-          buttonParamsJson: JSON.stringify({
-            display_text: "WaChannel",
-            url: newsletterUrl,
-          }),
-        },
-      ],
-    });
+    if (validNewsletterUrl) {
+      pingButtons.push({
+        name: "cta_url",
+        buttonParamsJson: JSON.stringify({
+          display_text: "WaChannel",
+          url: newsletterUrl,
+        }),
+      });
+    }
 
-    /*await Gifted.sendMessage(from, {
-      text: 
-      contextInfo: {
-        forwardingScore: 5,
-        isForwarded: true,
-        forwardedNewsletterMessageInfo: {
-          newsletterJid: newsletterJid,
-          newsletterName: botName,
-          serverMessageId: 143
-        }
-      }
-    }, { quoted: mek });*/
-    await react("✅");
+    try {
+      await sendButtons(Gifted, from, {
+        title: "Bot Speed",
+        text: pingText,
+        footer: `> *${botFooter}*`,
+        buttons: pingButtons,
+      });
+    } catch (error) {
+      console.error("Ping interactive response failed:", error.message);
+      await Gifted.sendMessage(from, {
+        text: `${pingText}\n\n> *${botFooter}*`,
+      });
+    }
+
+    try {
+      await react("✅");
+    } catch (error) {
+      console.error("Ping reaction failed:", error.message);
+    }
   },
 );
 
