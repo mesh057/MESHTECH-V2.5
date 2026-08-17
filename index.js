@@ -774,6 +774,10 @@ function setupCommandHandler(Gifted) {
             settings.OWNER_NUMBER || "",
         );
         const isSuperUser = superUser.includes(sender);
+        const configuredPrimaryOwner = standardizeJid(settings.OWNER_NUMBER || "");
+        const isPrimaryOwner = configuredPrimaryOwner
+            ? configuredPrimaryOwner === sender
+            : isSuperUser;
 
         if (settings.AUTO_BLOCK && sender && !isSuperUser && !isGroup) {
             const countryCodes = settings.AUTO_BLOCK.split(",").map((code) =>
@@ -821,6 +825,7 @@ function setupCommandHandler(Gifted) {
                     sender,
                     superUser,
                     isSuperUser,
+                    isPrimaryOwner,
                     messageAuthor,
                     user,
                     pushName,
@@ -881,6 +886,7 @@ function setupCommandHandler(Gifted) {
                     sender,
                     superUser,
                     isSuperUser,
+                    isPrimaryOwner,
                     messageAuthor,
                     user,
                     pushName,
@@ -1043,6 +1049,7 @@ function buildContext(ms, settings, helpers, data) {
         quotedKey: data.quotedKey,
         quotedUser: data.quotedUser,
         isSuperUser: data.isSuperUser,
+        isPrimaryOwner: data.isPrimaryOwner,
         botMode: settings.MODE,
         botPic: settings.BOT_PIC,
         botFooter: settings.FOOTER,
