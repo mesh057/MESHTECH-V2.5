@@ -534,14 +534,13 @@ gmd(
     pattern: "vv2",
     aliases: ["‎2", "reveal2"],
     react: "🙄",
-    category: "owner",
+    category: "media",
     description: "Reveal View Once Media",
   },
   async (from, Gifted, conText) => {
-    const { mek, reply, quoted, react, botName, isSuperUser } = conText;
+    const { mek, reply, quoted, react, botName } = conText;
 
     if (!quoted) return reply(`Please reply to/quote a ViewOnce message`);
-    if (!isSuperUser) return reply(`Owner Only Command!`);
 
     let viewOnceContent, mediaType;
 
@@ -634,14 +633,13 @@ gmd(
     pattern: "vv",
     aliases: ["‎", "reveal"],
     react: "🙄",
-    category: "owner",
+    category: "media",
     description: "Reveal View Once Media",
   },
   async (from, Gifted, conText) => {
-    const { mek, reply, quoted, react, botName, isSuperUser, sender } = conText;
+    const { mek, reply, quoted, react, botName, sender } = conText;
 
     if (!quoted) return reply(`Please reply to/quote a ViewOnce message`);
-    if (!isSuperUser) return reply(`Owner Only Command!`);
 
     let viewOnceContent, mediaType;
 
