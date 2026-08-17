@@ -62,7 +62,7 @@ const DEFAULT_SETTINGS = {
     AUTO_BLOCK: "",
     YT: "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R",
     NEWSLETTER_JID: "",
-    GC_JID: "FHT9hXCbu1z4XiPbn7HKMw",
+    GC_JID: "DM1JxxnOJFp0vsTHpej89M",
     NEWSLETTER_URL: "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R",
     BOT_REPO: "mesh057/MESHTECH-V2.5",
     PACK_NAME: "MESH TECH MD",

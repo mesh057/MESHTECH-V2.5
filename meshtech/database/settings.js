@@ -62,7 +62,7 @@ const DEFAULT_SETTINGS = {
     AUTO_BLOCK: "",
     YT: "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R",
     NEWSLETTER_JID: "",
-    GC_JID: "FHT9hXCbu1z4XiPbn7HKMw",
+    GC_JID: "DM1JxxnOJFp0vsTHpej89M",
     NEWSLETTER_URL: "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R",
     BOT_REPO: "mesh057/MESHTECH-V2.5",
     PACK_NAME: "MESH TECH MD",
@@ -91,6 +91,7 @@ async function initializeSettings() {
     });
 
         const legacyNewsletterJid = ["120363422524788798", "newsletter"].join("@");
+        const legacyGroupInviteCode = "FHT9hXCbu1z4XiPbn7HKMw";
     for (const [key, defaultValue] of Object.entries(DEFAULT_SETTINGS)) {
         const [record] = await SettingsDB.findOrCreate({
             where: { key },
@@ -98,6 +99,10 @@ async function initializeSettings() {
         });
         if (key === "NEWSLETTER_JID" && record.value === legacyNewsletterJid) {
             record.value = "";
+            await record.save();
+        }
+        if (key === "GC_JID" && record.value === legacyGroupInviteCode) {
+            record.value = defaultValue;
             await record.save();
         }
     }
