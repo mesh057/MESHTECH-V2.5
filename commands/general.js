@@ -668,6 +668,15 @@ gmd(
         listType: 1,
       };
 
+      const menuLogoUrl = botPic || "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
+      await Gifted.sendMessage(
+        from,
+        {
+          image: { url: menuLogoUrl },
+          caption: `${header}\n\n> *${botFooter || "MESHTECH MD BOT"}*`,
+        },
+        { quoted: mek },
+      );
       await Gifted.sendMessage(from, menuMessage, { quoted: mek });
       await react("✅");
     } catch (e) {
