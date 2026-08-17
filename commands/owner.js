@@ -534,7 +534,7 @@ gmd(
     pattern: "vv2",
     aliases: ["‎2", "reveal2"],
     react: "🙄",
-    category: "media",
+    category: "owner",
     description: "Reveal View Once Media",
   },
   async (from, Gifted, conText) => {
@@ -633,7 +633,7 @@ gmd(
     pattern: "vv",
     aliases: ["‎", "reveal"],
     react: "🙄",
-    category: "media",
+    category: "owner",
     description: "Reveal View Once Media",
   },
   async (from, Gifted, conText) => {

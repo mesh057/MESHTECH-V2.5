@@ -19,15 +19,15 @@ gmd(
             mek,
             react,
             reply,
-            isPrimaryOwner,
+            isSuperUser,
             setCommitHash,
             getCommitHash,
             giftedRepo,
         } = conText;
 
-        if (!isPrimaryOwner) {
+        if (!isSuperUser) {
             await react("❌");
-            return reply("❌ Primary Owner Only Command!");
+            return reply("❌ Owner Only Command!");
         }
 
         try {
