@@ -594,6 +594,31 @@ function setupNewsletterReact(Gifted) {
 }
 
 function setupPresence(Gifted) {
+    let onlineHeartbeat = null;
+
+    const stopOnlineHeartbeat = () => {
+        if (onlineHeartbeat) {
+            clearInterval(onlineHeartbeat);
+            onlineHeartbeat = null;
+        }
+    };
+
+    const sendOnlineHeartbeat = async () => {
+        try {
+            if (!Gifted?.user?.id) return;
+            const [dmPresence, groupPresence] = await Promise.all([
+                getSetting("DM_PRESENCE"),
+                getSetting("GC_PRESENCE"),
+            ]);
+            if ([dmPresence, groupPresence].every((value) => String(value || "offline").toLowerCase() === "offline")) {
+                return;
+            }
+            await Gifted.sendPresenceUpdate("available");
+        } catch (error) {
+            logger.debug(`Online presence heartbeat skipped: ${error.message}`);
+        }
+    };
+
     Gifted.ev.on("messages.upsert", async ({ messages }) => {
         if (Gifted?.user?.id && messages?.length > 0 && messages[0]?.key?.remoteJid) {
             await GiftedPresence(Gifted, messages[0].key.remoteJid);
@@ -602,7 +627,13 @@ function setupPresence(Gifted) {
 
     Gifted.ev.on("connection.update", ({ connection }) => {
         if (connection === "open" && Gifted?.user?.id) {
-            GiftedPresence(Gifted, "status@broadcast");
+            void GiftedPresence(Gifted, "status@broadcast");
+            stopOnlineHeartbeat();
+            void sendOnlineHeartbeat();
+            onlineHeartbeat = setInterval(sendOnlineHeartbeat, 4 * 60 * 1000);
+        }
+        if (connection === "close") {
+            stopOnlineHeartbeat();
         }
     });
 }
