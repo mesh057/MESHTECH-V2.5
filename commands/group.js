@@ -3,6 +3,83 @@ const { getGroupSetting, setGroupSetting } = require("../meshtech/database/group
 
 gmd(
   {
+    pattern: "admins",
+    aliases: ["groupadmins", "gcadmins", "adminlist"],
+    react: "👑",
+    category: "group",
+    description: "List the administrators and superadmins in this group.",
+  },
+  async (from, Gifted, conText) => {
+    const { reply, isGroup } = conText;
+    if (!isGroup) return reply("❌ This command only works in groups!");
+
+    try {
+      const metadata = await Gifted.groupMetadata(from);
+      const participants = Array.isArray(metadata?.participants)
+        ? metadata.participants
+        : [];
+      const superAdmins = participants.filter(
+        (participant) => participant?.admin === "superadmin",
+      );
+      const admins = participants.filter(
+        (participant) => participant?.admin === "admin",
+      );
+
+      if (!superAdmins.length && !admins.length) {
+        return reply("ℹ️ No group administrators were found in the current metadata.");
+      }
+
+      const resolveParticipant = async (participant) => {
+        let jid = participant?.pn || participant?.phoneNumber || participant?.id;
+        if (jid?.endsWith("@lid")) {
+          try {
+            const resolved = await Gifted.getJidFromLid(jid);
+            if (resolved) jid = resolved;
+          } catch (error) {
+            // Keep the LID as a fallback display identifier.
+          }
+        }
+        return jid;
+      };
+
+      const formatAdmins = async (list) => {
+        const lines = [];
+        for (const participant of list) {
+          const jid = await resolveParticipant(participant);
+          if (!jid) continue;
+          const number = jid.split("@")[0];
+          lines.push(`• @${number}`);
+        }
+        return lines;
+      };
+
+      const superAdminLines = await formatAdmins(superAdmins);
+      const adminLines = await formatAdmins(admins);
+      const mentions = [...superAdmins, ...admins]
+        .map((participant) => participant?.pn || participant?.phoneNumber || participant?.id)
+        .filter((jid) => jid && jid.endsWith("@s.whatsapp.net"));
+
+      let text = `╭━━━━━━━━━━━━━━━❍\n`;
+      text += `│ 👑 *GROUP ADMINS*\n`;
+      text += `│━━━━━━━━━━━━━━━❍\n`;
+      text += `│ 📍 *${metadata?.subject || "This Group"}*\n`;
+      text += `│\n`;
+      text += `│ ⭐ *Superadmin(s):*\n`;
+      text += superAdminLines.length ? `${superAdminLines.join("\n")}\n` : "│ None\n";
+      text += `│\n│ 🛡️ *Admin(s):*\n`;
+      text += adminLines.length ? `${adminLines.join("\n")}\n` : "│ None\n";
+      text += `╰━━━━━━━━━━━━━━━⬣`;
+
+      return reply(text, { mentions });
+    } catch (error) {
+      console.error("Admins command error:", error);
+      return reply("❌ Could not retrieve the group administrators right now.");
+    }
+  },
+);
+
+gmd(
+  {
     pattern: "antisticker",
     react: "🛡️",
     aliases: ["antistiker", "nosticker", "antist"],

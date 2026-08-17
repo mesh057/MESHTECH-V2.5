@@ -1579,7 +1579,7 @@ gmd(
 gmd(
   {
     pattern: "listadminusers",
-    aliases: ["admins", "superusers"],
+    aliases: ["paneladmins", "superusers"],
     react: "👑",
     category: "cpanel",
     description: "List admin Pterodactyl users.",
