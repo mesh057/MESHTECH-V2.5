@@ -538,8 +538,7 @@ gmd(
     description: "Reveal View Once Media",
   },
   async (from, Gifted, conText) => {
-    const { mek, reply, quoted, react, botName, isSuperUser } = conText;
-    if (!isSuperUser) return reply("❌ Owner Only Command!");
+    const { mek, reply, quoted, react, botName } = conText;
     if (!quoted) return reply(`Please reply to/quote a ViewOnce message`);
 
     let viewOnceContent, mediaType;
@@ -637,8 +636,7 @@ gmd(
     description: "Reveal View Once Media",
   },
   async (from, Gifted, conText) => {
-    const { mek, reply, quoted, react, botName, sender, isSuperUser } = conText;
-    if (!isSuperUser) return reply("❌ Owner Only Command!");
+    const { mek, reply, quoted, react, botName, sender } = conText;
     if (!quoted) return reply(`Please reply to/quote a ViewOnce message`);
 
     let viewOnceContent, mediaType;
