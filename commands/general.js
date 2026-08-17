@@ -221,106 +221,6 @@ gmd(
 
 gmd(
   {
-    pattern: "menus",
-    aliases: ["mainmenu", "mainmens"],
-    description: "Display Bot's Uptime, Date, Time, and Other Stats",
-    react: "📜",
-    category: "general",
-  },
-  async (from, Gifted, conText) => {
-    const {
-      mek,
-      sender,
-      react,
-      pushName,
-      botPic,
-      botMode,
-      botVersion,
-      botName,
-      botFooter,
-      timeZone,
-      botPrefix,
-      newsletterJid,
-      reply,
-      ownerNumber,
-    } = conText;
-    try {
-      function formatUptime(seconds) {
-        const days = Math.floor(seconds / (24 * 60 * 60));
-        seconds %= 24 * 60 * 60;
-        const hours = Math.floor(seconds / (60 * 60));
-        seconds %= 60 * 60;
-        const minutes = Math.floor(seconds / 60);
-        seconds = Math.floor(seconds % 60);
-        return `${days}d ${hours}h ${minutes}m ${seconds}s`;
-      }
-
-      const now = new Date();
-      const date = new Intl.DateTimeFormat("en-GB", {
-        timeZone: timeZone,
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }).format(now);
-
-      const time = new Intl.DateTimeFormat("en-GB", {
-        timeZone: timeZone,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true,
-      }).format(now);
-
-      const uptime = formatUptime(process.uptime());
-      const totalCommands = commands.filter(
-        (command) => command.pattern && !command.dontAddCommandList,
-      ).length;
-
-	      let menus = `╭━━━〔 ${toBold("MESH TECH MD V2.5")} 〕━━━┈⊷
-	┃ 🛡️ *WHATSAPP MULTI-DEVICE COMMAND CENTER*
-	┃
-	┃ 👋 *Welcome:* ${monospace(pushName)}
-	┃ ⚙️ *Mode:* ${monospace(botMode)}
-	┃ ⏱️ *Uptime:* ${monospace(uptime)}
-	┃ 🧠 *Memory:* ${monospace(ram)}
-	┃ 📅 *Date:* ${monospace(date)}
-	┃ 🕒 *Time:* ${monospace(time)}
-	┃
-	┃ ╭──❰ *QUICK HELP* ❱
-	┃ │ ${botPrefix}menu  — Full command guide
-	┃ │ ${botPrefix}list  — Every command with usage
-	┃ │ ${botPrefix}ping  — Check response speed
-	┃ │ ${botPrefix}uptime — Check bot uptime
-	┃ ╰─────────────⦁
-	┃
-	┃ _Use the command prefix before every command._
-	╰━━━━━━━━━━━━━━━━━━━━━━━━━━┈⊷`;
-
-	      const giftedMess = {
-	        image: { url: MESHTECH_LOGO_URL },
-	        caption: menus.trim(),
-        contextInfo: {
-          mentionedJid: [sender],
-          forwardingScore: 5,
-          isForwarded: true,
-          forwardedNewsletterMessageInfo: {
-            newsletterJid: newsletterJid,
-            newsletterName: botName,
-            serverMessageId: 0,
-          },
-        },
-      };
-      await Gifted.sendMessage(from, giftedMess, { quoted: mek });
-      await react("✅");
-    } catch (e) {
-      console.error(e);
-      reply(`${e}`);
-    }
-  },
-);
-
-gmd(
-  {
     pattern: "category",
     aliases: ["cat"],
     description: "Open a command category from the dropdown",
@@ -530,7 +430,7 @@ gmd(
 gmd(
   {
     pattern: "menu",
-    aliases: ["men", "allmenu"],
+    aliases: ["men", "allmenu", "menus", "mainmenu", "mainmens"],
     react: "🪀",
     category: "general",
     description: "Fetch bot main menu",
