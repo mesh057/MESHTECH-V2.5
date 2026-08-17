@@ -76,32 +76,45 @@ const GiftedAntiLink = async (Gifted, message, getGroupMetadata) => {
         const { getGroupSetting, addAntilinkWarning, resetAntilinkWarnings } = require('./database/groupSettings');
         const { getLidMapping } = require('./connection/groupCache');
         const antiLink = await getGroupSetting(from, 'ANTILINK');
-        
         if (!antiLink || antiLink === 'false' || antiLink === 'off') return;
-
         const messageType = Object.keys(message.message)[0];
         const body = messageType === 'conversation'
             ? message.message.conversation
             : message.message[messageType]?.text || message.message[messageType]?.caption || '';
-
         if (!body || !isAnyLink(body)) return;
-
-        let sender = message.key.participantPn || message.key.participant || message.participant;
+        let sender = message.key.participantPn || message.key.participant || message.key.participantAlt || message.participant;
         if (!sender || sender.endsWith('@g.us')) {
             return;
         }
-
         const settings = await getAllSettings();
         const botName = settings.BOT_NAME || 'MESH TECH MD';
-        
+        const senderIdentifiers = new Set();
+        const addSenderIdentifier = (value) => {
+            if (!value || typeof value !== 'string') return;
+            const normalized = value.toLowerCase();
+            senderIdentifiers.add(normalized);
+            if (normalized.includes('@')) senderIdentifiers.add(normalized.split('@')[0]);
+        };
+        [
+            sender,
+            message.key.participantPn,
+            message.key.participant,
+            message.key.participantAlt,
+            message.key.senderPn,
+            message.participant,
+        ].forEach(addSenderIdentifier);
         if (sender.endsWith('@lid')) {
             const cached = getLidMapping(sender);
             if (cached) {
                 sender = cached;
+                addSenderIdentifier(cached);
             } else {
                 try {
                     const resolved = await Gifted.getJidFromLid(sender);
-                    if (resolved) sender = resolved;
+                    if (resolved) {
+                        sender = resolved;
+                        addSenderIdentifier(resolved);
+                    }
                 } catch (e) {}
             }
         }
@@ -122,22 +135,32 @@ const GiftedAntiLink = async (Gifted, message, getGroupMetadata) => {
         const groupMetadata = await getGroupMetadata(Gifted, from);
         if (!groupMetadata || !groupMetadata.participants) return;
 
-        const botJid = Gifted.user?.id?.split(':')[0] + '@s.whatsapp.net';
-        const botAdmin = groupMetadata.participants.find(p => {
-            const pNum = (p.pn || p.phoneNumber || p.id || '').split('@')[0];
-            const botNum = botJid.split('@')[0];
-            return pNum === botNum && p.admin;
+        const participantIdentifiers = (participant) => {
+            const identifiers = new Set();
+            [participant?.id, participant?.jid, participant?.pn, participant?.phoneNumber, participant?.participant, participant?.lid]
+                .forEach((value) => {
+                    if (!value || typeof value !== 'string') return;
+                    const normalized = value.toLowerCase();
+                    identifiers.add(normalized);
+                    if (normalized.includes('@')) identifiers.add(normalized.split('@')[0]);
+                });
+            return identifiers;
+        };
+        const botNumber = (Gifted.user?.id || '').split(':')[0];
+        const botAdmin = groupMetadata.participants.find((participant) => {
+            if (!participant.admin) return false;
+            const identifiers = participantIdentifiers(participant);
+            return identifiers.has(botNumber) || identifiers.has(`${botNumber}@s.whatsapp.net`);
         });
         if (!botAdmin) return;
 
-        const groupAdmins = groupMetadata.participants
-            .filter((member) => member.admin)
-            .map((admin) => admin.pn || admin.phoneNumber || admin.id);
-
-        const senderNormalized = sender.split('@')[0];
-        const isAdmin = groupAdmins.some(admin => {
-            const adminNum = (admin || '').split('@')[0];
-            return adminNum === senderNormalized || admin === sender;
+        const isAdmin = groupMetadata.participants.some((participant) => {
+            if (!participant.admin) return false;
+            const identifiers = participantIdentifiers(participant);
+            for (const identifier of senderIdentifiers) {
+                if (identifiers.has(identifier)) return true;
+            }
+            return false;
         });
 
         if (isAdmin) {
