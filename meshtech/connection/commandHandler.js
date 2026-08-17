@@ -129,21 +129,73 @@ const getGroupInfo = async (Gifted, from, botId, sender) => {
         };
     }
 
-    const participants = groupInfo.participants.map(p => p.pn || p.phoneNumber || p.id);
-    const groupAdmins = groupInfo.participants.filter(p => p.admin === 'admin').map(p => p.pn || p.phoneNumber || p.id);
-    const groupSuperAdmins = groupInfo.participants.filter(p => p.admin === 'superadmin').map(p => p.pn || p.phoneNumber || p.id);
-    
-    const senderLid = standardizeJid(sender);
-    const found = groupInfo.participants.find(p => p.id === senderLid || p.pn === senderLid || p.phoneNumber === senderLid);
+    const participantIdentifiers = (participant) => {
+        const identifiers = new Set();
+        const values = [
+            participant?.id,
+            participant?.jid,
+            participant?.pn,
+            participant?.phoneNumber,
+            participant?.participant,
+            participant?.lid,
+        ];
+        for (const value of values) {
+            if (!value || typeof value !== 'string') continue;
+            const normalized = value.trim().toLowerCase();
+            identifiers.add(normalized);
+            if (normalized.includes('@')) identifiers.add(normalized.split('@')[0]);
+            if (normalized.endsWith('@lid')) {
+                const mapped = getLidMapping(normalized);
+                if (mapped) {
+                    const mappedNormalized = mapped.toLowerCase();
+                    identifiers.add(mappedNormalized);
+                    if (mappedNormalized.includes('@')) identifiers.add(mappedNormalized.split('@')[0]);
+                }
+            }
+        }
+        return identifiers;
+    };
+    const senderIdentifiers = participantIdentifiers({
+        id: sender,
+        jid: standardizeJid(sender),
+    });
+    const found = groupInfo.participants.find((participant) => {
+        const identifiers = participantIdentifiers(participant);
+        return [...senderIdentifiers].some((identifier) => identifiers.has(identifier));
+    });
     let resolvedSender = found?.pn || found?.phoneNumber || found?.id || sender;
     if (resolvedSender.endsWith('@lid')) {
         const mapped = getLidMapping(resolvedSender);
         if (mapped) resolvedSender = mapped;
     }
-    
-    const isBotAdmin = groupAdmins.includes(standardizeJid(botId)) || groupSuperAdmins.includes(standardizeJid(botId));
-    const isAdmin = groupAdmins.includes(resolvedSender);
-    const isSuperAdmin = groupSuperAdmins.includes(resolvedSender);
+
+    const isAdminParticipant = (participant) => (
+        participant?.admin === 'admin' ||
+        participant?.admin === 'superadmin' ||
+        participant?.admin === true
+    );
+    const groupAdmins = groupInfo.participants
+        .filter((participant) => participant?.admin === 'admin' || participant?.admin === true)
+        .map((participant) => participant.pn || participant.phoneNumber || participant.id);
+    const groupSuperAdmins = groupInfo.participants
+        .filter((participant) => participant?.admin === 'superadmin')
+        .map((participant) => participant.pn || participant.phoneNumber || participant.id);
+    const botIdentifiers = participantIdentifiers({ id: botId, jid: standardizeJid(botId) });
+    const isBotAdmin = groupInfo.participants.some((participant) => {
+        if (!isAdminParticipant(participant)) return false;
+        const identifiers = participantIdentifiers(participant);
+        return [...botIdentifiers].some((identifier) => identifiers.has(identifier));
+    });
+    const isAdmin = groupInfo.participants.some((participant) => {
+        if (!isAdminParticipant(participant)) return false;
+        const identifiers = participantIdentifiers(participant);
+        return [...senderIdentifiers].some((identifier) => identifiers.has(identifier));
+    });
+    const isSuperAdmin = groupInfo.participants.some((participant) => {
+        if (participant?.admin !== 'superadmin') return false;
+        const identifiers = participantIdentifiers(participant);
+        return [...senderIdentifiers].some((identifier) => identifiers.has(identifier));
+    });
 
     return {
         groupInfo,
