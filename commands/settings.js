@@ -868,7 +868,7 @@ gmd(
     aliases: ["setwarncount", "warncount", "antilinkwarncount", "warnlimit"],
     react: "⚙️",
     category: "group",
-    description: "Set antilink warning count before kick (default 5)",
+    description: "Set antilink warning count before kick (default 3)",
   },
   async (from, Gifted, conText) => {
     const { q, reply, react, isSuperUser, isGroup, isAdmin } = conText;
@@ -878,7 +878,7 @@ gmd(
     const count = parseInt(q);
     if (!q) {
       const current =
-        (await getGroupSetting(from, "ANTILINK_WARN_COUNT")) || "5";
+        (await getGroupSetting(from, "ANTILINK_WARN_COUNT")) || "3";
       return reply(
         `⚠️ Current warn count for this group: *${current}*\nUsage: .antilinkwarn 3`,
       );
@@ -889,7 +889,7 @@ gmd(
     }
 
     try {
-      const currentWarnCount = (await getGroupSetting(from, "ANTILINK_WARN_COUNT")) || "5";
+      const currentWarnCount = (await getGroupSetting(from, "ANTILINK_WARN_COUNT")) || "3";
       if (currentWarnCount === count.toString()) {
         return reply(`⚠️ Antilink warn count is already set to: *${count}*`);
       }
