@@ -1061,6 +1061,7 @@
 
                     if (data.success) {
                         currentPhoneNumber = data.phoneNumber || phoneNumber.replace(/\D/g, '');
+                        localStorage.setItem('meshtech.customerNumber', currentPhoneNumber);
                         currentAccessToken = data.accessToken;
                         showQrWaiting('GENERATING WHATSAPP QR CODE...');
                         pollForQr(data.phoneNumber || phoneNumber, currentAccessToken);
@@ -1312,6 +1313,7 @@
                     const data = await response.json();
                     if (response.ok && data.success && data.sessionId) {
                         currentSessionId = data.sessionId;
+                        localStorage.setItem('meshtech.customerNumber', currentPhoneNumber);
                         sessionStorage.setItem('meshtech.pendingSession', JSON.stringify({
                             phoneNumber: currentPhoneNumber,
                             sessionId: currentSessionId,
@@ -1386,6 +1388,7 @@
 
         sessionIdBtn.addEventListener('click', async () => {
             if (currentSessionId) {
+                localStorage.setItem('meshtech.customerNumber', currentPhoneNumber);
                 sessionStorage.setItem('meshtech.pendingSession', JSON.stringify({ phoneNumber: currentPhoneNumber, sessionId: currentSessionId, createdAt: Date.now() }));
                 window.location.assign('/dashboard?autoSession=1');
                 return;

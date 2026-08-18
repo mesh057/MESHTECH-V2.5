@@ -316,6 +316,12 @@
         }
         .btn-danger:hover { background: rgba(239, 68, 68, .22); color: #fff; }
         .empty-sessions { color: var(--text-secondary); font-size: 12px; text-align: center; padding: 8px; }
+        .admin-panel { border-color: rgba(59, 130, 246, .4); }
+        .admin-login { display: flex; gap: 8px; align-items: center; }
+        .admin-login input { flex: 1; min-width: 0; }
+        .btn-blue { background: rgba(59, 130, 246, .15); border: 1px solid rgba(59, 130, 246, .55); color: #93c5fd; border-radius: 7px; padding: 9px 12px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+        .btn-blue:hover { background: rgba(59, 130, 246, .25); color: #fff; }
+        .admin-note { color: var(--text-secondary); font-size: 11px; line-height: 1.5; margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -384,13 +390,40 @@
 
             <div class="session-panel">
                 <div class="session-panel-header">
-                    <h3><i class="fa-solid fa-database"></i> Saved Sessions</h3>
-                    <button type="button" class="btn-small" onclick="loadSessions()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                    <h3><i class="fa-solid fa-user-shield"></i> My Saved Session</h3>
+                    <button type="button" class="btn-small" onclick="loadCustomerSession()"><i class="fa-solid fa-rotate"></i> Check</button>
                 </div>
-                <div id="sessionList" class="session-list">
-                    <div class="empty-sessions">Loading sessions...</div>
+                <div class="form-group">
+                    <label>YOUR WHATSAPP NUMBER</label>
+                    <input type="text" id="customerPhone" placeholder="e.g., 254746844168">
                 </div>
-                <div class="help-text" style="margin-top:10px;">Delete only a session you no longer need. This removes its saved WhatsApp credentials and stops its active process.</div>
+                <div id="customerSessionList" class="session-list" style="margin-top:12px;">
+                    <div class="empty-sessions">Enter your number to view your saved session.</div>
+                </div>
+                <div class="help-text" style="margin-top:10px;">You can only view and delete the session created or restored in this browser. Other customers' sessions are not shown.</div>
+            </div>
+
+            <div class="session-panel admin-panel">
+                <div class="session-panel-header">
+                    <h3><i class="fa-solid fa-lock"></i> Owner Admin Panel</h3>
+                    <button type="button" class="btn-small" id="adminLogoutBtn" onclick="adminLogout()" style="display:none;">Log out</button>
+                </div>
+                <div id="adminLoginArea">
+                    <div class="admin-login">
+                        <input type="password" id="adminPassword" placeholder="Owner admin password" autocomplete="current-password">
+                        <button type="button" class="btn-blue" onclick="adminLogin()">Unlock</button>
+                    </div>
+                    <div id="adminStatus" class="admin-note">Owner access is required to view all customer sessions.</div>
+                </div>
+                <div id="adminSessionArea" style="display:none;">
+                    <div class="session-panel-header" style="margin-top:12px;">
+                        <span class="help-text">All saved sessions</span>
+                        <button type="button" class="btn-small" onclick="loadAdminSessions()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                    </div>
+                    <div id="adminSessionList" class="session-list">
+                        <div class="empty-sessions">Loading all sessions...</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -406,8 +439,11 @@
                     return;
                 }
                 const phoneField = document.getElementById('phoneNumber');
+                const customerPhoneField = document.getElementById('customerPhone');
                 const sessionField = document.getElementById('sessionId');
                 if (phoneField && pending.phoneNumber) phoneField.value = pending.phoneNumber;
+                if (customerPhoneField && pending.phoneNumber) customerPhoneField.value = pending.phoneNumber;
+                if (pending.phoneNumber) localStorage.setItem('meshtech.customerNumber', pending.phoneNumber);
                 if (sessionField) {
                     sessionField.value = pending.sessionId;
                     sessionField.dataset.autoFilled = 'true';
@@ -426,15 +462,129 @@
         }
 
         loadPendingSession();
-        loadSessions();
+        const savedCustomerNumber = localStorage.getItem('meshtech.customerNumber');
+        if (savedCustomerNumber) {
+            document.getElementById('customerPhone').value = savedCustomerNumber;
+            loadCustomerSession();
+        }
+        checkAdminStatus();
 
-        async function loadSessions() {
-            const list = document.getElementById('sessionList');
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
+        }
+
+        function escapeJs(value) {
+            return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
+
+        function getCustomerNumber() {
+            const field = document.getElementById('customerPhone');
+            const fallback = document.getElementById('phoneNumber');
+            return String((field?.value || fallback?.value || '')).replace(/\D/g, '');
+        }
+
+        async function loadCustomerSession() {
+            const list = document.getElementById('customerSessionList');
+            const number = getCustomerNumber();
+            if (!list) return;
+            if (!number) {
+                list.innerHTML = '<div class="empty-sessions" style="color:var(--error);">Enter your WhatsApp number first.</div>';
+                return;
+            }
+            localStorage.setItem('meshtech.customerNumber', number);
+            list.innerHTML = '<div class="empty-sessions">Checking your saved session...</div>';
+            try {
+                const response = await fetch(`/api/sessions?phoneNumber=${encodeURIComponent(number)}`, { cache: 'no-store' });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.error || 'Unable to load your session.');
+                if (!data.sessions.length) {
+                    list.innerHTML = '<div class="empty-sessions">No saved session found for this number.</div>';
+                    return;
+                }
+                list.innerHTML = data.sessions.map(session => `
+                    <div class="session-row">
+                        <div>
+                            <div class="session-number">${escapeHtml(session.number)}</div>
+                            <div class="session-status">${escapeHtml(session.status)}${session.pid ? ` · Active process` : ''}</div>
+                        </div>
+                        <button type="button" class="btn-danger" onclick="deleteCustomerSession('${escapeJs(session.number)}')">
+                            <i class="fa-solid fa-trash"></i> Delete mine
+                        </button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                list.innerHTML = `<div class="empty-sessions" style="color:var(--error);">${escapeHtml(error.message)}</div>`;
+            }
+        }
+
+        async function deleteCustomerSession(number) {
+            const cleanNumber = String(number).replace(/\D/g, '');
+            if (!cleanNumber) return;
+            if (!window.confirm(`Delete your complete saved session for ${cleanNumber}? This cannot be undone.`)) return;
+            const list = document.getElementById('customerSessionList');
+            try {
+                const response = await fetch('/api/clear-session', {
+                    method: 'POST',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({ phoneNumber: cleanNumber })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.error || 'Session could not be deleted.');
+                if (list) list.innerHTML = '<div class="empty-sessions">Your session was deleted.</div>';
+            } catch (error) {
+                if (list) list.innerHTML = `<div class="empty-sessions" style="color:var(--error);">${escapeHtml(error.message)}</div>`;
+            }
+        }
+
+        async function checkAdminStatus() {
+            try {
+                const response = await fetch('/api/admin/status', { cache: 'no-store' });
+                const data = await response.json();
+                if (data.authenticated) showAdminPanel();
+            } catch (_) {}
+        }
+
+        async function adminLogin() {
+            const password = document.getElementById('adminPassword').value;
+            const status = document.getElementById('adminStatus');
+            if (!password) { status.textContent = 'Enter the owner admin password.'; return; }
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.error || 'Admin login failed.');
+                document.getElementById('adminPassword').value = '';
+                showAdminPanel();
+            } catch (error) {
+                status.textContent = error.message;
+                status.style.color = 'var(--error)';
+            }
+        }
+
+        function showAdminPanel() {
+            document.getElementById('adminLoginArea').style.display = 'none';
+            document.getElementById('adminSessionArea').style.display = 'block';
+            document.getElementById('adminLogoutBtn').style.display = 'inline-block';
+            loadAdminSessions();
+        }
+
+        async function adminLogout() {
+            await fetch('/api/admin/logout', { method: 'POST' });
+            document.getElementById('adminLoginArea').style.display = 'block';
+            document.getElementById('adminSessionArea').style.display = 'none';
+            document.getElementById('adminLogoutBtn').style.display = 'none';
+        }
+
+        async function loadAdminSessions() {
+            const list = document.getElementById('adminSessionList');
             if (!list) return;
             try {
                 const response = await fetch('/api/sessions', { cache: 'no-store' });
                 const data = await response.json();
-                if (!response.ok || !data.success) throw new Error(data.error || 'Unable to load sessions.');
+                if (!response.ok || !data.success) throw new Error(data.error || 'Unable to load all sessions.');
                 if (!data.sessions.length) {
                     list.innerHTML = '<div class="empty-sessions">No saved sessions found.</div>';
                     return;
@@ -445,7 +595,7 @@
                             <div class="session-number">${escapeHtml(session.number)}</div>
                             <div class="session-status">${escapeHtml(session.status)}${session.pid ? ` · PID ${escapeHtml(String(session.pid))}` : ''}</div>
                         </div>
-                        <button type="button" class="btn-danger" onclick="deleteSession('${escapeJs(session.number)}')">
+                        <button type="button" class="btn-danger" onclick="deleteAdminSession('${escapeJs(session.number)}')">
                             <i class="fa-solid fa-trash"></i> Delete
                         </button>
                     </div>
@@ -455,32 +605,17 @@
             }
         }
 
-        function escapeHtml(value) {
-            return String(value).replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
-        }
-
-        function escapeJs(value) {
-            return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-        }
-
-        async function deleteSession(number) {
-            const cleanNumber = String(number).replace(/\\D/g, '');
-            if (!cleanNumber) return;
-            if (!window.confirm(`Delete the complete saved session for ${cleanNumber}? This cannot be undone.`)) return;
-            const list = document.getElementById('sessionList');
-            try {
-                const response = await fetch('/api/clear-session', {
-                    method: 'POST',
-                    headers: { 'content-type': 'application/json' },
-                    body: JSON.stringify({ phoneNumber: cleanNumber })
-                });
-                const data = await response.json();
-                if (!response.ok || !data.success) throw new Error(data.error || 'Session could not be deleted.');
-                if (list) list.innerHTML = '<div class="empty-sessions">Session deleted. Refreshing...</div>';
-                await loadSessions();
-            } catch (error) {
-                if (list) list.innerHTML = `<div class="empty-sessions" style="color:var(--error);">${escapeHtml(error.message)}</div>`;
-            }
+        async function deleteAdminSession(number) {
+            const cleanNumber = String(number).replace(/\D/g, '');
+            if (!cleanNumber || !window.confirm(`Delete the complete saved session for ${cleanNumber}?`)) return;
+            const response = await fetch('/api/clear-session', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ phoneNumber: cleanNumber })
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) return alert(data.error || 'Session could not be deleted.');
+            await loadAdminSessions();
         }
 
         async function handleDeploy(event) {

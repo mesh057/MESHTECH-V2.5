@@ -1,7 +1,101 @@
 const http = require('http');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { MultiUserSessionManager } = require('./session-manager');
+
+const ADMIN_PASSWORD = process.env.MESHTECH_ADMIN_PASSWORD || 'MESHTECH_ADMIN';
+const CUSTOMER_TOKEN_SECRET = process.env.MESHTECH_CUSTOMER_SECRET || process.env.MESHTECH_ADMIN_PASSWORD || 'MESHTECH_ADMIN';
+const ADMIN_SESSION_TTL = 8 * 60 * 60 * 1000;
+const CUSTOMER_COOKIE_TTL = 30 * 24 * 60 * 60 * 1000;
+const adminSessions = new Map();
+const adminLoginRate = new Map();
+
+function safeEqualText(a, b) {
+  const left = Buffer.from(String(a || ''));
+  const right = Buffer.from(String(b || ''));
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
+}
+
+function parseCookies(req) {
+  const cookies = {};
+  for (const part of String(req.headers.cookie || '').split(';')) {
+    const separator = part.indexOf('=');
+    if (separator < 0) continue;
+    const key = part.slice(0, separator).trim();
+    const value = part.slice(separator + 1).trim();
+    if (key) cookies[key] = decodeURIComponent(value);
+  }
+  return cookies;
+}
+
+function adminToken(req) {
+  const token = parseCookies(req).meshtech_admin;
+  if (!token) return null;
+  const expiresAt = adminSessions.get(token);
+  if (!expiresAt || expiresAt < Date.now()) {
+    adminSessions.delete(token);
+    return null;
+  }
+  return token;
+}
+
+function requireAdmin(req, res) {
+  if (adminToken(req)) return true;
+  json(res, 401, { success: false, authenticated: false, error: 'Admin authentication required.' });
+  return false;
+}
+
+function loginAllowed(ip) {
+  const now = Date.now();
+  const item = adminLoginRate.get(ip) || { count: 0, reset: now + 15 * 60_000 };
+  if (now > item.reset) { item.count = 0; item.reset = now + 15 * 60_000; }
+  item.count += 1;
+  adminLoginRate.set(ip, item);
+  return item.count <= 8;
+}
+
+function setAdminCookie(res, token) {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  res.setHeader('set-cookie', `meshtech_admin=${encodeURIComponent(token)}; Max-Age=${ADMIN_SESSION_TTL / 1000}; HttpOnly; SameSite=Lax; Path=/${secure}`);
+}
+
+function clearAdminCookie(res) {
+  res.setHeader('set-cookie', 'meshtech_admin=; Max-Age=0; HttpOnly; SameSite=Lax; Path=/');
+}
+
+function customerCookieValue(number) {
+  const phone = String(number || '').replace(/\D/g, '');
+  const expiresAt = Date.now() + CUSTOMER_COOKIE_TTL;
+  const payload = `${phone}.${expiresAt}`;
+  const encoded = Buffer.from(payload).toString('base64url');
+  const signature = crypto.createHmac('sha256', CUSTOMER_TOKEN_SECRET).update(encoded).digest('base64url');
+  return `${encoded}.${signature}`;
+}
+
+function customerPhone(req) {
+  const token = parseCookies(req).meshtech_customer;
+  if (!token) return null;
+  const [encoded, signature] = token.split('.');
+  if (!encoded || !signature) return null;
+  const expected = crypto.createHmac('sha256', CUSTOMER_TOKEN_SECRET).update(encoded).digest('base64url');
+  if (!safeEqualText(signature, expected)) return null;
+  try {
+    const [phone, expiresText] = Buffer.from(encoded, 'base64url').toString('utf8').split('.');
+    const expiresAt = Number(expiresText);
+    if (!/^\d{8,15}$/.test(phone) || !Number.isFinite(expiresAt) || expiresAt < Date.now()) return null;
+    return phone;
+  } catch (_) {
+    return null;
+  }
+}
+
+function setCustomerCookie(res, number) {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  const token = customerCookieValue(number);
+  res.setHeader('set-cookie', `meshtech_customer=${encodeURIComponent(token)}; Max-Age=${CUSTOMER_COOKIE_TTL / 1000}; HttpOnly; SameSite=Lax; Path=/${secure}`);
+}
+
 const { createMeshTechSessionId } = require('../meshtech/sessionId');
 
 const manager = new MultiUserSessionManager();
@@ -114,7 +208,53 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    if (req.method === 'POST' && url.pathname === '/api/admin/login') {
+      if (!loginAllowed(ip)) return json(res, 429, { success: false, error: 'Too many admin login attempts. Try again in 15 minutes.' });
+      const data = await readBody(req, 20_000);
+      if (!safeEqualText(data.password, ADMIN_PASSWORD)) return json(res, 401, { success: false, authenticated: false, error: 'Incorrect admin password.' });
+      const token = crypto.randomBytes(32).toString('hex');
+      adminSessions.set(token, Date.now() + ADMIN_SESSION_TTL);
+      setAdminCookie(res, token);
+      return json(res, 200, { success: true, authenticated: true, expiresIn: ADMIN_SESSION_TTL });
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/admin/status') {
+      return json(res, 200, { success: true, authenticated: Boolean(adminToken(req)) });
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/admin/logout') {
+      const token = adminToken(req);
+      if (token) adminSessions.delete(token);
+      clearAdminCookie(res);
+      return json(res, 200, { success: true, authenticated: false });
+    }
+
     if (req.method === 'GET' && url.pathname === '/api/sessions') {
+      const isAdmin = Boolean(adminToken(req));
+      const requestedNumber = String(url.searchParams.get('phoneNumber') || '').replace(/\D/g, '');
+
+      if (!isAdmin) {
+        // Customer view: the signed cookie is the ownership proof.
+        const ownedNumber = customerPhone(req);
+        if (!requestedNumber || !ownedNumber || ownedNumber !== requestedNumber) {
+          return json(res, 403, { success: false, sessions: [], error: 'Enter the number used in this browser session.' });
+        }
+        const restorable = manager.listRestorableSessions();
+        const activeList = manager.list();
+        const isRestorable = restorable.includes(requestedNumber);
+        const active = activeList.find(s => s.number === requestedNumber);
+        const exists = isRestorable || Boolean(active);
+        const sessions = exists ? [{
+          number: requestedNumber,
+          status: active ? active.status : (isRestorable ? 'registered' : 'idle'),
+          active: Boolean(active),
+          restorable: isRestorable,
+          pid: active ? active.pid : null,
+        }] : [];
+        return json(res, 200, { success: true, sessions });
+      }
+
+      // Owner/Admin view: return all sessions
       const restorable = manager.listRestorableSessions();
       const activeList = manager.list();
       const allNumbers = Array.from(new Set([...restorable, ...activeList.map(s => s.number)]));
@@ -129,7 +269,7 @@ const server = http.createServer(async (req, res) => {
           pid: active ? active.pid : null,
         };
       });
-      return json(res, 200, { success: true, sessions });
+      return json(res, 200, { success: true, sessions, isAdmin: true });
     }
 
     if (req.method === 'POST' && url.pathname === '/api/request-pairing') {
@@ -137,7 +277,8 @@ const server = http.createServer(async (req, res) => {
       const data = await readBody(req);
       if (!manager.hasSessionCapacity(data.phoneNumber)) return json(res, 429, { success: false, error: `Maximum active sessions reached (${manager.maxInstances}).` });
       const session = await manager.start(data.phoneNumber, data.useQr === true, false, '', data.force === true);
-      return json(res, 200, { success: true, message: 'Session started. Poll /api/pairing-code for the code or QR.', phoneNumber: session.number, accessToken: session.accessToken });
+      setCustomerCookie(res, session.number);
+      return json(res, 200, { success: true, message: 'Session started. Poll /api/pairing-code for the code or QR.', phoneNumber: session.number, accessToken: session.accessToken, customerNumber: session.number });
     }
 
     if (req.method === 'POST' && url.pathname === '/api/clear-session') {
@@ -146,6 +287,11 @@ const server = http.createServer(async (req, res) => {
       const phoneNumber = String(data.phoneNumber || '').replace(/\D/g, '');
       if (!phoneNumber) return json(res, 400, { success: false, error: 'Phone number is required.' });
       
+      const isAdmin = Boolean(adminToken(req));
+      if (!isAdmin && customerPhone(req) !== phoneNumber) {
+        return json(res, 403, { success: false, error: 'Unauthorized. You can only delete your own saved session.' });
+      }
+
       const success = await manager.clear(phoneNumber);
       return json(res, 200, { success, message: success ? 'Session cleared successfully.' : 'Failed to clear session.' });
     }
@@ -165,7 +311,8 @@ const server = http.createServer(async (req, res) => {
       const importedMeshTechSession = /^MeshTech~.+/i.test(sessionText) ? sessionText : '';
       if (!importedMeshTechSession) writeRawCredentials(authDir, sessionText);
       const session = await manager.start(phoneNumber, false, true, importedMeshTechSession);
-      return json(res, 200, { success: true, message: 'Session restored successfully!', phoneNumber, status: session.status });
+      setCustomerCookie(res, session.number);
+      return json(res, 200, { success: true, message: 'Session restored successfully!', phoneNumber, status: session.status, accessToken: session.accessToken, customerNumber: session.number });
     }
 
     if (req.method === 'GET' && url.pathname === '/api/session-id') {
@@ -202,6 +349,13 @@ const server = http.createServer(async (req, res) => {
 });
 
 let shuttingDown = false;
+setInterval(() => {
+  const now = Date.now();
+  for (const [token, expiresAt] of adminSessions) {
+    if (expiresAt < now) adminSessions.delete(token);
+  }
+}, 15 * 60_000).unref();
+
 async function shutdown(signal) {
   if (shuttingDown) return;
   shuttingDown = true;
