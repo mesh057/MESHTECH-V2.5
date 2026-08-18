@@ -155,12 +155,17 @@ setInterval(() => {
 }, 60000);
 
 if (embeddedHttpServerEnabled) {
+    // Keep-alive: Ping the local health endpoint every 30 seconds to prevent Railway hibernation
     setInterval(async () => {
         try {
             const http = require("http");
             http.get(`http://localhost:${PORT}/health`, () => {});
+            // Also send a presence update to WhatsApp if connected
+            if (Gifted?.user?.id) {
+                await Gifted.sendPresenceUpdate("available");
+            }
         } catch (e) {}
-    }, 240000);
+    }, 30000);
 }
 
 const sessionDir = path.resolve(process.env.AUTH_DIR || config.AUTH_DIR || path.join(__dirname, "meshtech", "session"));
@@ -258,20 +263,25 @@ async function startGifted() {
 
         setupConnectionHandler(Gifted, sessionDir, startGifted, {
             onOpen: async (Gifted) => {
-                try {
-                    if (!Gifted?.user?.id) {
-                        console.warn("⚠️ Connection opened before WhatsApp authentication; skipping post-connect actions.");
-                        return;
+                // Background task to avoid blocking connection
+                (async () => {
+                    try {
+                        if (!Gifted?.user?.id) return;
+                        
+                        // Ensure presence is set to available on start
+                        await Gifted.sendPresenceUpdate("available");
+                        
+                        // Resolve channel metadata in the background
+                        void resolveMeshTechChannel(Gifted);
+                        
+                        const s = await getAllSettings();
+                        if (s.NEWSLETTER_JID) await safeNewsletterFollow(Gifted, s.NEWSLETTER_JID);
+                        if (s.GC_JID) await safeGroupAcceptInvite(Gifted, s.GC_JID);
+                        await initializeLidStore(Gifted);
+                    } catch (err) {
+                        console.error("Error in onOpen post-connect handler:", err);
                     }
-                    // Resolve channel metadata in the background; connection startup must not wait on an external lookup.
-                    void resolveMeshTechChannel(Gifted);
-                    const s = await getAllSettings();
-                    await safeNewsletterFollow(Gifted, s.NEWSLETTER_JID);
-                    await safeGroupAcceptInvite(Gifted, s.GC_JID);
-                    await initializeLidStore(Gifted);
-                } catch (err) {
-                    console.error("Error in onOpen post-connect handler:", err);
-                }
+                })();
 
                 setTimeout(async () => {
                     try {

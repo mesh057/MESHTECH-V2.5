@@ -4,8 +4,8 @@ const fs = require("fs-extra");
 const path = require("path");
 const { setupGroupCacheListeners } = require("./groupCache");
 
-const RECONNECT_DELAY = 5000;
-const MAX_RECONNECT_ATTEMPTS = 50;
+const RECONNECT_DELAY = 3000;
+const MAX_RECONNECT_ATTEMPTS = 100;
 
 let reconnectAttempts = 0;
 
@@ -94,7 +94,7 @@ const setupConnectionHandler = (
                 reconnectAttempts++;
                 const delay = Math.min(
                     RECONNECT_DELAY * Math.pow(2, reconnectAttempts - 1),
-                    300000,
+                    60000, // Max 1 minute delay to ensure bot doesn't stay dead too long
                 );
                 console.log(
                     `🕗 Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms...`,
