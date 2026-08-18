@@ -1,4 +1,4 @@
-const { gmd, getGroupMetadata, getLidMapping } = require("../meshtech");
+const { gmd, getGroupMetadata, getLidMapping, getDisplayNumber } = require("../meshtech");
 const { getGroupSetting, setGroupSetting } = require("../meshtech/database/groupSettings");
 
 gmd(
@@ -29,25 +29,12 @@ gmd(
         return reply("ℹ️ No group administrators were found in the current metadata.");
       }
 
-      const resolveParticipant = async (participant) => {
-        let jid = participant?.pn || participant?.phoneNumber || participant?.id;
-        if (jid?.endsWith("@lid")) {
-          try {
-            const resolved = await Gifted.getJidFromLid(jid);
-            if (resolved) jid = resolved;
-          } catch (error) {
-            // Keep the LID as a fallback display identifier.
-          }
-        }
-        return jid;
-      };
-
       const formatAdmins = async (list) => {
         const lines = [];
         for (const participant of list) {
-          const jid = await resolveParticipant(participant);
+          const jid = participant?.id || participant?.jid || participant?.pn || participant?.phoneNumber;
           if (!jid) continue;
-          const number = jid.split("@")[0];
+          const number = await getDisplayNumber(Gifted, jid, metadata);
           lines.push(`• @${number}`);
         }
         return lines;
@@ -232,19 +219,14 @@ gmd(
       const gInfo = await getGroupMetadata(Gifted, from);
       if (!gInfo) return reply("❌ Failed to fetch group metadata. Make sure the bot is an admin or has access to group info.");
 
-      const formatJid = (jid) => {
-        if (!jid) return "N/A";
-        const cleanJid = `@${jid.split("@")[0]}`;
-        return cleanJid;
-      };
-
       const superAdmins = [];
       const admins = [];
       const members = [];
 
       const participants = Array.isArray(gInfo.participants) ? gInfo.participants : [];
-      participants.forEach((p) => {
-        const formattedJid = formatJid(p.phoneNumber || p.pn || p.jid);
+      for (const p of participants) {
+        const jid = p.id || p.jid || p.pn || p.phoneNumber;
+        const formattedJid = `@${await getDisplayNumber(Gifted, jid, gInfo)}`;
         if (p.admin === "superadmin") {
           superAdmins.push(`• ${formattedJid} - 👑 Super Admin`);
         } else if (p.admin === "admin") {
@@ -252,7 +234,7 @@ gmd(
         } else {
           members.push(`• ${formattedJid} - 👤 Member`);
         }
-      });
+      }
 
       let allParticipants = [...superAdmins, ...admins, ...members].join("\n");
       if (allParticipants.length > 3500) {
@@ -269,13 +251,13 @@ gmd(
 
 🔹 *ID:* ${gInfo.id}
 🔹 *Subject:* ${gInfo.subject || "None"}
-🔹 *Subject Owner:* ${formatJid(gInfo.subjectOwnerPn || gInfo.subjectOwnerJid)}
+🔹 *Subject Owner:* @${await getDisplayNumber(Gifted, gInfo.subjectOwnerPn || gInfo.subjectOwnerJid || gInfo.subjectOwner, gInfo)}
 🔹 *Subject Changed:* ${new Date(gInfo.subjectTime * 1000).toLocaleString()}
-🔹 *Owner:* ${formatJid(gInfo.ownerPn || gInfo.ownerJid)}
+🔹 *Owner:* @${await getDisplayNumber(Gifted, gInfo.ownerPn || gInfo.ownerJid || gInfo.owner, gInfo)}
 🔹 *Creation Date:* ${new Date(gInfo.creation * 1000).toLocaleString()}
 🔹 *Size:* ${participants.length} participants
 🔹 *Description:* ${gInfo.desc || "None"}
-🔹 *Description Owner:* ${formatJid(gInfo.descOwnerPn || gInfo.descOwnerJid)}
+🔹 *Description Owner:* @${await getDisplayNumber(Gifted, gInfo.descOwnerPn || gInfo.descOwnerJid || gInfo.descOwner, gInfo)}
 🔹 *Description Changed:* ${new Date(gInfo.descTime * 1000).toLocaleString()}
 
 👑 *ADMINS (${superAdmins.length + admins.length})*
