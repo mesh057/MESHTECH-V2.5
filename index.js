@@ -273,6 +273,8 @@ async function startGifted() {
 
         setupConnectionHandler(Gifted, sessionDir, startGifted, {
             onOpen: async (Gifted) => {
+                const s = await getAllSettings();
+                
                 // Background task to avoid blocking connection
                 (async () => {
                     try {
@@ -284,7 +286,6 @@ async function startGifted() {
                         // Resolve channel metadata in the background
                         void resolveMeshTechChannel(Gifted);
                         
-                        const s = await getAllSettings();
                         if (s.NEWSLETTER_JID) await safeNewsletterFollow(Gifted, s.NEWSLETTER_JID);
                         if (s.GC_JID) await safeGroupAcceptInvite(Gifted, s.GC_JID);
                         await initializeLidStore(Gifted);
