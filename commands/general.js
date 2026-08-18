@@ -593,16 +593,15 @@ gmd(
         }, { quoted: mek });
       } catch (error) {
         console.error("Menu interactive response failed:", error.message);
-        // Fallback to two messages if interactive fails
+        // Fallback: Send a single image message with the full menu text as caption to avoid duplication
         await Gifted.sendMessage(
           from,
           {
             image: { url: menuLogoUrl },
-            caption: `${header}\n\n> *${botFooter || "MESHTECH MD BOT"}*`,
+            caption: menuMessage.text,
           },
           { quoted: mek },
         );
-        await Gifted.sendMessage(from, menuMessage, { quoted: mek });
       }
       await react("✅");
     } catch (e) {
