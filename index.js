@@ -251,13 +251,13 @@ async function startGifted() {
             }
             // The QR-ready event means the socket is ready for the pairing IQ.
             // WhatsApp may emit this event even when QR rendering is disabled.
-            if (qr) setTimeout(requestPairingCode, 500);
-            if (connection === "connecting") setTimeout(requestPairingCode, 2500);
+            if (qr) setTimeout(requestPairingCode, 200);
+            if (connection === "connecting") setTimeout(requestPairingCode, 500);
         });
 
         if (!state.creds.registered && process.env.MESH_PAIRING_PHONE_NUMBER && process.env.MESH_PAIRING_MODE !== "qr") {
             // Fallback for hosts that do not emit a connecting update promptly.
-            setTimeout(requestPairingCode, 5000);
+            setTimeout(requestPairingCode, 3000);
         }
 
         Gifted.ev.process(async (events) => {
