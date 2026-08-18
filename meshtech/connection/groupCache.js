@@ -1,6 +1,5 @@
 const NodeCache = require("node-cache");
-// Removed internal baileys imports that might cause crashes on some environments
-const { getLidMappingFromDb } = require("../database/lidMapping");
+const { getAllLidMappingsFromDb } = require("../database/lidMapping");
 
 const groupCache = new NodeCache({
     stdTTL: 5 * 60,
@@ -98,27 +97,8 @@ const setupGroupCacheListeners = (Gifted) => {
         } catch (error) {
             deleteGroupCache(event?.id);
             if (!isExpectedError(error.message)) {
-                console.error("Group cache update failed:", error.message);
-            }
-        }
-    });
-
-    Gifted.ev.on("group-participants.update", async (event) => {
-        try {
-            if (event?.id) {
-                const cachedMeta = groupCache.get(event.id);
-                if (cachedMeta) {
-                    updateLidMappingsFromMetadata(cachedMeta);
-                }
-
-                const metadata = await Gifted.groupMetadata(event.id);
-                updateGroupCache(event.id, metadata);
-            }
-        } catch (error) {
-            deleteGroupCache(event?.id);
-            if (!isExpectedError(error.message)) {
                 console.error(
-                    "Participant cache update failed:",
+                    `Failed to update group cache for ${event?.id}:`,
                     error.message,
                 );
             }
@@ -126,24 +106,13 @@ const setupGroupCacheListeners = (Gifted) => {
     });
 };
 
-const cachedGroupMetadata = async (jid) => {
-    return groupCache.get(jid);
-};
-
 const initializeLidStore = async (Gifted) => {
     try {
-        const groups = await Gifted.groupFetchAllParticipating();
-        if (groups) {
-            for (const groupJid of Object.keys(groups)) {
-                const meta = groups[groupJid];
-                if (meta?.participants) {
-                    updateLidMappingsFromMetadata(meta);
-                    groupCache.set(groupJid, meta);
-                }
+        const mappings = await getAllLidMappingsFromDb();
+        if (mappings && typeof mappings === 'object') {
+            for (const [lid, jid] of Object.entries(mappings)) {
+                storeLidMapping(lid, jid);
             }
-            console.log(
-                `✅ LID store initialized => ${lidToJidStore.keys().length} Mappings from ${Object.keys(groups).length} Groups`,
-            );
         }
     } catch (error) {
         console.error("Failed to initialize LID store:", error.message);
@@ -157,9 +126,9 @@ module.exports = {
     deleteGroupCache,
     clearGroupCache,
     setupGroupCacheListeners,
-    cachedGroupMetadata,
-    getLidMapping,
-    storeLidMapping,
-    updateLidMappingsFromMetadata,
+    cachedGroupMetadata: groupCache,
     initializeLidStore,
+    getLidMapping,
+    updateLidMappingsFromMetadata,
+    storeLidMapping
 };

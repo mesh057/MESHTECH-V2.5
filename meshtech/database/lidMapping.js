@@ -62,4 +62,18 @@ async function getLidMappingFromDb(lid) {
     }
 }
 
-module.exports = { loadPersistedLidMappings, persistLidMapping, getLidMappingFromDb };
+async function getAllLidMappingsFromDb() {
+    try {
+        await syncLidMappingTable();
+        const rows = await LidMappingDB.findAll();
+        const mappings = {};
+        for (const row of rows) {
+            mappings[row.lid] = row.jid;
+        }
+        return mappings;
+    } catch (err) {
+        return {};
+    }
+}
+
+module.exports = { loadPersistedLidMappings, persistLidMapping, getLidMappingFromDb, getAllLidMappingsFromDb };

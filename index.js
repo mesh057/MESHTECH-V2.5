@@ -279,9 +279,13 @@ async function startGifted() {
         setupStatusHandlers(Gifted);
         setupGroupEventsListeners(Gifted);
 
-        loadPlugins(pluginsPath);
-
-        setupCommandHandler(Gifted);
+        // Background plugin loading to prevent blocking the event loop during pairing
+        setTimeout(() => {
+            console.log("ℹ️ Loading plugins in background...");
+            loadPlugins(pluginsPath);
+            setupCommandHandler(Gifted);
+            console.log("✅ Plugins loaded.");
+        }, 1000);
 
         setupConnectionHandler(Gifted, sessionDir, startGifted, {
             onOpen: async (Gifted) => {
