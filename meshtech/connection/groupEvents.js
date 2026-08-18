@@ -84,6 +84,22 @@ const getJidFromParticipant = async (Gifted, participant, groupMeta = null) => {
             }
         }
 
+        // Deep Scan: Check all cached groups for this participant's PN
+        try {
+            const allCachedGroups = cachedGroupMetadata(); // If this returns all, or we iterate
+            // Actually, let's use a more direct approach if groupCache allows
+            const { groupCache } = require("./groupCache");
+            const allKeys = groupCache.keys();
+            for (const key of allKeys) {
+                const meta = groupCache.get(key);
+                const found = getJidFromLidUsingMetadata(participant, meta);
+                if (found) {
+                    storeLidMapping(participant, found);
+                    return found;
+                }
+            }
+        } catch (e) {}
+
         try {
             if (Gifted.lidToJid) {
                 const result = await Gifted.lidToJid(participant);

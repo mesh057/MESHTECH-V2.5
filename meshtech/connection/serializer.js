@@ -1,5 +1,5 @@
 const { getContentType, downloadContentFromMessage, downloadMediaMessage } = require('gifted-baileys');
-const { getLidMapping } = require('./groupCache');
+const { getLidMapping, storeLidMapping } = require('./groupCache');
 
 const standardizeJid = (jid) => {
     if (!jid) return '';
@@ -44,9 +44,19 @@ const serializeMessage = async (ms, Gifted, settings = {}) => {
     const from = isMessageYourself ? botId : standardizeJid(ms.key.remoteJid);
     const isGroup = from.endsWith('@g.us');
     
-    const sendr = ms.key.fromMe 
+    let sendr = ms.key.fromMe 
         ? (Gifted.user.id.split(':')[0] + '@s.whatsapp.net' || Gifted.user.id) 
         : (ms.key.senderPn || ms.key.participantPn || ms.key.participantAlt || ms.key.remoteJidAlt || ms.key.remoteJid || ms.key.participant);
+
+    // Auto-map LID to PN if both are present in the message key
+    const rawParticipant = ms.key.participant || ms.participant || ms.key.remoteJid;
+    const rawPn = ms.key.participantPn || ms.key.senderPn;
+    
+    if (rawParticipant && rawParticipant.endsWith('@lid') && rawPn) {
+        const jid = rawPn.includes('@') ? rawPn : `${rawPn}@s.whatsapp.net`;
+        storeLidMapping(rawParticipant, jid);
+        if (sendr === rawParticipant) sendr = jid;
+    }
     
     let body = '';
     let isButtonResponse = false;

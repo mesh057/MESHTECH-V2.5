@@ -15,7 +15,13 @@ gmd(
     if (!isGroup) return reply("❌ This command only works in groups!");
 
     try {
+      // Force a fresh metadata fetch to pull in latest PNs from WhatsApp
       const metadata = await Gifted.groupMetadata(from);
+      
+      // Update our internal LID mappings with this fresh data
+      const { updateLidMappingsFromMetadata } = require("../meshtech/connection/groupCache");
+      updateLidMappingsFromMetadata(metadata);
+
       const participants = Array.isArray(metadata?.participants)
         ? metadata.participants
         : [];
