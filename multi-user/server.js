@@ -355,6 +355,38 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { success: true, sessionId, phoneNumber: session.number, warning: 'Treat this session ID like a password. Never post it in chats or public logs.' });
     }
 
+    if (req.method === 'GET' && url.pathname === '/api/export-saved-session') {
+      const isAdmin = Boolean(adminToken(req));
+      const requestedNumber = String(url.searchParams.get('phoneNumber') || '').replace(/\D/g, '');
+      const ownedNumber = customerPhone(req);
+      const number = isAdmin ? (requestedNumber || ownedNumber) : ownedNumber;
+      
+      if (!number || (!isAdmin && requestedNumber && requestedNumber !== ownedNumber)) {
+        return json(res, 403, { success: false, error: 'Unauthorized.' });
+      }
+
+      const authDir = path.join(manager.sessionDir(number), 'auth_info');
+      if (!fs.existsSync(authDir)) return json(res, 404, { success: false, error: 'No saved session found.' });
+      const sessionId = createMeshTechSessionId(authDir);
+      if (!sessionId) return json(res, 500, { success: false, error: 'Could not export credentials.' });
+      return json(res, 200, { success: true, sessionId, phoneNumber: number });
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/start-session') {
+      const isAdmin = Boolean(adminToken(req));
+      const data = await readBody(req);
+      const requestedNumber = String(data.phoneNumber || '').replace(/\D/g, '');
+      const ownedNumber = customerPhone(req);
+      const number = isAdmin ? (requestedNumber || ownedNumber) : ownedNumber;
+
+      if (!number || (!isAdmin && requestedNumber && requestedNumber !== ownedNumber)) {
+        return json(res, 403, { success: false, error: 'Unauthorized.' });
+      }
+
+      const session = await manager.start(number, false, true);
+      return json(res, 200, { success: true, message: 'Session starting...', phoneNumber: number, status: session.status });
+    }
+
     if (req.method === 'GET' && url.pathname === '/api/pairing-code') {
       const number = url.searchParams.get('phoneNumber');
       const token = url.searchParams.get('accessToken');

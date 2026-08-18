@@ -142,7 +142,8 @@ class MultiUserSessionManager {
   async start(number, useQr = false, restoring = false, importedSessionId = '', force = false) {
     const normalized = this.normalizePhoneNumber(number);
     
-    if (force) {
+    if (force || (!restoring && !importedSessionId)) {
+      // If we are not restoring, we want a fresh pairing. Clear stale auth.
       await this.clear(normalized);
     }
 

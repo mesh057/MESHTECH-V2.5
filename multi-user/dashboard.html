@@ -489,9 +489,25 @@
                 list.innerHTML = '<div class="empty-sessions">No saved session found for this customer.</div><div style="text-align:center;margin-top:8px;"><a class="btn-blue" href="/pairing.html">Pair or relink this account</a></div>';
                 return;
             }
-            const relink = session.relinkRequired
-                ? `<div style="margin-top:8px;"><a class="btn-blue" href="/pairing.html?phoneNumber=${encodeURIComponent(session.number)}&force=1">Relink this account</a></div>`
-                : '';
+            
+            let actions = '';
+            if (session.relinkRequired) {
+                actions += `<div style="display:flex;gap:8px;margin-top:8px;">
+                    <button type="button" class="btn-primary" style="flex:1;" onclick="autoReconnect('${escapeJs(session.number)}')">
+                        <i class="fa-solid fa-bolt"></i> Reconnect Now
+                    </button>
+                    <a class="btn-blue" style="flex:1;text-align:center;" href="/pairing.html?phoneNumber=${encodeURIComponent(session.number)}&force=1">
+                        <i class="fa-solid fa-key"></i> New Pairing
+                    </a>
+                </div>`;
+            } else if (!session.active) {
+                actions += `<div style="margin-top:8px;">
+                    <button type="button" class="btn-blue" onclick="startCustomerSession('${escapeJs(session.number)}')">
+                        <i class="fa-solid fa-play"></i> Start Bot
+                    </button>
+                </div>`;
+            }
+
             list.innerHTML = `
                 <div class="session-row">
                     <div>
@@ -501,7 +517,61 @@
                     <button type="button" class="btn-danger" onclick="deleteCustomerSession('${escapeJs(session.number)}')">
                         <i class="fa-solid fa-trash"></i> Delete mine
                     </button>
-                </div>${relink}`;
+                </div>${actions}`;
+        }
+
+        async function autoReconnect(number) {
+            const statusBox = document.getElementById('statusBox');
+            const phoneField = document.getElementById('phoneNumber');
+            const sessionField = document.getElementById('sessionId');
+            const deployForm = document.getElementById('deployForm');
+            
+            statusBox.style.display = 'block';
+            statusBox.className = 'status-box';
+            statusBox.textContent = '⏳ Exporting your saved session ID...';
+            
+            // Scroll to form
+            deployForm.scrollIntoView({ behavior: 'smooth' });
+            
+            try {
+                const res = await fetch(`/api/export-saved-session?phoneNumber=${encodeURIComponent(number)}`);
+                const data = await res.json();
+                
+                if (data.success && data.sessionId) {
+                    phoneField.value = data.phoneNumber;
+                    sessionField.value = data.sessionId;
+                    statusBox.className = 'status-box success';
+                    statusBox.textContent = '✅ Session ID exported and pasted automatically! Deploying now...';
+                    
+                    // Small delay for visual feedback then submit
+                    setTimeout(() => {
+                        handleDeploy(new Event('submit'));
+                    }, 800);
+                } else {
+                    throw new Error(data.error || 'Could not export session. Please use New Pairing.');
+                }
+            } catch (err) {
+                statusBox.className = 'status-box error';
+                statusBox.textContent = '❌ ' + err.message;
+            }
+        }
+
+        async function startCustomerSession(number) {
+            try {
+                const res = await fetch('/api/start-session', {
+                    method: 'POST',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({ phoneNumber: number })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadCustomerSession();
+                } else {
+                    alert(data.error || 'Failed to start session.');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
         }
 
         async function loadRecognizedCustomerSession() {
