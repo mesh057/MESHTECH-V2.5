@@ -59,7 +59,15 @@ gmd(
             jid = await getJidFromParticipant(Gifted, jid, metadata);
           }
           
-          const number = jid.split("@")[0];
+          // Last resort: if it's the bot itself, use its own JID
+          if (jid.includes("@lid") && Gifted?.user?.id) {
+              const botLid = Gifted.user.id.split(":")[0];
+              if (jid.startsWith(botLid)) {
+                  jid = Gifted.user.id.split(":")[0] + "@s.whatsapp.net";
+              }
+          }
+          
+          const number = jid.split("@")[0].split(":")[0];
           lines.push(`• @${number}`);
           mentions.push(jid);
         }
