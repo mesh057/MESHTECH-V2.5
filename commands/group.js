@@ -32,7 +32,7 @@ gmd(
       const formatAdmins = async (list) => {
         const lines = [];
         for (const participant of list) {
-          const jid = participant?.id || participant?.jid || participant?.pn || participant?.phoneNumber;
+          const jid = participant?.pn || participant?.phoneNumber || participant?.id || participant?.jid;
           if (!jid) continue;
           const number = await getDisplayNumber(Gifted, jid, metadata);
           lines.push(`• @${number}`);
@@ -225,7 +225,7 @@ gmd(
 
       const participants = Array.isArray(gInfo.participants) ? gInfo.participants : [];
       for (const p of participants) {
-        const jid = p.id || p.jid || p.pn || p.phoneNumber;
+        const jid = p.pn || p.phoneNumber || p.id || p.jid;
         const formattedJid = `@${await getDisplayNumber(Gifted, jid, gInfo)}`;
         if (p.admin === "superadmin") {
           superAdmins.push(`• ${formattedJid} - 👑 Super Admin`);
