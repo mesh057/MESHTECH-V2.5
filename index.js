@@ -782,27 +782,22 @@ const BOT_START_TIME = Date.now();
 
 function setupCommandHandler(Gifted) {
     Gifted.ev.on("messages.upsert", async ({ messages, type }) => {
-        if (type === "append") return;
-
-        const ms = messages[0];
-        if (!ms?.message || !ms?.key) return;
-
-        const messageId = ms.key.id;
-        if (processedMessages.has(messageId)) return;
-        processedMessages.add(messageId);
-
-        setTimeout(() => processedMessages.delete(messageId), 60000);
-
-        const messageTimestamp =
-            (ms.messageTimestamp?.low || ms.messageTimestamp) * 1000;
-        if (messageTimestamp && messageTimestamp < BOT_START_TIME - 5000)
-            return;
+        if (!Array.isArray(messages)) return;
 
         const settings = await getAllSettings();
         const botId = standardizeJid(Gifted.user?.id);
 
-        const serialized = await serializeMessage(ms, Gifted, settings);
-        if (!serialized) return;
+        for (const ms of messages) {
+            if (!ms?.message || !ms?.key) continue;
+
+            const messageId = ms.key.id;
+            if (processedMessages.has(messageId)) continue;
+            processedMessages.add(messageId);
+
+            setTimeout(() => processedMessages.delete(messageId), 60000);
+
+            const serialized = await serializeMessage(ms, Gifted, settings);
+            if (!serialized) continue;
 
         const {
             from,
@@ -996,6 +991,7 @@ function setupCommandHandler(Gifted) {
                 }
             }
         }
+      }
     });
 }
 
