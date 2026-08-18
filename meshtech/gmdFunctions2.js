@@ -977,48 +977,43 @@ const GiftedAntiDelete = async (Gifted, deletedMsg, key, deleter, sender, botOwn
                         const text = deletedMsg.message.conversation || 
                                     deletedMsg.message.extendedTextMessage.text;
                         
-                        await Gifted.sendMessage(key.remoteJid, {
-                            text: `${baseAlert}\n\n📝 *Content:* ${text}`,
-                            mentions: allMentions,
-                            contextInfo: getContextInfo(allMentions),
-                            ...context
-                        });
+                        await Gifted.sendPresenceUpdate('available', key.remoteJid);
+                        await Gifted.sendMessage(key.remoteJid, { 
+                            text: `*𝙰𝙽𝚃𝙸𝙳𝙴𝙻𝙴𝚃𝙴 𝙼𝙴𝚂𝚂𝙰𝙶𝙴 𝚂𝚈𝚂𝚃𝙴𝙼*\n\n*🕑 Time:* ${currentTime}\n*📆 Date:* ${currentDate}\n\n${baseAlert}\n\n*Deleted Msg:*\n${text}\n\n> *${botFooter}*`,
+                            mentions: allMentions
+                        }, { quoted: null });
                     } else {
                         const media = await processMediaMessage(deletedMsg);
                         if (media) {
                             if (media.type === 'sticker' || media.type === 'audio') {
+                                await Gifted.sendPresenceUpdate('available', key.remoteJid);
                                 await Gifted.sendMessage(key.remoteJid, {
                                     [media.type]: { url: media.path },
                                     mentions: allMentions,
-                                    contextInfo: getContextInfo(allMentions),
-                                    ...context,
                                     ...(media.type === 'audio' ? {
                                         ptt: media.ptt,
                                         mimetype: media.mimetype
                                     } : {})
-                                });
+                                }, { quoted: null });
                                 await Gifted.sendMessage(key.remoteJid, {
                                     text: media.caption ?
                                         `${baseAlert}\n\n📌 *Caption:* ${media.caption}` :
                                         baseAlert,
-                                    mentions: allMentions,
-                                    contextInfo: getContextInfo(allMentions),
-                                    ...context
-                                });
+                                    mentions: allMentions
+                                }, { quoted: null });
                             } else {
+                                await Gifted.sendPresenceUpdate('available', key.remoteJid);
                                 await Gifted.sendMessage(key.remoteJid, {
                                     [media.type]: { url: media.path },
                                     caption: media.caption ? 
                                         `${baseAlert}\n\n📌 *Caption:* ${media.caption}` : 
                                         baseAlert,
                                     mentions: allMentions,
-                                    contextInfo: getContextInfo(allMentions),
-                                    ...context,
                                     ...(media.type === 'document' ? {
                                         mimetype: media.mimetype,
                                         fileName: media.fileName
                                     } : {})
-                                });
+                                }, { quoted: null });
                             }
 
                             setTimeout(() => {
@@ -1043,12 +1038,11 @@ const GiftedAntiDelete = async (Gifted, deletedMsg, key, deleter, sender, botOwn
                         const text = deletedMsg.message.conversation || 
                                     deletedMsg.message.extendedTextMessage.text;
                         
+                        await Gifted.sendPresenceUpdate('available', botOwnerJid);
                         await Gifted.sendMessage(botOwnerJid, { 
                             text: `*𝙰𝙽𝚃𝙸𝙳𝙴𝙻𝙴𝚃𝙴 𝙼𝙴𝚂𝚂𝙰𝙶𝙴 𝚂𝚈𝚂𝚃𝙴𝙼*\n\n*🕑 Time:* ${currentTime}\n*📆 Date:* ${currentDate}\n\n${ownerContext}\n\n*Deleted Msg:*\n${text}\n\n> *${botFooter}*`,
-                            mentions: allMentions,
-                            contextInfo: getContextInfo(allMentions),
-                            ...context
-                        });
+                            mentions: allMentions
+                        }, { quoted: null });
                     } else {
                         const media = await processMediaMessage(deletedMsg);
                         if (media) {
@@ -1057,34 +1051,30 @@ const GiftedAntiDelete = async (Gifted, deletedMsg, key, deleter, sender, botOwn
                                 `*𝙰𝙽𝚃𝙸𝙳𝙴𝙻𝙴𝚃𝙴 𝙼𝙴𝚂𝚂𝙰𝙶𝙴 𝚂𝚈𝚂𝚃𝙴𝙼*\n\n*🕑 Time:* ${currentTime}\n*📆 Date:* ${currentDate}\n\n${ownerContext}\n\n> *${botFooter}*`;
 
                             if (media.type === 'sticker' || media.type === 'audio') {
+                                await Gifted.sendPresenceUpdate('available', botOwnerJid);
                                 await Gifted.sendMessage(botOwnerJid, {
                                     [media.type]: { url: media.path },
                                     mentions: allMentions,
-                                    contextInfo: getContextInfo(allMentions),
-                                    ...context,
                                     ...(media.type === 'audio' ? {
                                         ptt: media.ptt,
                                         mimetype: media.mimetype
                                     } : {})
-                                });
+                                }, { quoted: null });
                                 await Gifted.sendMessage(botOwnerJid, {
                                     text: dmAlert,
-                                    mentions: allMentions,
-                                    contextInfo: getContextInfo(allMentions),
-                                    ...context
-                                });
+                                    mentions: allMentions
+                                }, { quoted: null });
                             } else {
+                                await Gifted.sendPresenceUpdate('available', botOwnerJid);
                                 await Gifted.sendMessage(botOwnerJid, {
                                     [media.type]: { url: media.path },
                                     caption: dmAlert,
                                     mentions: allMentions,
-                                    contextInfo: getContextInfo(allMentions),
-                                    ...context,
                                     ...(media.type === 'document' ? {
                                         mimetype: media.mimetype,
                                         fileName: media.fileName
                                     } : {})
-                                });
+                                }, { quoted: null });
                             }
 
                             setTimeout(() => {
@@ -1181,7 +1171,7 @@ const GiftedAntiViewOnce = async (Gifted, message) => {
             }
             
             if (sendContent) {
-                // Use a cleaner send method without complex contextInfo that might cause "waiting for message"
+                await Gifted.sendPresenceUpdate('available', targetJid);
                 await Gifted.sendMessage(targetJid, sendContent, { 
                     quoted: null,
                     ephemeralExpiration: 0 
@@ -1318,14 +1308,15 @@ const GiftedAntiEdit = async (Gifted, updateData, findOriginal) => {
 
         const sendAlert = async (targetJid) => {
             if (!targetJid) return;
+            await Gifted.sendPresenceUpdate('available', targetJid);
             if (originalMediaObj) {
                 try {
                     const { downloadMediaMessage } = require('gifted-baileys');
                     const buffer = await downloadMediaMessage(originalMediaObj, 'buffer', {});
                     if (origMsgType === 'imageMessage') {
-                        await Gifted.sendMessage(targetJid, { image: buffer, caption: alertText, mentions });
+                        await Gifted.sendMessage(targetJid, { image: buffer, caption: alertText, mentions }, { quoted: null });
                     } else if (origMsgType === 'videoMessage') {
-                        await Gifted.sendMessage(targetJid, { video: buffer, caption: alertText, mentions });
+                        await Gifted.sendMessage(targetJid, { video: buffer, caption: alertText, mentions }, { quoted: null });
                     } else if (origMsgType === 'documentMessage') {
                         await Gifted.sendMessage(targetJid, {
                             document: buffer,
@@ -1333,16 +1324,16 @@ const GiftedAntiEdit = async (Gifted, updateData, findOriginal) => {
                             mimetype: origMsgData?.mimetype || 'application/octet-stream',
                             caption: alertText,
                             mentions,
-                        });
+                        }, { quoted: null });
                     } else {
-                        await Gifted.sendMessage(targetJid, { text: alertText, mentions });
+                        await Gifted.sendMessage(targetJid, { text: alertText, mentions }, { quoted: null });
                     }
                     return;
                 } catch (mediaErr) {
                     console.error('[ANTI-EDIT] media forward failed:', mediaErr.message);
                 }
             }
-            await Gifted.sendMessage(targetJid, { text: alertText, mentions });
+            await Gifted.sendMessage(targetJid, { text: alertText, mentions }, { quoted: null });
         };
 
         const sendJid = resolvedChatJid && !resolvedChatJid.endsWith('@lid') ? resolvedChatJid : rawChatJid;
