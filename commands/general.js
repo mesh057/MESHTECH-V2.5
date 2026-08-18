@@ -483,7 +483,7 @@ gmd(
       const greeting = hour >= 5 && hour < 12 ? "🌅 Good Morning" : hour >= 12 && hour < 17 ? "☀️ Good Afternoon" : hour >= 17 && hour < 21 ? "🌆 Good Evening" : "🌙 Good Night";
       const configuredOwnerName = String((await getSetting("OWNER_NAME")) || "").trim();
       const ownerName = configuredOwnerName && configuredOwnerName.toLowerCase() !== "mesh tech" ? configuredOwnerName : "MESHACK N";
-      const ownerNumber = String((await getSetting("OWNER_NUMBER")) || Gifted?.user?.id?.split(":")?.[0] || "Not Set").replace(/\D/g, "") || "Not Set";
+      const ownerNumber = String((await getSetting("OWNER_NUMBER")) || Gifted?.user?.id?.split(":")?.[0] || "254746844168").replace(/\D/g, "") || "254746844168";
       const activeUsers = getActiveUserCount();
       const connectedBots = Gifted?.user?.id ? "1 Live" : "0 Offline";
       const deviceName = process.env.DEVICE_NAME || "ANDROID-CORE";
@@ -694,7 +694,7 @@ gmd(
       const totalCommands = commands.filter((command) => command.pattern && !command.dontAddCommandList).length;
       const activeUsers = getActiveUserCount();
       const connection = Gifted?.user?.id ? "1 Live" : "0 Offline";
-      const number = String(ownerNumber || Gifted?.user?.id?.split(":")?.[0] || "Not Set").replace(/\D/g, "") || "Not Set";
+      const number = String(ownerNumber || Gifted?.user?.id?.split(":")?.[0] || "254746844168").replace(/\D/g, "") || "254746844168";
       const memory = `${formatBytes(process.memoryUsage().rss)}/${formatBytes(totalMemoryBytes)}`;
       const text = `╔══════════════════════╗
       👾 *${botName || "MESH-TECH MD"}* 👾

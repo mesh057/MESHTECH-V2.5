@@ -1076,7 +1076,7 @@ function buildContext(ms, settings, helpers, data) {
         botFooter: settings.FOOTER,
         botCaption: settings.CAPTION,
         botVersion: settings.VERSION,
-        ownerNumber: Gifted?.user?.id ? Gifted.user.id.split(":")[0] : "",
+        ownerNumber: Gifted?.user?.id ? Gifted.user.id.split(":")[0] : "254746844168",
         ownerName: settings.OWNER_NAME,
         botName: settings.BOT_NAME,
         giftedRepo: settings.BOT_REPO,
