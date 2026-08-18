@@ -762,17 +762,19 @@
             
             pollInterval = setInterval(async () => {
                 try {
-                    const res = await fetch('/api/status');
+                    const res = await fetch('/api/customer/session', { cache: 'no-store' });
                     const data = await res.json();
-                    const mySession = data.active?.find(s => s.number === cleanNum);
-                    
+                    const mySession = data.authenticated && data.session && data.phoneNumber === cleanNum
+                        ? data.session
+                        : null;
+
                     if (mySession) {
                         if (mySession.status === 'running') {
                             badge.textContent = '🟢 ONLINE';
                             badge.style.background = 'rgba(0, 255, 0, 0.1)';
                             badge.style.color = '#00ff00';
-                        } else if (mySession.status === 'connecting') {
-                            const dots = '.'.repeat((Date.now() / 500) % 4);
+                        } else if (mySession.status === 'connecting' || mySession.status === 'restoring') {
+                            const dots = '.'.repeat(Math.floor((Date.now() / 500) % 4));
                             badge.textContent = '🟡 CONNECTING' + dots;
                             badge.style.background = 'rgba(255, 255, 0, 0.1)';
                             badge.style.color = '#ffff00';
@@ -784,6 +786,10 @@
                             badge.textContent = '🔴 ERROR / LOGGED OUT';
                             badge.style.background = 'rgba(255, 0, 0, 0.1)';
                             badge.style.color = '#ff4444';
+                        } else {
+                            badge.textContent = '⚪ INACTIVE';
+                            badge.style.background = 'rgba(255, 255, 255, 0.1)';
+                            badge.style.color = '#ffffff';
                         }
                     } else {
                         badge.textContent = '⚪ INACTIVE';

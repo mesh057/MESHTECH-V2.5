@@ -217,7 +217,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         ok: true,
         multiUser: true,
-        active,
+        // Never expose phone numbers, access tokens, PIDs, or auth paths publicly.
         botStatus,
         totalActive: active.length,
         connected,
