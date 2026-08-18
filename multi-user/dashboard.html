@@ -257,6 +257,65 @@
             color: var(--error);
             display: block;
         }
+
+        .session-panel {
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 16px;
+            background: rgba(9, 13, 22, 0.7);
+        }
+
+        .session-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .session-panel-header h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-small {
+            border: 1px solid var(--card-border);
+            color: var(--text-secondary);
+            background: transparent;
+            border-radius: 7px;
+            padding: 7px 10px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .btn-small:hover { border-color: var(--primary); color: var(--primary); }
+
+        .session-list { display: flex; flex-direction: column; gap: 8px; }
+        .session-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 12px;
+        }
+        .session-number { font-weight: 700; letter-spacing: .4px; }
+        .session-status { color: var(--text-secondary); margin-top: 3px; font-size: 11px; }
+        .btn-danger {
+            background: rgba(239, 68, 68, .12);
+            border: 1px solid rgba(239, 68, 68, .55);
+            color: #ff8a8a;
+            border-radius: 7px;
+            padding: 7px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-danger:hover { background: rgba(239, 68, 68, .22); color: #fff; }
+        .empty-sessions { color: var(--text-secondary); font-size: 12px; text-align: center; padding: 8px; }
     </style>
 </head>
 <body>
@@ -322,6 +381,17 @@
 
                 <div id="statusBox" class="status-box"></div>
             </form>
+
+            <div class="session-panel">
+                <div class="session-panel-header">
+                    <h3><i class="fa-solid fa-database"></i> Saved Sessions</h3>
+                    <button type="button" class="btn-small" onclick="loadSessions()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                </div>
+                <div id="sessionList" class="session-list">
+                    <div class="empty-sessions">Loading sessions...</div>
+                </div>
+                <div class="help-text" style="margin-top:10px;">Delete only a session you no longer need. This removes its saved WhatsApp credentials and stops its active process.</div>
+            </div>
         </div>
     </div>
 
@@ -356,6 +426,62 @@
         }
 
         loadPendingSession();
+        loadSessions();
+
+        async function loadSessions() {
+            const list = document.getElementById('sessionList');
+            if (!list) return;
+            try {
+                const response = await fetch('/api/sessions', { cache: 'no-store' });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.error || 'Unable to load sessions.');
+                if (!data.sessions.length) {
+                    list.innerHTML = '<div class="empty-sessions">No saved sessions found.</div>';
+                    return;
+                }
+                list.innerHTML = data.sessions.map(session => `
+                    <div class="session-row">
+                        <div>
+                            <div class="session-number">${escapeHtml(session.number)}</div>
+                            <div class="session-status">${escapeHtml(session.status)}${session.pid ? ` · PID ${escapeHtml(String(session.pid))}` : ''}</div>
+                        </div>
+                        <button type="button" class="btn-danger" onclick="deleteSession('${escapeJs(session.number)}')">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                list.innerHTML = `<div class="empty-sessions" style="color:var(--error);">${escapeHtml(error.message)}</div>`;
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
+        }
+
+        function escapeJs(value) {
+            return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
+
+        async function deleteSession(number) {
+            const cleanNumber = String(number).replace(/\\D/g, '');
+            if (!cleanNumber) return;
+            if (!window.confirm(`Delete the complete saved session for ${cleanNumber}? This cannot be undone.`)) return;
+            const list = document.getElementById('sessionList');
+            try {
+                const response = await fetch('/api/clear-session', {
+                    method: 'POST',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({ phoneNumber: cleanNumber })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.error || 'Session could not be deleted.');
+                if (list) list.innerHTML = '<div class="empty-sessions">Session deleted. Refreshing...</div>';
+                await loadSessions();
+            } catch (error) {
+                if (list) list.innerHTML = `<div class="empty-sessions" style="color:var(--error);">${escapeHtml(error.message)}</div>`;
+            }
+        }
 
         async function handleDeploy(event) {
             event.preventDefault();

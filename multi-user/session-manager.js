@@ -118,27 +118,32 @@ class MultiUserSessionManager {
     return this.sessions.has(normalized) || this.sessions.size < this.maxInstances;
   }
 
-  clear(number) {
+  async clear(number) {
     const normalized = this.normalizePhoneNumber(number);
-    this.stop(normalized);
+    await this.stopAndWait(normalized);
     const authDir = this.sessionDir(normalized);
-    if (fs.existsSync(authDir)) {
+    if (!fs.existsSync(authDir)) return true;
+
+    // The child process must be fully stopped before auth files are removed.
+    // This prevents a stale Baileys process from recreating credentials after a
+    // user clicks Force New Pairing.
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
       try {
-        fs.rmSync(authDir, { recursive: true, force: true });
-        return true;
+        fs.rmSync(authDir, { recursive: true, force: true, maxRetries: 2, retryDelay: 100 });
+        return !fs.existsSync(authDir);
       } catch (error) {
-        console.error(`[mesh-multi-user] Could not clear session directory for ${normalized}:`, error.message);
-        return false;
+        console.error(`[mesh-multi-user] Could not clear session directory for ${normalized} (attempt ${attempt}/3):`, error.message);
+        if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 250));
       }
     }
-    return true;
+    return !fs.existsSync(authDir);
   }
 
   async start(number, useQr = false, restoring = false, importedSessionId = '', force = false) {
     const normalized = this.normalizePhoneNumber(number);
     
     if (force) {
-      this.clear(normalized);
+      await this.clear(normalized);
     }
 
     const existing = this.sessions.get(normalized);
@@ -146,8 +151,7 @@ class MultiUserSessionManager {
     if (existingAlive && !force) return this.publicSession(existing);
     
     if (existing) {
-      if (existing.child && !existing.child.killed) existing.child.kill('SIGTERM');
-      this.sessions.delete(normalized);
+      await this.stopAndWait(normalized);
     }
 
     if (!this.hasSessionCapacity(normalized)) {
@@ -263,8 +267,34 @@ class MultiUserSessionManager {
     const record = this.sessions.get(normalized);
     if (!record) return false;
     record.status = 'stopped';
-    if (record.child && !record.child.killed) record.child.kill('SIGTERM');
+    if (record.child && !record.child.killed && record.child.exitCode === null) record.child.kill('SIGTERM');
     this.sessions.delete(normalized);
+    return true;
+  }
+
+  async stopAndWait(number, timeoutMs = 5000) {
+    const normalized = this.normalizePhoneNumber(number);
+    const record = this.sessions.get(normalized);
+    if (!record) return false;
+    const child = record.child;
+    this.stop(normalized);
+    if (!child || child.exitCode !== null) return true;
+
+    await new Promise((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve();
+      };
+      const timer = setTimeout(() => {
+        try { if (child.exitCode === null) child.kill('SIGKILL'); } catch (_) {}
+        finish();
+      }, timeoutMs);
+      child.once('exit', finish);
+      try { if (child.exitCode === null && !child.killed) child.kill('SIGTERM'); } catch (_) { finish(); }
+    });
     return true;
   }
 

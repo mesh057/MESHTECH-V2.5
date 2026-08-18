@@ -114,6 +114,24 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    if (req.method === 'GET' && url.pathname === '/api/sessions') {
+      const restorable = manager.listRestorableSessions();
+      const activeList = manager.list();
+      const allNumbers = Array.from(new Set([...restorable, ...activeList.map(s => s.number)]));
+      const sessions = allNumbers.map(num => {
+        const active = activeList.find(s => s.number === num);
+        const isRestorable = restorable.includes(num);
+        return {
+          number: num,
+          status: active ? active.status : (isRestorable ? 'registered' : 'idle'),
+          active: Boolean(active),
+          restorable: isRestorable,
+          pid: active ? active.pid : null,
+        };
+      });
+      return json(res, 200, { success: true, sessions });
+    }
+
     if (req.method === 'POST' && url.pathname === '/api/request-pairing') {
       if (!allowed(ip)) return json(res, 429, { success: false, error: 'Too many requests. Try again later.' });
       const data = await readBody(req);
@@ -128,7 +146,7 @@ const server = http.createServer(async (req, res) => {
       const phoneNumber = String(data.phoneNumber || '').replace(/\D/g, '');
       if (!phoneNumber) return json(res, 400, { success: false, error: 'Phone number is required.' });
       
-      const success = manager.clear(phoneNumber);
+      const success = await manager.clear(phoneNumber);
       return json(res, 200, { success, message: success ? 'Session cleared successfully.' : 'Failed to clear session.' });
     }
 
@@ -142,7 +160,7 @@ const server = http.createServer(async (req, res) => {
 
       const authDir = path.join(manager.sessionDir(phoneNumber), 'auth_info');
       fs.mkdirSync(authDir, { recursive: true });
-      if (manager.get(phoneNumber)) manager.stop(phoneNumber);
+      if (manager.get(phoneNumber)) await manager.stopAndWait(phoneNumber);
 
       const importedMeshTechSession = /^MeshTech~.+/i.test(sessionText) ? sessionText : '';
       if (!importedMeshTechSession) writeRawCredentials(authDir, sessionText);
@@ -173,7 +191,7 @@ const server = http.createServer(async (req, res) => {
       const data = await readBody(req);
       const session = manager.get(data.phoneNumber);
       if (!session || session.accessToken !== data.accessToken) return json(res, 403, { success: false, error: 'Invalid session token.' });
-      manager.stop(data.phoneNumber);
+      await manager.stopAndWait(data.phoneNumber);
       return json(res, 200, { success: true, message: 'User session stopped.' });
     }
 
@@ -188,9 +206,7 @@ async function shutdown(signal) {
   if (shuttingDown) return;
   shuttingDown = true;
   console.log(`[mesh-multi-user] ${signal} received; stopping child sessions safely.`);
-  for (const session of manager.list()) {
-    manager.stop(session.number);
-  }
+  await Promise.all(manager.list().map((session) => manager.stopAndWait(session.number)));
   await new Promise((resolve) => server.close(() => resolve()));
   process.exit(0);
 }

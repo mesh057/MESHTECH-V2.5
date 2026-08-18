@@ -1080,35 +1080,40 @@
         function pollForQr(phoneNumber, accessToken) {
             let attempts = 0;
             let qrDisplayed = false;
-            const maxAttempts = 120;
-
+            let requestInFlight = false;
+            const maxAttempts = 180;
             const interval = setInterval(async () => {
+                if (requestInFlight) return;
+                requestInFlight = true;
                 attempts++;
                 try {
-                    const response = await fetch(`/api/pairing-code?phoneNumber=${encodeURIComponent(phoneNumber)}&accessToken=${encodeURIComponent(accessToken)}`);
+                    const response = await fetch(`/api/pairing-code?phoneNumber=${encodeURIComponent(phoneNumber)}&accessToken=${encodeURIComponent(accessToken)}`, { cache: 'no-store' });
                     const data = await response.json();
+                    const status = data.status || 'starting';
 
                     if (data.success && data.qr && !qrDisplayed) {
                         qrDisplayed = true;
                         showQrCode(data.qr);
                     }
-                    
-                    if (data.success && data.status === 'running') {
+
+                    if (data.success && status === 'running') {
                         clearInterval(interval);
                         showQrSuccess('CONNECTED SUCCESSFULLY! GENERATING SESSION ID...');
                         qrSubmitBtn.disabled = false;
                         qrBtnText.innerHTML = '<i class="fas fa-qrcode"></i> GENERATE QR CODE';
                         await generateAndRouteSessionId();
-                    } else if (data.success === false) {
+                    } else if (data.success && status === 'error') {
                         clearInterval(interval);
                         showQrError(data.error || 'PAIRING FAILED. PLEASE TRY AGAIN.');
                         qrSubmitBtn.disabled = false;
                         qrBtnText.innerHTML = '<i class="fas fa-qrcode"></i> GENERATE QR CODE';
                     } else if (attempts >= maxAttempts) {
                         clearInterval(interval);
-                        showQrError('QR CODE GENERATION TIMED OUT. PLEASE TRY AGAIN.');
+                        showQrError('QR CODE GENERATION TIMED OUT. The WhatsApp process may still be starting; try Force New QR once, then retry.');
                         qrSubmitBtn.disabled = false;
                         qrBtnText.innerHTML = '<i class="fas fa-qrcode"></i> GENERATE QR CODE';
+                    } else if (attempts % 5 === 0 && !qrDisplayed) {
+                        showQrWaiting(`WAITING FOR WHATSAPP QR... ${status.toUpperCase()} (${attempts}s)`);
                     }
                 } catch (err) {
                     if (attempts >= maxAttempts) {
@@ -1117,6 +1122,8 @@
                         qrSubmitBtn.disabled = false;
                         qrBtnText.innerHTML = '<i class="fas fa-qrcode"></i> GENERATE QR CODE';
                     }
+                } finally {
+                    requestInFlight = false;
                 }
             }, 1000);
         }
@@ -1158,7 +1165,7 @@
                 const response = await fetch('/api/status');
                 const data = await response.json();
                 
-                if (data.botStatus === 'initialized' && data.totalActive > 0) {
+                if (data.botStatus === 'connected' || data.botStatus === 'reconnecting' || data.totalActive > 0) {
                     statusBadge.classList.remove('offline');
                     statusText.textContent = '✓ SYSTEM ONLINE';
                 } else {
@@ -1221,9 +1228,12 @@
             let attempts = 0;
             let codeShown = false;
             let connectionHandled = false;
+            let requestInFlight = false;
             const maxAttempts = 180;
 
             const interval = setInterval(async () => {
+                if (requestInFlight) return;
+                requestInFlight = true;
                 attempts++;
                 try {
                     if (!currentPhoneNumber || !currentAccessToken) {
@@ -1232,9 +1242,12 @@
                         return;
                     }
                     const query = new URLSearchParams({ phoneNumber: currentPhoneNumber, accessToken: currentAccessToken });
-                    const response = await fetch(`/api/pairing-code?${query.toString()}`);
+                    const response = await fetch(`/api/pairing-code?${query.toString()}`, { cache: 'no-store' });
                     const data = await response.json();
+                    const status = data.status || 'starting';
 
+                    // Starting/connecting/retrying are expected while the child process
+                    // initializes. Do not treat them as a failed pairing request.
                     if (data.success && data.code && !codeShown) {
                         codeShown = true;
                         currentCode = data.code;
@@ -1242,20 +1255,22 @@
                         submitBtn.disabled = false;
                         btnText.innerHTML = '<i class="fas fa-key"></i> GENERATE CODE';
                     }
-                    if (data.success && data.status === 'running' && !connectionHandled) {
+                    if (data.success && status === 'running' && !connectionHandled) {
                         connectionHandled = true;
                         clearInterval(interval);
                         await generateAndRouteSessionId();
-                    } else if (data.success && data.status === 'error') {
+                    } else if (data.success && status === 'error') {
                         clearInterval(interval);
                         showError(data.error || 'WHATSAPP COULD NOT CREATE A PAIRING CODE. CHECK THE DEPLOY LOGS AND TRY AGAIN.');
                         submitBtn.disabled = false;
                         btnText.innerHTML = '<i class="fas fa-key"></i> GENERATE CODE';
                     } else if (attempts >= maxAttempts) {
                         clearInterval(interval);
-                        showError('PAIRING CODE GENERATION TIMED OUT. PLEASE TRY AGAIN.');
+                        showError('PAIRING CODE GENERATION TIMED OUT. The WhatsApp process may still be starting; try Force New Pairing once, then retry.');
                         submitBtn.disabled = false;
                         btnText.innerHTML = '<i class="fas fa-key"></i> GENERATE CODE';
+                    } else if (attempts % 5 === 0 && !codeShown) {
+                        showWaiting(`GENERATING PAIRING CODE... ${status.toUpperCase()} (${attempts}s)`);
                     }
                 } catch (err) {
                     if (attempts >= maxAttempts) {
@@ -1264,6 +1279,8 @@
                         submitBtn.disabled = false;
                         btnText.innerHTML = '<i class="fas fa-key"></i> GENERATE CODE';
                     }
+                } finally {
+                    requestInFlight = false;
                 }
             }, 1000);
         }
