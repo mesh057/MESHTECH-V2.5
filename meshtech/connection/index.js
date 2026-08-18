@@ -7,7 +7,8 @@ const {
     setupGroupCacheListeners,
     cachedGroupMetadata,
     initializeLidStore,
-    getLidMapping
+    getLidMapping,
+    updateLidMappingsFromMetadata
 } = require('./groupCache');
 
 const { createSocketConfig } = require('./socketConfig');
@@ -52,5 +53,6 @@ module.exports = {
     getProfilePic,
     getDisplayNumber,
     getJidFromParticipant,
-    getLidMapping
+    getLidMapping,
+    updateLidMappingsFromMetadata
 };

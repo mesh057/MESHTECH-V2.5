@@ -57,8 +57,12 @@ const findBodyCommand = (body) => {
 };
 
 const createHelpers = (Gifted, ms, from) => {
-    const reply = (text) => {
-        Gifted.sendMessage(from, { text }, { quoted: ms });
+    const reply = (text, options = {}) => {
+        if (typeof text === 'string') {
+            Gifted.sendMessage(from, { text, ...options }, { quoted: ms });
+        } else {
+            Gifted.sendMessage(from, { ...text, ...options }, { quoted: ms });
+        }
     };
 
     const react = async (emoji) => {

@@ -1,6 +1,14 @@
 require("events").EventEmitter.defaultMaxListeners = 960;
 require("./meshtech/gmdHelpers");
 
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception thrown:', err);
+});
+
 const {
     default: giftedConnect,
     isJidGroup,

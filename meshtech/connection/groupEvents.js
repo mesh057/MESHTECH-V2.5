@@ -2,7 +2,7 @@ const moment = require("moment-timezone");
 const { getSetting } = require("../database/settings");
 const { getGroupSetting } = require("../database/groupSettings");
 const { sendButtons } = require("gifted-btns");
-const { cachedGroupMetadata, getLidMapping } = require("./groupCache");
+const { cachedGroupMetadata, getLidMapping, storeLidMapping, groupCache } = require("./groupCache");
 
 const isSuperUser = async (jid, Gifted) => {
     if (!jid || !Gifted?.user?.id) return false;
@@ -86,19 +86,24 @@ const getJidFromParticipant = async (Gifted, participant, groupMeta = null) => {
 
         // Deep Scan: Check all cached groups for this participant's PN
         try {
-            const allCachedGroups = cachedGroupMetadata(); // If this returns all, or we iterate
-            // Actually, let's use a more direct approach if groupCache allows
-            const { groupCache } = require("./groupCache");
-            const allKeys = groupCache.keys();
-            for (const key of allKeys) {
-                const meta = groupCache.get(key);
-                const found = getJidFromLidUsingMetadata(participant, meta);
-                if (found) {
-                    storeLidMapping(participant, found);
-                    return found;
+            if (groupCache && typeof groupCache.keys === 'function') {
+                const allKeys = groupCache.keys();
+                // Limit scan to 50 groups to prevent event loop blockage
+                const scanLimit = Math.min(allKeys.length, 50);
+                for (let i = 0; i < scanLimit; i++) {
+                    const meta = groupCache.get(allKeys[i]);
+                    if (meta) {
+                        const found = getJidFromLidUsingMetadata(participant, meta);
+                        if (found) {
+                            storeLidMapping(participant, found);
+                            return found;
+                        }
+                    }
                 }
             }
-        } catch (e) {}
+        } catch (e) {
+            console.error("Deep Scan Error:", e.message);
+        }
 
         try {
             if (Gifted.lidToJid) {

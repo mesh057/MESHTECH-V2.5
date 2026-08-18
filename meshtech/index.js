@@ -42,7 +42,7 @@ module.exports = {
     groupCache, getGroupMetadata, updateGroupCache, deleteGroupCache, clearGroupCache, 
     setupGroupCacheListeners, cachedGroupMetadata, initializeLidStore, createSocketConfig, getLidMapping,
     safeNewsletterFollow, safeGroupAcceptInvite, setupConnectionHandler,
-    setupGroupEventsListeners, getProfilePic, getDisplayNumber, getJidFromParticipant,
+    setupGroupEventsListeners, getProfilePic, getDisplayNumber, getJidFromParticipant, updateLidMappingsFromMetadata,
     runFFmpeg, getVideoDuration, gmdSticker, copyFolderSync,
     loadPersistedLidMappings, persistLidMapping
 };

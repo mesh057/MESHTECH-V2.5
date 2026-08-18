@@ -1,5 +1,13 @@
-const { gmd, getGroupMetadata, getLidMapping, getDisplayNumber, getJidFromParticipant } = require("../meshtech");
+const { 
+  gmd, 
+  getGroupMetadata, 
+  getLidMapping, 
+  getDisplayNumber, 
+  getJidFromParticipant,
+  updateLidMappingsFromMetadata 
+} = require("../meshtech");
 const { getGroupSetting, setGroupSetting } = require("../meshtech/database/groupSettings");
+
 
 
 gmd(
@@ -19,7 +27,6 @@ gmd(
       const metadata = await Gifted.groupMetadata(from);
       
       // Update our internal LID mappings with this fresh data
-      const { updateLidMappingsFromMetadata } = require("../meshtech/connection/groupCache");
       updateLidMappingsFromMetadata(metadata);
 
       const participants = Array.isArray(metadata?.participants)
