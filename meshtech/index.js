@@ -1,6 +1,5 @@
-const { evt, gmd, commands } = require('./gmdCmds');
 const config = require('../config');
-
+const { gmd, commands, evt } = require('./gmdCmds');
 const { DATABASE, syncDatabase } = require('./database/database');
 const { loadPersistedLidMappings, persistLidMapping } = require('./database/lidMapping');
 const { UpdateDB, setCommitHash, getCommitHash } = require('./database/autoUpdate');
@@ -19,8 +18,14 @@ const {
     safeNewsletterFollow, safeGroupAcceptInvite, setupConnectionHandler,
     standardizeJid, serializeMessage, downloadMediaMessage,
     loadPlugins, findCommand, findBodyCommand, createHelpers, getGroupInfo, buildSuperUsers,
-    setupGroupEventsListeners, getProfilePic, getDisplayNumber, getJidFromParticipant
+    setupGroupEventsListeners, getProfilePic, getDisplayNumber, getJidFromParticipant,
+    updateLidMappingsFromMetadata
 } = require('./connection');
+
+// Set globals to prevent ReferenceErrors in plugin files
+global.gmd = gmd;
+global.evt = evt;
+global.commands = commands;
 
 module.exports = { 
     evt, gmd, config, emojis, commands, syncDatabase,
@@ -43,6 +48,5 @@ module.exports = {
     setupGroupCacheListeners, cachedGroupMetadata, initializeLidStore, createSocketConfig, getLidMapping,
     safeNewsletterFollow, safeGroupAcceptInvite, setupConnectionHandler,
     setupGroupEventsListeners, getProfilePic, getDisplayNumber, getJidFromParticipant, updateLidMappingsFromMetadata,
-    runFFmpeg, getVideoDuration, gmdSticker, copyFolderSync,
-    loadPersistedLidMappings, persistLidMapping
+    runFFmpeg, getVideoDuration, gmdSticker, copyFolderSync
 };
