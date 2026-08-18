@@ -202,7 +202,11 @@ startCleanup();
 
 async function startGifted() {
     try {
-        const { version } = await fetchLatestWaWebVersion();
+        // Add a timeout to version fetching to prevent pairing delays
+        const { version } = await Promise.race([
+            fetchLatestWaWebVersion(),
+            new Promise(resolve => setTimeout(() => resolve({ version: [2, 3000, 1015901307] }), 4000))
+        ]);
         const sessionDbPath = path.resolve(process.env.SESSION_DB_FILE || config.SESSION_DB_FILE || path.join(sessionDir, "session.db"));
         const { state, saveCreds } = await useSQLiteAuthState(sessionDbPath);
 
@@ -1147,6 +1151,7 @@ function buildContext(ms, settings, helpers, data) {
 
 (async () => {
     await loadSession();
-    await loadBotSettings();
+    // Start settings load in background so pairing can start immediately
+    loadBotSettings().catch(err => console.error("Settings Load Error:", err));
     startGifted();
 })();

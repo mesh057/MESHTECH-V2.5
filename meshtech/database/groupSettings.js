@@ -313,11 +313,11 @@ async function clearBadWords(groupJid) {
 
 async function initializeGroupSettings() {
     try {
-        await GroupSettingsDB.sync({ alter: true });
-        await AntilinkWarningsDB.sync({ alter: true });
-        await AntibadWarningsDB.sync({ alter: true });
-        await AntiGroupMentionWarningsDB.sync({ alter: true });
-        await BadWordsDB.sync({ alter: true });
+        await GroupSettingsDB.sync();
+        await AntilinkWarningsDB.sync();
+        await AntibadWarningsDB.sync();
+        await AntiGroupMentionWarningsDB.sync();
+        await BadWordsDB.sync();
         console.log("✅ Group Settings Initialized.");
     } catch (error) {
         if (error.original?.code === 'SQLITE_ERROR' && error.original?.message?.includes('already exists')) {
