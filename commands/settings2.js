@@ -65,7 +65,7 @@ gmd(
       }
       await setSetting("AUTO_LIKE_STATUS", value);
       await react("✅");
-      await reply(`✅ Auto like status set to: *${formatBoolDisplay(value)}*\n\n⚠️ Note: Auto like only works when auto view (*autoreadstatus*) is also *ON*`);
+      await reply(`✅ Auto like status set to: *${formatBoolDisplay(value)}*`);
     } catch (error) {
       await reply(`❌ Error: ${error.message}`);
     }
@@ -642,7 +642,7 @@ gmd(
       }
       await setSetting("AUTO_REPLY_STATUS", value);
       await react("✅");
-      await reply(`✅ Auto reply status set to: *${formatBoolDisplay(value)}*\n\n⚠️ Note: Auto reply to status only works when auto view (*autoreadstatus*) is also *ON*`);
+      await reply(`✅ Auto reply status set to: *${formatBoolDisplay(value)}*`);
     } catch (error) {
       await reply(`❌ Error: ${error.message}`);
     }

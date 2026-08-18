@@ -7,9 +7,9 @@ const AdmZip = require("adm-zip");
 gmd(
     {
         pattern: "restart",
-        alias: ["reboot"],
+        aliases: ["reboot"],
         react: "🔄",
-        desc: "Restart the bot.",
+        description: "Restart the bot.",
         category: "owner",
     },
     async (from, Gifted, conText) => {
@@ -30,9 +30,9 @@ gmd(
 gmd(
     {
         pattern: "update",
-        alias: ["updatenow", "updt", "sync"],
+        aliases: ["updatenow", "updt", "sync"],
         react: "🆕",
-        desc: "Update the bot to the latest version.",
+        description: "Update the bot to the latest version.",
         category: "owner",
     },
     async (from, Gifted, conText) => {

@@ -1,6 +1,6 @@
 const { gmd, getGroupMetadata, getLidMapping, getDisplayNumber } = require("../meshtech");
 const { getGroupSetting, setGroupSetting } = require("../meshtech/database/groupSettings");
-const { getDisplayNumber } = require("../meshtech/connection/groupEvents");
+
 
 gmd(
   {
