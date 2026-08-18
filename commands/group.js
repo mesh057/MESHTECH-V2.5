@@ -33,14 +33,20 @@ gmd(
       const formatAdmins = async (list) => {
         const lines = [];
         const mentions = [];
-        for (const participant of list) {
-          const rawId = participant?.id || participant?.jid || participant?.pn || participant?.phoneNumber;
-          if (!rawId) continue;
+        for (const p of list) {
+          // Prefer PN (Phone Number) if available in metadata directly
+          let jid = p.pn ? (p.pn.includes("@") ? p.pn : `${p.pn}@s.whatsapp.net`) : 
+                    p.phoneNumber ? (p.phoneNumber.includes("@") ? p.phoneNumber : `${p.phoneNumber}@s.whatsapp.net`) : 
+                    p.id || p.jid;
+
+          if (!jid) continue;
+
+          // If it's still an LID, try to resolve it using our helper
+          if (jid.includes("@lid")) {
+            jid = await getJidFromParticipant(Gifted, jid, metadata);
+          }
           
-          // Use the improved helper to get the real JID (PN)
-          const jid = await getJidFromParticipant(Gifted, rawId, metadata);
           const number = jid.split("@")[0];
-          
           lines.push(`• @${number}`);
           mentions.push(jid);
         }
@@ -230,8 +236,15 @@ gmd(
 
       const participants = Array.isArray(gInfo.participants) ? gInfo.participants : [];
       for (const p of participants) {
-        const jid = p.pn || p.phoneNumber || p.id || p.jid;
-        const formattedJid = `@${await getDisplayNumber(Gifted, jid, gInfo)}`;
+        let jid = p.pn ? (p.pn.includes("@") ? p.pn : `${p.pn}@s.whatsapp.net`) : 
+                  p.phoneNumber ? (p.phoneNumber.includes("@") ? p.phoneNumber : `${p.phoneNumber}@s.whatsapp.net`) : 
+                  p.id || p.jid;
+        
+        if (jid && jid.includes("@lid")) {
+          jid = await getJidFromParticipant(Gifted, jid, gInfo);
+        }
+
+        const formattedJid = `@${jid.split("@")[0]}`;
         if (p.admin === "superadmin") {
           superAdmins.push(`• ${formattedJid} - 👑 Super Admin`);
         } else if (p.admin === "admin") {

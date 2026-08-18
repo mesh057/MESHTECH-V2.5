@@ -29,11 +29,26 @@ const formatJid = (jid) => {
 const getJidFromLidUsingMetadata = (participant, groupMeta) => {
     if (!participant || !groupMeta?.participants) return null;
 
+    const lidNum = participant.split("@")[0];
+
     for (const p of groupMeta.participants) {
-        const pId = p.id || p.jid;
-        const pLid = p.lid;
-        if (pId === participant || pLid === participant) {
+        const pId = p.id || p.jid || "";
+        const pLid = p.lid || "";
+        const pPn = p.pn || p.phoneNumber || "";
+        
+        const isMatch = pId.startsWith(lidNum) || 
+                        pLid.startsWith(lidNum) || 
+                        (pId.includes("@lid") && pId.split("@")[0] === lidNum) ||
+                        (pLid.includes("@lid") && pLid.split("@")[0] === lidNum);
+
+        if (isMatch) {
             let jid = p.pn || p.jid || p.phoneNumber || p.id;
+            if (jid && jid.endsWith("@lid")) {
+                if (p.pn) jid = p.pn + "@s.whatsapp.net";
+                else if (p.phoneNumber) jid = p.phoneNumber + "@s.whatsapp.net";
+                else if (p.id && p.id.endsWith("@s.whatsapp.net")) jid = p.id;
+            }
+            
             if (jid && !jid.includes("@")) {
                 jid = `${jid}@s.whatsapp.net`;
             }
