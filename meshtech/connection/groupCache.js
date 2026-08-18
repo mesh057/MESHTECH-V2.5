@@ -1,6 +1,6 @@
 const NodeCache = require("node-cache");
-const { globalLidMapping } = require("gifted-baileys/lib/Utils/lid-mapping");
-const { loadPersistedLidMappings } = require("../database/lidMapping");
+// Removed internal baileys imports that might cause crashes on some environments
+const { getLidMappingFromDb } = require("../database/lidMapping");
 
 const groupCache = new NodeCache({
     stdTTL: 5 * 60,
@@ -22,7 +22,7 @@ const storeLidMapping = (lid, jid) => {
 
 const getLidMapping = (lid) => {
     if (!lid || typeof lid !== "string") return null;
-    return lidToJidStore.get(lid) || globalLidMapping?.get(lid);
+    return lidToJidStore.get(lid);
 };
 
 const updateLidMappingsFromMetadata = (metadata) => {
@@ -132,7 +132,6 @@ const cachedGroupMetadata = async (jid) => {
 
 const initializeLidStore = async (Gifted) => {
     try {
-        await loadPersistedLidMappings();
         const groups = await Gifted.groupFetchAllParticipating();
         if (groups) {
             for (const groupJid of Object.keys(groups)) {

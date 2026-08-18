@@ -124,25 +124,7 @@ async function resolveMeshTechChannel(Gifted) {
  * When a LID cannot be resolved it returns the original LID as a best-effort
  * fallback so the operation still fires rather than being silently skipped.
  */
-async function resolveRealJid(Gifted, jid) {
-    if (!jid) return null;
-    if (!jid.endsWith('@lid')) return jid;   // already real
-    try {
-        const { getLidMapping } = require('./meshtech/connection/groupCache');
-        const cached = getLidMapping(jid);
-        if (cached) return cached;
-    } catch (_) {}
-    try {
-        const resolved = await Gifted.getJidFromLid(jid);
-        if (resolved && !resolved.endsWith('@lid')) return resolved;
-    } catch (_) {}
-    try {
-        const { getLidMappingFromDb } = require('./meshtech/database/lidMapping');
-        const fromDb = await getLidMappingFromDb(jid);
-        if (fromDb) return fromDb;
-    } catch (_) {}
-    return jid;   // best effort — return original LID so the operation still fires
-}
+// Unused resolveRealJid removed to simplify index.js
 
 const { sendButtons } = require("gifted-btns");
 const { setSetting } = require("./meshtech/database/settings");
@@ -276,16 +258,20 @@ async function startGifted() {
 
         setupConnectionHandler(Gifted, sessionDir, startGifted, {
             onOpen: async (Gifted) => {
-                if (!Gifted?.user?.id) {
-                    console.warn("⚠️ Connection opened before WhatsApp authentication; skipping post-connect actions.");
-                    return;
+                try {
+                    if (!Gifted?.user?.id) {
+                        console.warn("⚠️ Connection opened before WhatsApp authentication; skipping post-connect actions.");
+                        return;
+                    }
+                    // Resolve channel metadata in the background; connection startup must not wait on an external lookup.
+                    void resolveMeshTechChannel(Gifted);
+                    const s = await getAllSettings();
+                    await safeNewsletterFollow(Gifted, s.NEWSLETTER_JID);
+                    await safeGroupAcceptInvite(Gifted, s.GC_JID);
+                    await initializeLidStore(Gifted);
+                } catch (err) {
+                    console.error("Error in onOpen post-connect handler:", err);
                 }
-                // Resolve channel metadata in the background; connection startup must not wait on an external lookup.
-                void resolveMeshTechChannel(Gifted);
-                const s = await getAllSettings();
-                await safeNewsletterFollow(Gifted, s.NEWSLETTER_JID);
-                await safeGroupAcceptInvite(Gifted, s.GC_JID);
-                await initializeLidStore(Gifted);
 
                 setTimeout(async () => {
                     try {
