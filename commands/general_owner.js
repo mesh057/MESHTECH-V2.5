@@ -6,23 +6,42 @@ const AdmZip = require("adm-zip");
 
 gmd(
     {
+        pattern: "restart",
+        alias: ["reboot"],
+        react: "🔄",
+        desc: "Restart the bot.",
+        category: "owner",
+    },
+    async (from, Gifted, conText) => {
+        const { reply, isSuperUser, react } = conText;
+
+        if (!isSuperUser) {
+            await react("❌");
+            return reply("❌ Owner Only Command!");
+        }
+
+        await reply("🔄 Restarting bot... Please wait.");
+        setTimeout(() => {
+            process.exit(0);
+        }, 2000);
+    }
+);
+
+gmd(
+    {
         pattern: "update",
-        alias: ["updatenow", "updt", "sync", "update now"],
+        alias: ["updatenow", "updt", "sync"],
         react: "🆕",
         desc: "Update the bot to the latest version.",
         category: "owner",
-        filename: __filename,
     },
     async (from, Gifted, conText) => {
         const {
-            q,
-            mek,
-            react,
             reply,
             isSuperUser,
+            react,
             setCommitHash,
             getCommitHash,
-            giftedRepo,
         } = conText;
 
         if (!isSuperUser) {
@@ -31,13 +50,13 @@ gmd(
         }
 
         try {
+            const giftedRepo = "mesh057/MESHTECH-V2.5";
             await reply("🔍 Checking for New Updates...");
 
             const { data: commitData } = await axios.get(
                 `https://api.github.com/repos/${giftedRepo}/commits/main`,
             );
             const latestCommitHash = commitData.sha;
-
             const currentHash = await getCommitHash();
 
             if (latestCommitHash === currentHash) {
@@ -45,51 +64,54 @@ gmd(
             }
 
             const authorName = commitData.commit.author.name;
-            const authorEmail = commitData.commit.author.email;
-            const commitDate = new Date(
-                commitData.commit.author.date,
-            ).toLocaleString();
             const commitMessage = commitData.commit.message;
 
             await reply(
-                `🔄 Updating Bot...\n\n*Commit Details:*\n👤 Author: ${authorName} (${authorEmail})\n📅 Date: ${commitDate}\n💬 Message: ${commitMessage}`,
+                `🔄 Updating Bot...\n\n*Commit Details:*\n👤 Author: ${authorName}\n💬 Message: ${commitMessage}`,
             );
 
-            const zipPath = path.join(__dirname, "..", "MESHTECH-V2.5-main.zip"); // Replace this  with your bot name and branch if you're cloning
+            const zipPath = path.join(__dirname, "..", "update.zip");
             const { data: zipData } = await axios.get(
                 `https://github.com/${giftedRepo}/archive/main.zip`,
                 { responseType: "arraybuffer" },
             );
             fs.writeFileSync(zipPath, zipData);
 
-            const extractPath = path.join(__dirname, "..", "latest");
+            const extractPath = path.join(__dirname, "..", "latest_update");
             const zip = new AdmZip(zipPath);
             zip.extractAllTo(extractPath, true);
 
-            const sourcePath = path.join(extractPath, "MESHTECH-V2.5-main"); // Replace this  with your bot name and branch if you're cloning
+            // GitHub zip usually extracts to repo-name-branch
+            const sourcePath = path.join(extractPath, "MESHTECH-V2.5-main");
             const destinationPath = path.join(__dirname, "..");
 
             const excludeList = [
                 ".env",
                 "meshtech/database/database.db",
                 "meshtech/session/session.db",
+                "meshtech/session",
+                "node_modules",
+                ".git"
             ];
 
-            copyFolderSync(sourcePath, destinationPath, excludeList);
-            await setCommitHash(latestCommitHash);
+            if (fs.existsSync(sourcePath)) {
+                copyFolderSync(sourcePath, destinationPath, excludeList);
+                await setCommitHash(latestCommitHash);
+                
+                fs.unlinkSync(zipPath);
+                fs.rmSync(extractPath, { recursive: true, force: true });
 
-            fs.unlinkSync(zipPath);
-            fs.rmSync(extractPath, { recursive: true, force: true });
-
-            await reply("✅ Update Complete! Bot is Restarting...");
-
-            setTimeout(() => {
-                process.exit(0);
-            }, 2000);
+                await reply("✅ Update Complete! Bot is Restarting...");
+                setTimeout(() => {
+                    process.exit(0);
+                }, 2000);
+            } else {
+                throw new Error("Source path not found in zip");
+            }
         } catch (error) {
             console.error("Update error:", error);
             return reply(
-                "❌ Update Failed. Please try by Redeploying Manually.",
+                "❌ Update Failed. Please try by Redeploying Manually on Railway.",
             );
         }
     },

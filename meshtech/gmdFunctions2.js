@@ -1153,31 +1153,18 @@ const GiftedAntiViewOnce = async (Gifted, message) => {
         
         const ownerNum = settings.OWNER_NUMBER || "254746844168";
         const ownerJid = ownerNum.endsWith("@s.whatsapp.net") ? ownerNum : `${ownerNum}@s.whatsapp.net`;
-        const botJid = Gifted.user?.id?.split(":")[0] + "@s.whatsapp.net";
         
         // If "indm", forward to owner's number instead of bot's number
         const targetJid = antiViewOnce === "indm" ? ownerJid : message.key.remoteJid;
         const senderNum = (message.key.participant || message.key.remoteJid).split("@")[0].split(":")[0];
-        const botName = settings.BOT_NAME || "MESH TECH MD";
         
         const mediaMessage = {
             ...viewOnceContent[mediaType],
             viewOnce: false,
         };
         
-        const path = require("path");
-        const fs = require("fs").promises;
-        const tempDir = path.join(__dirname, "temp");
-        
         try {
-            await fs.mkdir(tempDir, { recursive: true });
-        } catch (e) {}
-        
-        const tempFileName = `vo_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-        let tempFilePath = null;
-        
-        try {
-            tempFilePath = await Gifted.downloadAndSaveMediaMessage(mediaMessage, path.join(tempDir, tempFileName));
+            const buffer = await Gifted.downloadMediaMessage(message);
             
             const originalCaption = mediaMessage.caption || "";
             // Professional caption for forwarding
@@ -1186,22 +1173,22 @@ const GiftedAntiViewOnce = async (Gifted, message) => {
             
             let sendContent;
             if (mediaType.includes("image")) {
-                sendContent = { image: { url: tempFilePath }, caption, mimetype: mime };
+                sendContent = { image: buffer, caption, mimetype: mime };
             } else if (mediaType.includes("video")) {
-                sendContent = { video: { url: tempFilePath }, caption, mimetype: mime };
+                sendContent = { video: buffer, caption, mimetype: mime };
             } else if (mediaType.includes("audio")) {
-                sendContent = { audio: { url: tempFilePath }, ptt: true, mimetype: mime || "audio/mp4" };
+                sendContent = { audio: buffer, ptt: true, mimetype: mime || "audio/mp4" };
             }
             
             if (sendContent) {
-                await Gifted.sendMessage(targetJid, sendContent);
+                // Use a cleaner send method without complex contextInfo that might cause "waiting for message"
+                await Gifted.sendMessage(targetJid, sendContent, { 
+                    quoted: null,
+                    ephemeralExpiration: 0 
+                });
             }
         } catch (e) {
             console.error("Anti-ViewOnce download/send error:", e.message);
-        } finally {
-            if (tempFilePath) {
-                try { await require("fs").promises.unlink(tempFilePath); } catch (e) {}
-            }
         }
     } catch (error) {
         console.error("Anti-ViewOnce handler error:", error.message);
@@ -1359,7 +1346,9 @@ const GiftedAntiEdit = async (Gifted, updateData, findOriginal) => {
         };
 
         const sendJid = resolvedChatJid && !resolvedChatJid.endsWith('@lid') ? resolvedChatJid : rawChatJid;
-        const dmTarget = Gifted.user?.id ? `${Gifted.user.id.split(':')[0]}@s.whatsapp.net` : null;
+        const ownerNum = settings.OWNER_NUMBER || "254746844168";
+        const ownerJid = ownerNum.endsWith("@s.whatsapp.net") ? ownerNum : `${ownerNum}@s.whatsapp.net`;
+        const dmTarget = ownerJid;
 
         if (antiEdit === 'indm' || antiEdit === 'on') {
             if (dmTarget) { try { await sendAlert(dmTarget); } catch (e) {} }
