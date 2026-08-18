@@ -238,30 +238,29 @@ async function startGifted() {
             pairingInFlight = true;
             try {
                 if (Gifted?.user?.id) return;
+                // Wait briefly to ensure WebSocket is open and ready for pairing IQ
+                await new Promise(r => setTimeout(r, 2000));
                 const pairingCode = await Gifted.requestPairingCode(phoneNumber);
                 pairingRequested = true;
                 console.log(`PAIRING_CODE ${pairingCode}`);
             } catch (pairingError) {
                 console.error(`PAIRING_ERROR ${pairingError.message}`);
-                setTimeout(requestPairingCode, 5000);
-            } finally {
                 pairingInFlight = false;
+                // Retry pairing request after 3 seconds if connection was not yet open
+                setTimeout(requestPairingCode, 3000);
+                return;
             }
+            pairingInFlight = false;
         };
 
-        Gifted.ev.on("connection.update", ({ qr, connection }) => {
-            if (qr && process.env.MESH_PAIRING_MODE === "qr") {
-                console.log(`PAIRING_QR ${qr}`);
+        Gifted.ev.on("connection.update", ({ connection }) => {
+            if (connection === "connecting" || connection === "open") {
+                setTimeout(requestPairingCode, 1000);
             }
-            // The QR-ready event means the socket is ready for the pairing IQ.
-            // WhatsApp may emit this event even when QR rendering is disabled.
-            if (qr) setTimeout(requestPairingCode, 200);
-            if (connection === "connecting") setTimeout(requestPairingCode, 500);
         });
 
         if (!state.creds.registered && process.env.MESH_PAIRING_PHONE_NUMBER && process.env.MESH_PAIRING_MODE !== "qr") {
-            // Fallback for hosts that do not emit a connecting update promptly.
-            setTimeout(requestPairingCode, 3000);
+            setTimeout(requestPairingCode, 1500);
         }
 
         Gifted.ev.process(async (events) => {
