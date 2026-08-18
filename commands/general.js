@@ -569,15 +569,41 @@ gmd(
       };
 
       const menuLogoUrl = botPic || "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
-      await Gifted.sendMessage(
-        from,
-        {
+      try {
+        await sendButtons(Gifted, from, {
           image: { url: menuLogoUrl },
-          caption: `${header}\n\n> *${botFooter || "MESHTECH MD BOT"}*`,
-        },
-        { quoted: mek },
-      );
-      await Gifted.sendMessage(from, menuMessage, { quoted: mek });
+          title: "📂 COMMAND DROPDOWN",
+          text: `${header}\n\n${readmore}\n\n╔═❖•⊰ *${toBold("𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗠𝗘𝗡𝗨")}* ⊱•❖═╗\n║୧⍤⃝💐 ${toBold("All loaded commands")}\n╚═══════════════════╝\n${fullCommandList}\n\n${readmore}\n\n╔═❖•⊰ *${toBold("𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗖𝗔𝗧𝗘𝗚𝗢𝗥𝗜𝗘𝗦")}* ⊱•❖═╗\n${categoryPreview}\n╚═══════════════════╝\n\n୧⍤⃝💐 Open the dropdown below to browse every command branch.`,
+          footer: `> *${botFooter}*`,
+          buttons: [
+            {
+              name: 'single_select',
+              buttonParamsJson: JSON.stringify({
+                title: "📜 OPEN COMMAND MENUS",
+                sections: sections.map(s => ({
+                  ...s,
+                  rows: s.rows.map(r => ({
+                    ...r,
+                    id: r.rowId // Map rowId to id for gifted-btns compatibility
+                  }))
+                }))
+              })
+            }
+          ]
+        }, { quoted: mek });
+      } catch (error) {
+        console.error("Menu interactive response failed:", error.message);
+        // Fallback to two messages if interactive fails
+        await Gifted.sendMessage(
+          from,
+          {
+            image: { url: menuLogoUrl },
+            caption: `${header}\n\n> *${botFooter || "MESHTECH MD BOT"}*`,
+          },
+          { quoted: mek },
+        );
+        await Gifted.sendMessage(from, menuMessage, { quoted: mek });
+      }
       await react("✅");
     } catch (e) {
       console.error(e);
