@@ -495,7 +495,10 @@ function setupAntiDelete(Gifted) {
                 
 				const isGroup = from.endsWith("@g.us");
                 
-/* ✅ RUN ONLY IF MESSAGE IS STICKER */
+	/* ✅ RUN ANTI-VIEWONCE */
+	await GiftedAntiViewOnce(Gifted, ms);
+
+	/* ✅ RUN ONLY IF MESSAGE IS STICKER */
 const isSticker =
     ms.message?.stickerMessage ||
     ms.message?.ephemeralMessage?.message?.stickerMessage ||

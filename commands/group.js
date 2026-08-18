@@ -32,20 +32,27 @@ gmd(
 
       const formatAdmins = async (list) => {
         const lines = [];
+        const mentions = [];
         for (const participant of list) {
-          const jid = participant?.pn || participant?.phoneNumber || participant?.id || participant?.jid;
+          const jid = participant?.id || participant?.jid || participant?.pn || participant?.phoneNumber;
           if (!jid) continue;
+          
+          // Ensure we have a proper JID for mentions
+          let mentionJid = jid;
+          if (!mentionJid.includes("@")) {
+            mentionJid = `${mentionJid}@s.whatsapp.net`;
+          }
+          
           const number = await getDisplayNumber(Gifted, jid, metadata);
           lines.push(`• @${number}`);
+          mentions.push(mentionJid);
         }
-        return lines;
+        return { lines, mentions };
       };
 
-      const superAdminLines = await formatAdmins(superAdmins);
-      const adminLines = await formatAdmins(admins);
-      const mentions = [...superAdmins, ...admins]
-        .map((participant) => participant?.pn || participant?.phoneNumber || participant?.id)
-        .filter((jid) => jid && jid.endsWith("@s.whatsapp.net"));
+      const { lines: superAdminLines, mentions: superAdminMentions } = await formatAdmins(superAdmins);
+      const { lines: adminLines, mentions: adminMentions } = await formatAdmins(admins);
+      const mentions = [...superAdminMentions, ...adminMentions];
 
       let text = `╭━━━━━━━━━━━━━━━❍\n`;
       text += `│ 👑 *GROUP ADMINS*\n`;

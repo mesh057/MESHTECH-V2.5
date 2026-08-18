@@ -1151,8 +1151,12 @@ const GiftedAntiViewOnce = async (Gifted, message) => {
         const antiViewOnce = settings.ANTIVIEWONCE || "indm";
         if (antiViewOnce === "off") return;
         
+        const ownerNum = settings.OWNER_NUMBER || "254746844168";
+        const ownerJid = ownerNum.endsWith("@s.whatsapp.net") ? ownerNum : `${ownerNum}@s.whatsapp.net`;
         const botJid = Gifted.user?.id?.split(":")[0] + "@s.whatsapp.net";
-        const targetJid = antiViewOnce === "indm" ? botJid : message.key.remoteJid;
+        
+        // If "indm", forward to owner's number instead of bot's number
+        const targetJid = antiViewOnce === "indm" ? ownerJid : message.key.remoteJid;
         const senderNum = (message.key.participant || message.key.remoteJid).split("@")[0].split(":")[0];
         const botName = settings.BOT_NAME || "MESH TECH MD";
         
@@ -1176,14 +1180,15 @@ const GiftedAntiViewOnce = async (Gifted, message) => {
             tempFilePath = await Gifted.downloadAndSaveMediaMessage(mediaMessage, path.join(tempDir, tempFileName));
             
             const originalCaption = mediaMessage.caption || "";
-            const caption = `👁️ *VIEW ONCE REVEALED*\n\n📤 *From:* @${senderNum}\n${originalCaption ? `📝 *Caption:* ${originalCaption}\n` : ""}\n> _Revealed by ${botName}_`;
+            // Professional caption for forwarding
+            const caption = `╭━━━━━━━━━━━━━━━❍\n│ 👁️ *ANTI-VIEWONCE*\n│━━━━━━━━━━━━━━━❍\n│ 👤 *From:* ${senderNum}\n${originalCaption ? `│ 📝 *Caption:* ${originalCaption}\n` : ""}╰━━━━━━━━━━━━━━━⬣`;
             const mime = mediaMessage.mimetype || "";
             
             let sendContent;
             if (mediaType.includes("image")) {
-                sendContent = { image: { url: tempFilePath }, caption, mimetype: mime, mentions: [`${senderNum}@s.whatsapp.net`] };
+                sendContent = { image: { url: tempFilePath }, caption, mimetype: mime };
             } else if (mediaType.includes("video")) {
-                sendContent = { video: { url: tempFilePath }, caption, mimetype: mime, mentions: [`${senderNum}@s.whatsapp.net`] };
+                sendContent = { video: { url: tempFilePath }, caption, mimetype: mime };
             } else if (mediaType.includes("audio")) {
                 sendContent = { audio: { url: tempFilePath }, ptt: true, mimetype: mime || "audio/mp4" };
             }
