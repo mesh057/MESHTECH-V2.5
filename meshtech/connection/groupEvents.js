@@ -660,4 +660,5 @@ module.exports = {
     setupGroupEventsListeners,
     getProfilePic,
     getDisplayNumber,
+    getJidFromParticipant,
 };

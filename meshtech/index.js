@@ -19,7 +19,7 @@ const {
     safeNewsletterFollow, safeGroupAcceptInvite, setupConnectionHandler,
     standardizeJid, serializeMessage, downloadMediaMessage,
     loadPlugins, findCommand, findBodyCommand, createHelpers, getGroupInfo, buildSuperUsers,
-    setupGroupEventsListeners, getProfilePic, getDisplayNumber
+    setupGroupEventsListeners, getProfilePic, getDisplayNumber, getJidFromParticipant
 } = require('./connection');
 
 module.exports = { 
@@ -42,7 +42,7 @@ module.exports = {
     groupCache, getGroupMetadata, updateGroupCache, deleteGroupCache, clearGroupCache, 
     setupGroupCacheListeners, cachedGroupMetadata, initializeLidStore, createSocketConfig, getLidMapping,
     safeNewsletterFollow, safeGroupAcceptInvite, setupConnectionHandler,
-    setupGroupEventsListeners, getProfilePic, getDisplayNumber,
+    setupGroupEventsListeners, getProfilePic, getDisplayNumber, getJidFromParticipant,
     runFFmpeg, getVideoDuration, gmdSticker, copyFolderSync,
     loadPersistedLidMappings, persistLidMapping
 };

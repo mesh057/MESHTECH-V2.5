@@ -662,24 +662,26 @@ function setupStatusHandlers(Gifted) {
 
             // Sender of a status is on mek.participant (top-level), NOT inside mek.key
             const rawParticipant = mek.participant || mek.key.participantPn || mek.key.participant;
-            const participantJid = await resolveRealJid(Gifted, rawParticipant);
+            const participantJid = await getJidFromParticipant(Gifted, rawParticipant);
 
             // AUTO VIEW STATUS — works on its own; auto-like and auto-reply require this to be ON
             const shouldView = s.AUTO_READ_STATUS === "true";
 
-            const readKey = (participantJid && participantJid !== mek.key.participant)
-                ? { ...mek.key, participant: participantJid }
-                : mek.key;
-
             if (shouldView) {
+                const readKey = (participantJid && participantJid !== mek.key.participant)
+                    ? { ...mek.key, participant: participantJid }
+                    : mek.key;
                 await Gifted.readMessages([readKey]);
             }
 
-            // AUTO LIKE STATUS — only fires when auto-view is ON (status must be viewed first)
-            if (shouldView && s.AUTO_LIKE_STATUS === "true" && participantJid) {
+            // AUTO LIKE STATUS — works independently if enabled
+            if (s.AUTO_LIKE_STATUS === "true" && participantJid) {
                 const emojis = (s.STATUS_LIKE_EMOJIS || "💛,❤️,💜,🤍,💙").split(",").map(e => e.trim()).filter(Boolean);
                 const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-                const reactKey = { ...mek.key, participant: participantJid };
+                const reactKey = (participantJid && participantJid !== mek.key.participant)
+                    ? { ...mek.key, participant: participantJid }
+                    : mek.key;
+                
                 await Gifted.sendMessage(
                     "status@broadcast",
                     { react: { text: randomEmoji, key: reactKey } },
@@ -687,8 +689,8 @@ function setupStatusHandlers(Gifted) {
                 );
             }
 
-            // AUTO REPLY STATUS — only fires when auto-view is ON
-            if (shouldView && s.AUTO_REPLY_STATUS === "true" && !mek.key.fromMe && participantJid) {
+            // AUTO REPLY STATUS
+            if (s.AUTO_REPLY_STATUS === "true" && !mek.key.fromMe && participantJid) {
                 await Gifted.sendMessage(
                     participantJid,
                     { text: s.STATUS_REPLY_TEXT || DEFAULT_SETTINGS.STATUS_REPLY_TEXT },
