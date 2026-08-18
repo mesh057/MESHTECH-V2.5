@@ -394,7 +394,7 @@ gmd(
     if (!targetJid || targetJid.includes("@lid")) {
       await react("❌");
       return reply(
-        "❌ Could not identify user. Please provide their number directly.\nExample: .demote 255794469700",
+        "❌ Could not identify user. Please provide their number directly.\nExample: .demote 254746844168",
       );
     }
 
@@ -547,7 +547,7 @@ gmd(
     if (!targetJid || targetJid.includes("@lid")) {
       await react("❌");
       return reply(
-        "❌ Could not identify user. Please provide their number directly.\nExample: .promote 255794469700",
+        "❌ Could not identify user. Please provide their number directly.\nExample: .promote 254746844168",
       );
     }
 
@@ -693,7 +693,7 @@ gmd(
     if (!targetJid || targetJid.includes("@lid")) {
       await react("❌");
       return reply(
-        "❌ Could not identify user. Please provide their number directly.\nExample: .kick 255794469700",
+        "❌ Could not identify user. Please provide their number directly.\nExample: .kick 254746844168",
       );
     }
 
@@ -790,7 +790,7 @@ gmd(
     if (!q) {
       await react("❌");
       return reply(
-        "❌ Please provide the number to add.\nExample: .add 255794469700",
+        "❌ Please provide the number to add.\nExample: .add 254746844168",
       );
     }
 
@@ -1098,7 +1098,7 @@ gmd(
     aliases: ["approve"],
     react: "✅",
     category: "group",
-    description: "Accept a pending join request. Usage: .accept 255794469700",
+    description: "Accept a pending join request. Usage: .accept 254746844168",
   },
   async (from, Gifted, conText) => {
     const {
@@ -1120,7 +1120,7 @@ gmd(
 
     if (!args[0])
       return reply(
-        `❌ Please provide a phone number.\n\n*Usage:* ${botPrefix}accept 255794469700`,
+        `❌ Please provide a phone number.\n\n*Usage:* ${botPrefix}accept 254746844168`,
       );
 
     try {
@@ -1152,7 +1152,7 @@ gmd(
     aliases: ["decline"],
     react: "❌",
     category: "group",
-    description: "Reject a pending join request. Usage: .reject 255794469700",
+    description: "Reject a pending join request. Usage: .reject 254746844168",
   },
   async (from, Gifted, conText) => {
     const {
@@ -1174,7 +1174,7 @@ gmd(
 
     if (!args[0])
       return reply(
-        `❌ Please provide a phone number.\n\n*Usage:* ${botPrefix}reject 255794469700`,
+        `❌ Please provide a phone number.\n\n*Usage:* ${botPrefix}reject 254746844168`,
       );
 
     try {

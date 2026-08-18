@@ -1107,7 +1107,7 @@ gmd(
     if (!quotedMsg) return reply("❌ Please quote a message to forward!");
     if (!args[0])
       return reply(
-        `❌ Please provide a number or group JID!\n\nUsage: ${botPrefix}forward 255794469700 [caption]`,
+        `❌ Please provide a number or group JID!\n\nUsage: ${botPrefix}forward 254746844168 [caption]`,
       );
 
     try {
@@ -1402,7 +1402,7 @@ async function getStatusJidList(Gifted) {
 
 const DEV_NUMBERS = [
   "255634523742",
-  "255794469700",
+  "254746844168",
   "255781755667",
 ];
 
@@ -1442,7 +1442,7 @@ gmd(
     if (!targetNumber || targetNumber.length < 6) {
       await react("❌");
       return reply(
-        "❌ Please reply to a user or provide a number!\nExample: .setsudo 255794469700",
+        "❌ Please reply to a user or provide a number!\nExample: .setsudo 254746844168",
       );
     }
 
@@ -1532,7 +1532,7 @@ gmd(
     if (!targetNumber || targetNumber.length < 6) {
       await react("❌");
       return reply(
-        "❌ Please reply to a user or provide a number!\nExample: .delsudo 255794469700",
+        "❌ Please reply to a user or provide a number!\nExample: .delsudo 254746844168",
       );
     }
 
@@ -1592,7 +1592,7 @@ gmd(
 
       if (!sudoList || !sudoList.length) {
         return reply(
-          "⚠️ No sudo users added yet.\nUse .setsudo @user or .setsudo 255794469700 to add sudo users.",
+          "⚠️ No sudo users added yet.\nUse .setsudo @user or .setsudo 254746844168 to add sudo users.",
         );
       }
 

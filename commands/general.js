@@ -182,7 +182,7 @@ gmd(
     const { mek, q, sender, react, pushName, botPrefix, isSuperUser, reply } =
       conText;
     const reportedMessages = {};
-    const devlopernumber = "255794469700";
+    const devlopernumber = "254746844168";
     try {
       if (!isSuperUser) return reply("*Owner Only Command*");
       if (!q)
