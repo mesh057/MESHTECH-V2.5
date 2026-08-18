@@ -118,8 +118,18 @@ const server = http.createServer(async (req, res) => {
       if (!allowed(ip)) return json(res, 429, { success: false, error: 'Too many requests. Try again later.' });
       const data = await readBody(req);
       if (!manager.hasSessionCapacity(data.phoneNumber)) return json(res, 429, { success: false, error: `Maximum active sessions reached (${manager.maxInstances}).` });
-      const session = await manager.start(data.phoneNumber, data.useQr === true);
+      const session = await manager.start(data.phoneNumber, data.useQr === true, false, '', data.force === true);
       return json(res, 200, { success: true, message: 'Session started. Poll /api/pairing-code for the code or QR.', phoneNumber: session.number, accessToken: session.accessToken });
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/clear-session') {
+      if (!allowed(ip)) return json(res, 429, { success: false, error: 'Too many requests. Try again later.' });
+      const data = await readBody(req);
+      const phoneNumber = String(data.phoneNumber || '').replace(/\D/g, '');
+      if (!phoneNumber) return json(res, 400, { success: false, error: 'Phone number is required.' });
+      
+      const success = manager.clear(phoneNumber);
+      return json(res, 200, { success, message: success ? 'Session cleared successfully.' : 'Failed to clear session.' });
     }
 
     if (req.method === 'POST' && url.pathname === '/api/restore-session') {

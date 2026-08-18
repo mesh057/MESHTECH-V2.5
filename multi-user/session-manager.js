@@ -118,11 +118,33 @@ class MultiUserSessionManager {
     return this.sessions.has(normalized) || this.sessions.size < this.maxInstances;
   }
 
-  async start(number, useQr = false, restoring = false, importedSessionId = '') {
+  clear(number) {
     const normalized = this.normalizePhoneNumber(number);
+    this.stop(normalized);
+    const authDir = this.sessionDir(normalized);
+    if (fs.existsSync(authDir)) {
+      try {
+        fs.rmSync(authDir, { recursive: true, force: true });
+        return true;
+      } catch (error) {
+        console.error(`[mesh-multi-user] Could not clear session directory for ${normalized}:`, error.message);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  async start(number, useQr = false, restoring = false, importedSessionId = '', force = false) {
+    const normalized = this.normalizePhoneNumber(number);
+    
+    if (force) {
+      this.clear(normalized);
+    }
+
     const existing = this.sessions.get(normalized);
     const existingAlive = existing && existing.child && existing.child.exitCode === null && !existing.child.killed;
-    if (existingAlive) return this.publicSession(existing);
+    if (existingAlive && !force) return this.publicSession(existing);
+    
     if (existing) {
       if (existing.child && !existing.child.killed) existing.child.kill('SIGTERM');
       this.sessions.delete(normalized);
