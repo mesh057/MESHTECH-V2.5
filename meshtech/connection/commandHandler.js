@@ -200,7 +200,7 @@ const getGroupInfo = async (Gifted, from, botId, sender) => {
     return {
         groupInfo,
         groupName: groupInfo.subject || '',
-        participants,
+        participants: groupInfo.participants,
         groupAdmins,
         groupSuperAdmins,
         isBotAdmin,
