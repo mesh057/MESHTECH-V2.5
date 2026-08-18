@@ -160,6 +160,16 @@ if (embeddedHttpServerEnabled) {
         try {
             const http = require("http");
             http.get(`http://localhost:${PORT}/health`, () => {});
+            
+            // If a public URL is set in environment, ping it externally to prevent sleep
+            const publicUrl = process.env.PUBLIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN;
+            if (publicUrl) {
+                const target = publicUrl.startsWith("http") ? publicUrl : `https://${publicUrl}`;
+                const https = require("https");
+                const client = target.startsWith("https") ? https : http;
+                client.get(`${target}/health`, () => {}).on("error", () => {});
+            }
+
             // Also send a presence update to WhatsApp if connected
             if (Gifted?.user?.id) {
                 await Gifted.sendPresenceUpdate("available");
