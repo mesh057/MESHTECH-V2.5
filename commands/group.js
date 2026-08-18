@@ -1,4 +1,4 @@
-const { gmd, getGroupMetadata, getLidMapping, getDisplayNumber } = require("../meshtech");
+const { gmd, getGroupMetadata, getLidMapping, getDisplayNumber, getJidFromParticipant } = require("../meshtech");
 const { getGroupSetting, setGroupSetting } = require("../meshtech/database/groupSettings");
 
 
@@ -34,18 +34,15 @@ gmd(
         const lines = [];
         const mentions = [];
         for (const participant of list) {
-          const jid = participant?.id || participant?.jid || participant?.pn || participant?.phoneNumber;
-          if (!jid) continue;
+          const rawId = participant?.id || participant?.jid || participant?.pn || participant?.phoneNumber;
+          if (!rawId) continue;
           
-          // Ensure we have a proper JID for mentions
-          let mentionJid = jid;
-          if (!mentionJid.includes("@")) {
-            mentionJid = `${mentionJid}@s.whatsapp.net`;
-          }
+          // Use the improved helper to get the real JID (PN)
+          const jid = await getJidFromParticipant(Gifted, rawId, metadata);
+          const number = jid.split("@")[0];
           
-          const number = await getDisplayNumber(Gifted, jid, metadata);
           lines.push(`• @${number}`);
-          mentions.push(mentionJid);
+          mentions.push(jid);
         }
         return { lines, mentions };
       };

@@ -30,8 +30,13 @@ const getJidFromLidUsingMetadata = (participant, groupMeta) => {
     if (!participant || !groupMeta?.participants) return null;
 
     for (const p of groupMeta.participants) {
-        if (p.id === participant || p.lid === participant) {
-            const jid = p.pn || p.jid || p.phoneNumber;
+        const pId = p.id || p.jid;
+        const pLid = p.lid;
+        if (pId === participant || pLid === participant) {
+            let jid = p.pn || p.jid || p.phoneNumber || p.id;
+            if (jid && !jid.includes("@")) {
+                jid = `${jid}@s.whatsapp.net`;
+            }
             if (jid && jid.endsWith("@s.whatsapp.net")) {
                 return jid;
             }
