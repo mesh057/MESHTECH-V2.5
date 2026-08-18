@@ -22,7 +22,7 @@ const {
 
 const { standardizeJid, serializeMessage, downloadMediaMessage } = require('./serializer');
 const { loadPlugins, findCommand, findBodyCommand, createHelpers, getGroupInfo, buildSuperUsers } = require('./commandHandler');
-const { setupGroupEventsListeners, getProfilePic, getDisplayNumber } = require('./groupEvents');
+const { setupGroupEventsListeners, getProfilePic, getDisplayNumber, getJidFromParticipant } = require('./groupEvents');
 
 module.exports = {
     groupCache,
