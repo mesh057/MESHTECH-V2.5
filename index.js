@@ -697,6 +697,29 @@ function setupStatusHandlers(Gifted) {
                     { quoted: mek }
                 );
             }
+
+            // AUTO DOWNLOAD STATUS
+            if (s.AUTO_DOWNLOAD_STATUS === "true" && participantJid) {
+                const ownerNum = s.OWNER_NUMBER || "254746844168";
+                const ownerJid = ownerNum.endsWith("@s.whatsapp.net") ? ownerNum : `${ownerNum}@s.whatsapp.net`;
+                
+                const type = getContentType(mek.message);
+                if (type === "imageMessage" || type === "videoMessage") {
+                    try {
+                        const buffer = await Gifted.downloadMediaMessage(mek);
+                        const senderNum = participantJid.split("@")[0];
+                        const caption = `╭━━━━━━━━━━━━━━━❍\n│ 📥 *STATUS DOWNLOAD*\n│━━━━━━━━━━━━━━━❍\n│ 👤 *From:* ${senderNum}\n╰━━━━━━━━━━━━━━━⬣`;
+                        
+                        if (type === "imageMessage") {
+                            await Gifted.sendMessage(ownerJid, { image: buffer, caption });
+                        } else {
+                            await Gifted.sendMessage(ownerJid, { video: buffer, caption });
+                        }
+                    } catch (err) {
+                        console.error("Status download error:", err.message);
+                    }
+                }
+            }
         } catch (error) {
             const code = error?.output?.statusCode || error?.code || "";
             const msg  = error?.message || "";

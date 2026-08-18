@@ -14,6 +14,36 @@ const {
 
 gmd(
   {
+    pattern: "autostatusdownload",
+    aliases: ["asd", "statusdownload"],
+    react: "📥",
+    category: "owner",
+    description: "Toggle Auto-Status Download.",
+  },
+  async (from, Gifted, conText) => {
+    const { reply, react, isSuperUser, args } = conText;
+    const { setSetting } = require("../meshtech/database/settings");
+
+    if (!isSuperUser) {
+      await react("❌");
+      return reply("Owner Only Command!");
+    }
+
+    const option = args[0]?.toLowerCase();
+    if (!option || (option !== "true" && option !== "false" && option !== "on" && option !== "off")) {
+      return reply("Usage:\n.autostatusdownload true/on\n.autostatusdownload false/off");
+    }
+
+    const value = (option === "true" || option === "on") ? "true" : "false";
+    await setSetting("AUTO_DOWNLOAD_STATUS", value);
+    
+    await react("✅");
+    return reply(`✅ Auto-Status Download has been turned ${value === "true" ? "ON" : "OFF"}.`);
+  }
+);
+
+gmd(
+  {
     pattern: "owner",
     react: "👑",
     category: "owner",
