@@ -219,14 +219,18 @@ gmd(
 gmd(
   {
     pattern: "met",
+    aliases: ["groupinfo", "ginfo", "metadata"],
     react: "⚡",
-    category: "general",
-    description: "Check group metadata",
+    category: "group",
+    description: "Check group metadata and information.",
   },
   async (from, Gifted, conText) => {
-    const { mek, react, newsletterJid, botName } = conText;
+    const { reply, mek, react, newsletterJid, botName, isGroup } = conText;
+    if (!isGroup) return reply("❌ This command only works in groups!");
+
     try {
       const gInfo = await getGroupMetadata(Gifted, from);
+      if (!gInfo) return reply("❌ Failed to fetch group metadata. Make sure the bot is an admin or has access to group info.");
 
       const formatJid = (jid) => {
         if (!jid) return "N/A";
@@ -238,7 +242,8 @@ gmd(
       const admins = [];
       const members = [];
 
-      gInfo.participants.forEach((p) => {
+      const participants = Array.isArray(gInfo.participants) ? gInfo.participants : [];
+      participants.forEach((p) => {
         const formattedJid = formatJid(p.phoneNumber || p.pn || p.jid);
         if (p.admin === "superadmin") {
           superAdmins.push(`• ${formattedJid} - 👑 Super Admin`);
@@ -249,9 +254,10 @@ gmd(
         }
       });
 
-      const allParticipants = [...superAdmins, ...admins, ...members].join(
-        "\n",
-      );
+      let allParticipants = [...superAdmins, ...admins, ...members].join("\n");
+      if (allParticipants.length > 3500) {
+        allParticipants = allParticipants.substring(0, 3500) + "\n\n... (list truncated for length)";
+      }
 
       const allAdmins = [
         ...superAdmins.map((s) => s.replace(" - 👑 Super Admin", "")),
@@ -267,7 +273,7 @@ gmd(
 🔹 *Subject Changed:* ${new Date(gInfo.subjectTime * 1000).toLocaleString()}
 🔹 *Owner:* ${formatJid(gInfo.ownerPn || gInfo.ownerJid)}
 🔹 *Creation Date:* ${new Date(gInfo.creation * 1000).toLocaleString()}
-🔹 *Size:* ${gInfo.size} participants
+🔹 *Size:* ${participants.length} participants
 🔹 *Description:* ${gInfo.desc || "None"}
 🔹 *Description Owner:* ${formatJid(gInfo.descOwnerPn || gInfo.descOwnerJid)}
 🔹 *Description Changed:* ${new Date(gInfo.descTime * 1000).toLocaleString()}
@@ -275,7 +281,7 @@ gmd(
 👑 *ADMINS (${superAdmins.length + admins.length})*
 ${allAdmins.join("\n") || "No admins"}
 
-👥 *PARTICIPANTS (${gInfo.participants.length})*
+👥 *PARTICIPANTS (${participants.length})*
 ${allParticipants}
 
 ℹ️ *GROUP SETTINGS*
