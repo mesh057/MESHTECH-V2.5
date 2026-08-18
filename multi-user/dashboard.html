@@ -468,6 +468,7 @@
             loadCustomerSession();
         }
         checkAdminStatus();
+        loadRecognizedCustomerSession();
 
         function escapeHtml(value) {
             return String(value).replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
@@ -481,6 +482,40 @@
             const field = document.getElementById('customerPhone');
             const fallback = document.getElementById('phoneNumber');
             return String((field?.value || fallback?.value || '')).replace(/\D/g, '');
+        }
+
+        function renderCustomerSession(session, list) {
+            if (!session) {
+                list.innerHTML = '<div class="empty-sessions">No saved session found for this customer.</div><div style="text-align:center;margin-top:8px;"><a class="btn-blue" href="/pairing.html">Pair or relink this account</a></div>';
+                return;
+            }
+            const relink = session.relinkRequired
+                ? `<div style="margin-top:8px;"><a class="btn-blue" href="/pairing.html?phoneNumber=${encodeURIComponent(session.number)}&force=1">Relink this account</a></div>`
+                : '';
+            list.innerHTML = `
+                <div class="session-row">
+                    <div>
+                        <div class="session-number">${escapeHtml(session.number)}</div>
+                        <div class="session-status">${escapeHtml(session.status)}${session.pid ? ' · Active process' : ''}</div>
+                    </div>
+                    <button type="button" class="btn-danger" onclick="deleteCustomerSession('${escapeJs(session.number)}')">
+                        <i class="fa-solid fa-trash"></i> Delete mine
+                    </button>
+                </div>${relink}`;
+        }
+
+        async function loadRecognizedCustomerSession() {
+            const list = document.getElementById('customerSessionList');
+            try {
+                const response = await fetch('/api/customer/session', { cache: 'no-store' });
+                const data = await response.json();
+                if (!response.ok || !data.success) return;
+                if (data.phoneNumber) {
+                    document.getElementById('customerPhone').value = data.phoneNumber;
+                    localStorage.setItem('meshtech.customerNumber', data.phoneNumber);
+                }
+                if (data.authenticated) renderCustomerSession(data.session, list);
+            } catch (_) {}
         }
 
         async function loadCustomerSession() {
@@ -497,21 +532,7 @@
                 const response = await fetch(`/api/sessions?phoneNumber=${encodeURIComponent(number)}`, { cache: 'no-store' });
                 const data = await response.json();
                 if (!response.ok || !data.success) throw new Error(data.error || 'Unable to load your session.');
-                if (!data.sessions.length) {
-                    list.innerHTML = '<div class="empty-sessions">No saved session found for this number.</div>';
-                    return;
-                }
-                list.innerHTML = data.sessions.map(session => `
-                    <div class="session-row">
-                        <div>
-                            <div class="session-number">${escapeHtml(session.number)}</div>
-                            <div class="session-status">${escapeHtml(session.status)}${session.pid ? ` · Active process` : ''}</div>
-                        </div>
-                        <button type="button" class="btn-danger" onclick="deleteCustomerSession('${escapeJs(session.number)}')">
-                            <i class="fa-solid fa-trash"></i> Delete mine
-                        </button>
-                    </div>
-                `).join('');
+                renderCustomerSession(data.sessions[0] || null, list);
             } catch (error) {
                 list.innerHTML = `<div class="empty-sessions" style="color:var(--error);">${escapeHtml(error.message)}</div>`;
             }

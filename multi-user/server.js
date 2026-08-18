@@ -142,6 +142,24 @@ function normalizeSessionText(value) {
   return String(value || '').trim();
 }
 
+function customerSessionSnapshot(number) {
+  const normalized = String(number || '').replace(/\D/g, '');
+  if (!normalized) return null;
+  const restorable = manager.listRestorableSessions();
+  const active = manager.list().find((item) => item.number === normalized);
+  const isRestorable = restorable.includes(normalized);
+  if (!active && !isRestorable) return null;
+  const status = active ? active.status : 'registered';
+  return {
+    number: normalized,
+    status,
+    active: Boolean(active),
+    restorable: isRestorable,
+    relinkRequired: ['error', 'stopped', 'registered'].includes(status),
+    pid: active ? active.pid : null,
+  };
+}
+
 function writeRawCredentials(authDir, sessionText) {
   let rawJson = sessionText;
   if (!sessionText.startsWith('{')) {
@@ -220,6 +238,17 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'GET' && url.pathname === '/api/admin/status') {
       return json(res, 200, { success: true, authenticated: Boolean(adminToken(req)) });
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/customer/session') {
+      const number = customerPhone(req);
+      if (!number) return json(res, 200, { success: true, authenticated: false, session: null });
+      return json(res, 200, {
+        success: true,
+        authenticated: true,
+        phoneNumber: number,
+        session: customerSessionSnapshot(number),
+      });
     }
 
     if (req.method === 'POST' && url.pathname === '/api/admin/logout') {

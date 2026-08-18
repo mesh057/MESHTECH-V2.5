@@ -1028,6 +1028,19 @@
         let qrScanning = false;
         let qrStream = null;
 
+        const pairingQuery = new URLSearchParams(window.location.search);
+        const recognizedPhone = pairingQuery.get('phoneNumber');
+        if (recognizedPhone) {
+            phoneInput.value = recognizedPhone.replace(/\D/g, '');
+            qrPhoneInput.value = recognizedPhone.replace(/\D/g, '');
+        }
+        if (pairingQuery.get('force') === '1') {
+            const forceCode = document.getElementById('forcePairing');
+            const forceQr = document.getElementById('qrForcePairing');
+            if (forceCode) forceCode.checked = true;
+            if (forceQr) forceQr.checked = true;
+        }
+
         // Tab switching
         function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
