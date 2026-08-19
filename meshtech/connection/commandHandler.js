@@ -178,12 +178,21 @@ const getGroupInfo = async (MeshTech, from, botId, sender) => {
         participant?.admin === 'superadmin' ||
         participant?.admin === true
     );
+    const resolveRealNumber = (participant) => {
+        const raw = participant.pn || participant.phoneNumber || participant.id;
+        if (raw && raw.endsWith('@lid')) {
+            const mapped = getLidMapping(raw);
+            if (mapped) return mapped;
+        }
+        return raw;
+    };
+
     const groupAdmins = groupInfo.participants
         .filter((participant) => participant?.admin === 'admin' || participant?.admin === true)
-        .map((participant) => participant.pn || participant.phoneNumber || participant.id);
+        .map(resolveRealNumber);
     const groupSuperAdmins = groupInfo.participants
         .filter((participant) => participant?.admin === 'superadmin')
-        .map((participant) => participant.pn || participant.phoneNumber || participant.id);
+        .map(resolveRealNumber);
     const botIdentifiers = participantIdentifiers({ id: botId, jid: standardizeJid(botId) });
     const isBotAdmin = groupInfo.participants.some((participant) => {
         if (!isAdminParticipant(participant)) return false;
