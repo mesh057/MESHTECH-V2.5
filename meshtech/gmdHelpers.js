@@ -85,21 +85,21 @@ const createContext = async (userJid, options = {}) => {
             (await getSetting("NEWSLETTER_URL")) ||
             "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R";
 
-        return {
-            contextInfo: {
-                mentionedJid: [userJid],
-                externalAdReply: {
-                    title: options.title || botName,
-                    body: options.body || "Powered by MESH-TECH MD",
-                    thumbnailUrl: botPic,
-                    mediaType: 1,
-                    mediaUrl: options.mediaUrl || botPic,
-                    sourceUrl: options.sourceUrl || newsletterUrl,
+    return {
+        contextInfo: {
+            mentionedJid: [userJid],
+            externalAdReply: {
+                title: options.title || botName,
+                body: options.body || "Powered by MESH-TECH MD",
+                thumbnailUrl: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663642644316/JqHcIDmLjPKWQuaH.jpg",
+                mediaType: 1,
+                mediaUrl: options.mediaUrl || "https://files.manuscdn.com/user_upload_by_module/session_file/310519663642644316/JqHcIDmLjPKWQuaH.jpg",
+                sourceUrl: options.sourceUrl || newsletterUrl,
                 showAdAttribution: false,
-                renderLargerThumbnail: true,
-                },
+                renderLargerThumbnail: false,
             },
-        };
+        },
+    };
     } catch (e) {
         return { contextInfo: {} };
     }
@@ -129,7 +129,7 @@ const createContext2 = async (userJid, options = {}) => {
                 thumbnailUrl: botPic,
                 mediaType: 1,
                 showAdAttribution: false,
-                renderLargerThumbnail: true,
+                renderLargerThumbnail: false,
             },
         },
     };
