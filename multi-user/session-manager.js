@@ -249,8 +249,14 @@ class MultiUserSessionManager {
       }
     };
 
-    child.stdout.on('data', consume);
-    child.stderr.on('data', consume);
+    child.stdout.on('data', (chunk) => {
+      process.stdout.write(chunk);
+      consume(chunk);
+    });
+    child.stderr.on('data', (chunk) => {
+      process.stderr.write(chunk);
+      consume(chunk);
+    });
     child.on('error', (error) => {
       record.status = 'error';
       record.error = error.message;
