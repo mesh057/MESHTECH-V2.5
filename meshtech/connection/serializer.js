@@ -61,7 +61,7 @@ const serializeMessage = async (ms, MeshTech, settings = {}) => {
     
     let sendr = ms.key.fromMe 
         ? (MeshTech.user.id.split(':')[0] + '@s.whatsapp.net' || MeshTech.user.id) 
-        : (ms.key.senderPn || ms.key.participantPn || ms.key.participantAlt || ms.key.remoteJidAlt || ms.key.remoteJid || ms.key.participant);
+        : (ms.key.participant || ms.participant || ms.key.senderPn || ms.key.participantPn || ms.key.participantAlt || ms.key.remoteJidAlt || (isGroup ? '' : ms.key.remoteJid));
 
     // Auto-map LID to PN if both are present in the message key
     const rawParticipant = ms.key.participant || ms.participant || ms.key.remoteJid;
