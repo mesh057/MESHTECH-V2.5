@@ -135,21 +135,15 @@ gmd(
     const elapsed = process.hrtime(startTime);
     const responseTime = Math.floor(elapsed[0] * 1000 + elapsed[1] / 1000000);
         const pingText = `⚡ Pong: ${responseTime}ms`;
-    const pingButtons = [
-      { id: `${botPrefix}uptime`, text: "↶ ⏱️ Uptime" }
-    ];
-    
-    const validNewsletterUrl = /^https?:\/\//i.test(String(newsletterUrl || ""));
-    if (validNewsletterUrl) {
-      pingButtons.push({ id: newsletterUrl, text: "🔗 WaChannel" });
-    }
-
     try {
       await sendButtons(MeshTech, from, {
         title: "Bot Speed",
         text: pingText,
         footer: "| POWERED BY Mesh Tech",
-        buttons: pingButtons,
+        buttons: [
+          { id: `${botPrefix}uptime`, text: "⏱️ Uptime" },
+          { id: newsletterUrl || "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R", text: "🔗 WaChannel" }
+        ],
       }, { quoted: conText.mek });
     } catch (error) {
       console.error("Ping interactive response failed:", error.message);

@@ -310,23 +310,34 @@ async function createLogoCommand(config) {
       try {
         await react("⏳");
 
-        const apiBase = MeshTechApi || "https://api.siputzx.my.id";
-        const apiUrl = `${apiBase}/api/m/ephoto360?url=${encodeURIComponent(ephotoUrl)}&text1=${encodeURIComponent(q)}`;
-        
-        const res = await axios.get(apiUrl, { 
-          responseType: 'arraybuffer',
-          timeout: 60000,
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
-          }
-        });
+        let imageBuffer = null;
+        const endpoints = [
+          `https://api.siputzx.my.id/api/m/ephoto360?url=${encodeURIComponent(ephotoUrl)}&text1=${encodeURIComponent(q)}`,
+          `https://api.agatz.xyz/api/ephoto?url=${encodeURIComponent(ephotoUrl)}&text=${encodeURIComponent(q)}`
+        ];
 
-        if (!res.data || res.data.length < 100) {
-          await react("❌");
-          return reply("Failed to generate logo. The API returned an invalid response.");
+        for (const apiUrl of endpoints) {
+          try {
+            const res = await axios.get(apiUrl, { 
+              responseType: 'arraybuffer',
+              timeout: 30000,
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+              }
+            });
+            if (res.data && res.data.length > 500) {
+              imageBuffer = Buffer.from(res.data, 'binary');
+              break;
+            }
+          } catch (err) {
+            continue;
+          }
         }
 
-        const imageBuffer = Buffer.from(res.data, 'binary');
+        if (!imageBuffer) {
+          await react("❌");
+          return reply("Failed to generate logo from all available providers. Please try another logo style.");
+        }
 
         await MeshTech.sendMessage(
           from,
