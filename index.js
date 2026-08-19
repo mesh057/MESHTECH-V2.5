@@ -776,12 +776,14 @@ const BOT_START_TIME = Date.now();
 
 function setupCommandHandler(MeshTech) {
     MeshTech.ev.on("messages.upsert", async ({ messages, type }) => {
+        console.log(`[EMERGENCY-TRACE] messages.upsert fired! Type: ${type}, Count: ${messages?.length}`);
         if (!Array.isArray(messages)) return;
 
         const settings = await getAllSettings();
         const botId = standardizeJid(MeshTech.user?.id);
 
         for (const ms of messages) {
+            console.log(`[EMERGENCY-TRACE] Processing message ID: ${ms.key?.id}, remoteJid: ${ms.key?.remoteJid}`);
             if (!ms?.message || !ms?.key) continue;
 
             const messageId = ms.key.id;
