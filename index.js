@@ -779,6 +779,14 @@ function setupCommandHandler(MeshTech) {
     MeshTech.ev.on("messages.upsert", async ({ messages, type }) => {
         console.log(`[EMERGENCY-TRACE] messages.upsert fired! Type: ${type}, Count: ${messages?.length}`);
         if (!Array.isArray(messages)) return;
+        
+        // Accept both notify and append (some WhatsApp versions send group/DM messages as append)
+        if (type !== "notify" && type !== "append" && type !== "other") {
+            // Also allow if it's from a group regardless of type
+            const firstMsg = messages[0];
+            const isGroupJid = firstMsg?.key?.remoteJid?.endsWith("@g.us");
+            if (!isGroupJid) return;
+        }
 
         const settings = await getAllSettings();
         const botId = standardizeJid(MeshTech.user?.id);
