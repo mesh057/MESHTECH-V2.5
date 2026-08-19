@@ -187,7 +187,7 @@ if (embeddedHttpServerEnabled) {
 }
 
 const sessionDir = path.resolve(process.env.AUTH_DIR || config.AUTH_DIR || path.join(__dirname, "meshtech", "session"));
-const pluginsPath = path.join(__dirname, "plugins");
+const pluginsPath = path.join(__dirname, "commands");
 
 let botSettings = {};
 async function loadBotSettings() {
