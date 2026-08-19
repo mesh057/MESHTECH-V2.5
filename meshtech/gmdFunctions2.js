@@ -613,34 +613,34 @@ async function getAIResponse(query) {
         return 'I am MESH-TECH MD, an advanced AI assistant created by Mesh Tech!';
     }
     
-    const fallbacks = [
+    const endpoints = [
         { url: "https://gpt-3-5.apis-bj-devs.workers.dev/", param: "prompt", type: "bj" },
-        { url: "https://api.siputzx.my.id/api/ai/gptoss120b", param: "prompt", type: "siputzx" },
-        { url: "https://api.siputzx.my.id/api/ai/duckai", param: "message", type: "siputzx" }
+        { url: "https://api.siputzx.my.id/api/ai/duckai", param: "message", type: "siputzx" },
+        { url: "https://api.siputzx.my.id/api/ai/gemini", param: "prompt", type: "siputzx" }
     ];
 
-    for (const fallback of fallbacks) {
+    for (const ep of endpoints) {
         try {
-            const { data } = await axios.get(fallback.url, {
-                params: { [fallback.param]: query },
-                timeout: 10000,
+            const { data } = await axios.get(ep.url, {
+                params: { [ep.param]: query },
+                timeout: 12000,
             });
             
             let result = null;
-            if (fallback.type === "bj") {
-                result = data?.reply || (typeof data === "string" ? data : null);
+            if (ep.type === "bj") {
+                result = data?.reply;
             } else {
-                result = data?.data?.response || data?.data?.message || data?.result;
+                result = data?.data?.response || data?.data?.message || data?.result || data?.data;
             }
             
-            if (result && typeof result === "string" && result.trim().length > 0) {
-                return result;
+            if (result && typeof result === "string" && !result.includes("error") && !result.includes("402") && result.trim().length > 0) {
+                return result.trim();
             }
         } catch (e) {
             continue;
         }
     }
-    return "Hello! I am MESH-TECH MD. How can I assist you today?";
+    return "Hello! I am MESH-TECH MD, your virtual assistant. How can I help you today?";
 }
 
 const processedMessages = new Set();
