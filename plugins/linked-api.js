@@ -17,7 +17,7 @@ gmd({
   const { q, mek, reply } = conText;
   if (!q?.trim()) return reply("Use .bing followed by a search query.");
   try {
-    const { data } = await axios.get("https://bing-search.apis-bj-devs.workers.dev/", {
+    const { data } = await axios.get("https://api.maher-zubair.tech/search/bing/", {
       params: { search: q.trim(), limit: 5 },
       ...REQUEST,
     });
@@ -42,7 +42,7 @@ gmd({
   const { q, mek, reply } = conText;
   if (!q?.trim()) return reply("Use .pinterest followed by a search query.");
   try {
-    const { data } = await axios.get("https://pinterest-search.apis-bj-devs.workers.dev/", {
+    const { data } = await axios.get("https://api.maher-zubair.tech/search/pinterest/", {
       params: { search: q.trim(), limit: 5 },
       ...REQUEST,
     });
@@ -71,7 +71,7 @@ gmd({
   const { q, mek, reply } = conText;
   if (!q?.trim()) return reply("Use .nation followed by a country name.");
   try {
-    const { data } = await axios.get("https://nation-info.apis-bj-devs.workers.dev/", {
+    const { data } = await axios.get("https://api.maher-zubair.tech/details/country/", {
       params: { name: q.trim() },
       ...REQUEST,
     });

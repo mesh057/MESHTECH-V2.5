@@ -122,7 +122,7 @@ async function queryAPI(query, endpoints, conText, timeout = 20000) {
   const t0 = Date.now();
 
   const attempts = endpoints.map(endpoint => {
-    const apiUrl = `${MeshTechApi}/api/download/${endpoint}?apikey=${MeshTechApiKey}&url=${encodeURIComponent(query)}`;
+    const apiUrl = `${MeshTechApi}/api/download/${endpoint}?url=${encodeURIComponent(query)}`;
     return axios.get(apiUrl, { timeout })
       .then(res => {
         if (res.data?.success && res.data?.result?.download_url) {

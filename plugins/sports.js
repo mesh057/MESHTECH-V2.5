@@ -6,7 +6,7 @@ const {
 } = require("mesh-baileys");
 const { getSetting } = require("../meshtech/database/settings");
 
-const SPORTS_API_BASE = "https://apiskeith.top";
+const SPORTS_API_BASE = "https://api.maher-zubair.tech";
 
 const LEAGUE_CONFIG = {
   1: { name: "Premier League", code: "epl", emoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", color: "#3d195b" },

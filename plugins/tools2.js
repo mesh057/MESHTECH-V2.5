@@ -36,7 +36,7 @@ gmd(
 
     try {
       const res = await axios.get(`${MeshTechApi}/api/tools/ssphone`, {
-        params: { apikey: MeshTechApiKey, url: url },
+        params: { url: url },
         responseType: "arraybuffer",
       });
 
@@ -88,7 +88,7 @@ gmd(
 
     try {
       const res = await axios.get(`${MeshTechApi}/api/tools/sstab`, {
-        params: { apikey: MeshTechApiKey, url: url },
+        params: { url: url },
         responseType: "arraybuffer",
       });
 
@@ -140,7 +140,7 @@ gmd(
 
     try {
       const res = await axios.get(`${MeshTechApi}/api/tools/sspc`, {
-        params: { apikey: MeshTechApiKey, url: url },
+        params: { url: url },
         responseType: "arraybuffer",
       });
 
@@ -202,7 +202,7 @@ gmd(
 
     try {
       const res = await axios.get(`${MeshTechApi}/api/tools/createqr`, {
-        params: { apikey: MeshTechApiKey, query: content },
+        params: { query: content },
         responseType: "arraybuffer",
       });
 
@@ -279,7 +279,7 @@ gmd(
 
     try {
       const res = await axios.get(`${MeshTechApi}/api/tools/readqr`, {
-        params: { apikey: MeshTechApiKey, url: imageUrl },
+        params: { url: imageUrl },
       });
 
       if (!res.data?.success) {
@@ -346,7 +346,7 @@ gmd(
 
     try {
       const res = await axios.get(`${MeshTechApi}/api/tools/ttp`, {
-        params: { apikey: MeshTechApiKey, query: text },
+        params: { query: text },
       });
 
       if (!res.data?.success || !res.data?.image_url) {
@@ -410,7 +410,7 @@ gmd(
 
     try {
       const res = await axios.get(`${MeshTechApi}/api/tools/fancy`, {
-        params: { apikey: MeshTechApiKey, text: text },
+        params: { text: text },
       });
 
       if (!res.data?.success || !res.data?.results) {
@@ -485,7 +485,7 @@ gmd(
 
     try {
       const res = await axios.get(`${MeshTechApi}/api/tools/define`, {
-        params: { apikey: MeshTechApiKey, term: term },
+        params: { term: term },
       });
 
       if (!res.data?.success || !res.data?.results?.length) {
@@ -552,7 +552,7 @@ gmd(
 
     try {
       const res = await axios.get(`${MeshTechApi}/api/tools/web2zip`, {
-        params: { apikey: MeshTechApiKey, url: url },
+        params: { url: url },
         responseType: "arraybuffer",
       });
 
@@ -636,7 +636,7 @@ gmd(
 
     try {
       const res = await axios.get(`${MeshTechApi}/api/tools/emojimix`, {
-        params: { apikey: MeshTechApiKey, emoji1: emoji1, emoji2: emoji2 },
+        params: { emoji1: emoji1, emoji2: emoji2 },
         responseType: "arraybuffer",
       });
 

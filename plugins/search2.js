@@ -43,7 +43,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${MeshTechApi}/api/search/googleimage?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/s/gimage?query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (
@@ -102,7 +102,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${MeshTechApi}/api/search/unsplash?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/s/unsplash?query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (
@@ -170,7 +170,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${MeshTechApi}/api/search/wallpaper?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/s/wallpaper?query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (
@@ -242,7 +242,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${MeshTechApi}/api/search/weather?apikey=${MeshTechApiKey}&location=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/s/weather?location=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (!res.data?.success || !res.data?.result) {
@@ -316,7 +316,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${MeshTechApi}/api/search/npmsearch?apikey=${MeshTechApiKey}&packagename=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/s/npm?packagename=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (!res.data?.success || !res.data?.result) {
@@ -416,7 +416,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${MeshTechApi}/api/search/wattpad?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/s/wattpad?query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (
@@ -523,7 +523,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${MeshTechApi}/api/search/spotifysearch?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/s/spotifysearch?query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (

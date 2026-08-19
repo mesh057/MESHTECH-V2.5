@@ -25,8 +25,8 @@ gmd(
     await react("⏳");
 
     try {
-      const res = await axios.get(`${MeshTechApi}/api/search/bible`, {
-        params: { apikey: MeshTechApiKey, verse: verse },
+      const res = await axios.get(`${MeshTechApi}/api/s/bible`, {
+        params: { query: verse },
       });
 
       if (!res.data?.success || !res.data?.result) {

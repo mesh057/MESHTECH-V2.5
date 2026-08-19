@@ -200,7 +200,7 @@ gmd(
 
     try {
       const res = await axios.get(`${MeshTechApi}/api/tools/photoeditor`, {
-        params: { apikey: MeshTechApiKey, url: imageUrl, prompt: prompt },
+        params: { url: imageUrl, prompt: prompt },
       });
 
       if (!res.data?.success || !res.data?.result) {
@@ -299,7 +299,7 @@ gmd(
 
     try {
       const res = await axios.get(`${MeshTechApi}/api/tools/topdf`, {
-        params: { apikey: MeshTechApiKey, query: content },
+        params: { query: content },
         responseType: "arraybuffer",
       });
 
@@ -349,7 +349,7 @@ gmd(
 
     try {
       const res = await axios.get(`${MeshTechApi}/api/tools/whois`, {
-        params: { apikey: MeshTechApiKey, domain: domain },
+        params: { domain: domain },
       });
 
       if (!res.data?.success || !res.data?.result) {
@@ -436,7 +436,7 @@ gmd(
 
     try {
       const res = await axios.get(`${MeshTechApi}/api/tools/remini`, {
-        params: { apikey: MeshTechApiKey, url: imageUrl },
+        params: { url: imageUrl },
       });
 
       if (!res.data?.success || !res.data?.result) {
@@ -667,7 +667,7 @@ gmd(
 
     try {
       const res = await axios.get(`${MeshTechApi}/api/tools/ssweb`, {
-        params: { apikey: MeshTechApiKey, url: url },
+        params: { url: url },
         responseType: "arraybuffer",
       });
 

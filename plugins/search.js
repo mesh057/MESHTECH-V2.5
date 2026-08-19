@@ -33,7 +33,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `https://yts.meshtechtech.co.ke/?q=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/s/yts/?q=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 100000 });
       const results = res.data?.videos;
 
@@ -191,7 +191,7 @@ gmd(
         ({ url: fileUrl } = await uploadToCatbox(buffer, `audio.${ext}`));
       }
 
-      const apiUrl = `${MeshTechApi}/api/search/shazam?apikey=${MeshTechApiKey}&url=${encodeURIComponent(fileUrl)}`;
+      const apiUrl = `${MeshTechApi}/api/s/shazam?url=${encodeURIComponent(fileUrl)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (!res.data?.success || !res.data?.result) {
@@ -270,7 +270,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${MeshTechApi}/api/search/google?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/s/google?query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (
@@ -286,7 +286,7 @@ gmd(
       const results = res.data.results.slice(0, 5);
 
       const defaultImg =
-        "https://files.meshtechtech.co.ke/image/ZAwgoogle-images-1548419288.jpg";
+        "https://api.siputzx.my.id/image/ZAwgoogle-images-1548419288.jpg";
 
       const cards = await Promise.all(
         results.map(async (result) => ({
@@ -385,7 +385,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${MeshTechApi}/api/search/lyricsv2?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/s/lyrics?query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (!res.data?.success || !res.data?.result) {
@@ -442,7 +442,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${MeshTechApi}/api/search/happymod?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/s/happymod?query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (!res.data?.success || !res.data?.results?.data) {
@@ -536,7 +536,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${MeshTechApi}/api/search/apkmirror?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/search/apkmirror?query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (!res.data?.success || !res.data?.results?.data) {
@@ -638,7 +638,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${MeshTechApi}/api/search/stickersearch?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/search/stickersearch?query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (

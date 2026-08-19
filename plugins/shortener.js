@@ -93,7 +93,6 @@ for (const shortener of shorteners) {
                     `${MeshTechApi}/api/tools/${shortener.endpoint}`,
                     {
                         params: {
-                            apikey: MeshTechApiKey,
                             url: url,
                         },
                         timeout: 30000,

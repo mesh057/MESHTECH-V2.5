@@ -1,15 +1,15 @@
 const { gmd } = require("../meshtech");
 const axios = require("axios");
 
-const LINKED_GPT_ENDPOINT = "https://gpt-3-5.apis-bj-devs.workers.dev/";
+const LINKED_GPT_ENDPOINT = "https://api.siputzx.my.id/api/ai/duckai";
 
 async function queryLinkedGpt(query) {
   const { data } = await axios.get(LINKED_GPT_ENDPOINT, {
     params: { prompt: query },
     timeout: 30000,
   });
-  if (!data?.status || !data?.reply) throw new Error("Linked GPT endpoint returned no reply");
-  return data.reply;
+  if (!data?.status || !data?.result) throw new Error("Linked GPT endpoint returned no reply");
+  return data.result;
 }
 
 async function queryAI(endpoint, query, conText) {

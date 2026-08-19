@@ -431,7 +431,7 @@ gmd(
         }
 
         try {
-            const apiUrl = `${MeshTechApi}/api/download/mediafire?apikey=${MeshTechApiKey}&url=${encodeURIComponent(q)}`;
+            const apiUrl = `${MeshTechApi}/api/download/mediafire?url=${encodeURIComponent(q)}`;
             const response = await axios.get(apiUrl, { timeout: 60000 });
 
             if (!response.data?.success || !response.data?.result) {
@@ -554,7 +554,7 @@ gmd(
         try {
          //   await reply(`Searching for *${q}* APK...`);
 
-            const apiUrl = `${MeshTechApi}/api/download/apkdl?apikey=${MeshTechApiKey}&appName=${encodeURIComponent(q)}`;
+            const apiUrl = `${MeshTechApi}/api/download/apkdl?appName=${encodeURIComponent(q)}`;
             const response = await axios.get(apiUrl, { timeout: 60000 });
 
             if (!response.data?.success || !response.data?.result) {
@@ -640,7 +640,7 @@ gmd(
         try {
             await reply("Fetching paste content...");
 
-            const apiUrl = `${MeshTechApi}/api/download/pastebin?apikey=${MeshTechApiKey}&url=${encodeURIComponent(q)}`;
+            const apiUrl = `${MeshTechApi}/api/download/pastebin?url=${encodeURIComponent(q)}`;
             const response = await axios.get(apiUrl, { timeout: 30000 });
 
             if (!response.data?.success || !response.data?.result) {
@@ -740,7 +740,7 @@ gmd(
 
         try {
             const searchResponse = await gmdJson(
-                `${MeshTechApi}/search/yts?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`,
+                `${MeshTechApi}/search/yts?query=${encodeURIComponent(q)}`,
             );
             const videoInfo = searchResponse.results[0];
             const infoMessage = {
