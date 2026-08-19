@@ -633,23 +633,15 @@ function setupPresence(MeshTech) {
 }
 
 function setupChatBotAndAntiLink(MeshTech) {
+    // Initialize ChatBot once
+    try {
+        MeshTechChatBot(MeshTech, createContext, createContext2, googleTTS);
+    } catch (e) {
+        console.error("ChatBot init error:", e);
+    }
+
     MeshTech.ev.on("messages.upsert", async ({ messages, type }) => {
         if (type === "append") return;
-
-        const firstMsg = messages[0];
-        if (firstMsg?.message) {
-            const s = await getAllSettings();
-            if (s.CHATBOT === "true" || s.CHATBOT === "audio") {
-                MeshTechChatBot(
-                    MeshTech,
-                    s.CHATBOT,
-                    s.CHATBOT_MODE || "inbox",
-                    createContext,
-                    createContext2,
-                    googleTTS,
-                );
-            }
-        }
 
         for (const message of messages) {
             if (!message?.message) continue;

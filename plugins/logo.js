@@ -310,8 +310,8 @@ async function createLogoCommand(config) {
       try {
         await react("⏳");
 
-        // Use the new siputzx API which returns the image buffer directly
-        const apiUrl = `${MeshTechApi}/api/m/ephoto360?url=${encodeURIComponent(ephotoUrl)}&text1=${encodeURIComponent(q)}`;
+        const apiBase = MeshTechApi || "https://api.siputzx.my.id";
+        const apiUrl = `${apiBase}/api/m/ephoto360?url=${encodeURIComponent(ephotoUrl)}&text1=${encodeURIComponent(q)}`;
         
         const res = await axios.get(apiUrl, { 
           responseType: 'arraybuffer',

@@ -136,24 +136,12 @@ gmd(
     const responseTime = Math.floor(elapsed[0] * 1000 + elapsed[1] / 1000000);
         const pingText = `⚡ Pong: ${responseTime}ms`;
     const pingButtons = [
-      {
-        name: "quick_reply",
-        buttonParamsJson: JSON.stringify({
-          display_text: "↶ ⏱️ Uptime",
-          id: `${botPrefix}uptime`,
-        }),
-      }
+      { id: `${botPrefix}uptime`, text: "↶ ⏱️ Uptime" }
     ];
     
     const validNewsletterUrl = /^https?:\/\//i.test(String(newsletterUrl || ""));
     if (validNewsletterUrl) {
-      pingButtons.push({
-        name: "cta_url",
-        buttonParamsJson: JSON.stringify({
-          display_text: "🔗 WaChannel",
-          url: newsletterUrl,
-        }),
-      });
+      pingButtons.push({ id: newsletterUrl, text: "🔗 WaChannel" });
     }
 
     try {

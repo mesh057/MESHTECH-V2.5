@@ -609,46 +609,43 @@ function isIdentityQuestion(query) {
 
 async function getAIResponse(query) {
     if (isIdentityQuestion(query)) {
-        return 'I am an Interactive Ai Assistant Chat Bot, created by Mesh Tech!';
+        return 'I am MESH-TECH MD, an advanced AI assistant created by Mesh Tech!';
     }
     
-    try {
-        const apiUrl = getRandomApi();
-        const response = await fetch(apiUrl + encodeURIComponent(query));
-        
-        try {
-            const data = await response.json();
-            let aiResponse = data.result || data.response || data.message || 
-                           (data.data && (data.data.text || data.data.message)) || 
-                           JSON.stringify(data);
-            
-            if (typeof aiResponse === 'object') {
-                aiResponse = JSON.stringify(aiResponse);
-            }
+    const endpoints = [
+        `https://gpt-3-5.apis-bj-devs.workers.dev/?prompt=${encodeURIComponent(query)}`,
+        `https://api.siputzx.my.id/api/ai/duckai?message=${encodeURIComponent(query)}`
+    ];
 
-            return aiResponse;
-        } catch (jsonError) {
-            const textResponse = await response.text();
-            return textResponse;
+    for (const url of endpoints) {
+        try {
+            const res = await axios.get(url, { timeout: 15000 });
+            const data = res.data;
+            const ans = data.result || data.response || data.message || data.reply || (data.data && (data.data.text || data.data.message)) || (typeof data === 'string' ? data : null);
+            if (ans && typeof ans === 'string' && ans.trim().length > 0) {
+                return ans;
+            }
+        } catch (e) {
+            continue;
         }
-    } catch (error) {
-        console.error("API Error:", error);
-        return "Sorry, I couldn't get a response right now";
     }
+    return "Hello! I am MESH-TECH MD. How can I assist you today?";
 }
 
 const processedMessages = new Set();
 const userCooldown = new Map();
 
-function MeshTechChatBot(MeshTech, chatBot, chatBotMode, createContext, createContext2, googleTTS) {
-
-    if (chatBot !== 'true' && chatBot !== 'audio') return;
-
+function MeshTechChatBot(MeshTech, createContext, createContext2, googleTTS) {
     MeshTech.ev.on("messages.upsert", async (m) => {
-
         if (m.type !== "notify") return;
 
         try {
+            const settings = await getAllSettings().catch(() => ({}));
+            const chatBot = settings.CHATBOT;
+            const chatBotMode = settings.CHATBOT_MODE || "inbox";
+
+            if (chatBot !== 'true' && chatBot !== 'audio') return;
+
             const msg = m.messages?.[0];
             if (!msg || !msg.message || msg.key.fromMe) return;
 
@@ -692,8 +689,7 @@ function MeshTechChatBot(MeshTech, chatBot, chatBotMode, createContext, createCo
             // 🚫 ignore short spam
             if (text.length < 2) return;
 
-            const settings = await getAllSettings().catch(() => ({}));
-            const botName = settings.BOT_NAME || 'MESH TECH MD';
+            const botName = settings.BOT_NAME || 'MESH-TECH MD';
 
             const aiResponse = await getAIResponse(text);
 
@@ -702,8 +698,8 @@ function MeshTechChatBot(MeshTech, chatBot, chatBotMode, createContext, createCo
                 await MeshTech.sendMessage(jid, {
                     text: String(aiResponse),
                     ...(await createContext(jid, {
-                        title: `${botName} 𝐂𝐇𝐀𝐓 𝐁𝐎𝐓`,
-                        body: '𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐛𝐲 𝑨𝒏𝒐𝒏𝒚𝒎𝒖𝒔 𝒖𝒔𝒆𝒓🥷'
+                        title: `${botName} CHAT BOT`,
+                        body: 'Powered by MESH-TECH MD'
                     }))
                 }, { quoted: msg });
             }
@@ -725,8 +721,8 @@ function MeshTechChatBot(MeshTech, chatBot, chatBotMode, createContext, createCo
                     ptt: true,
                     waveform: [100, 0, 100, 0, 100, 0, 100],
                     ...(await createContext2(jid, {
-                        title: `${botName} 𝐀𝐔𝐃𝐈𝐎-𝐂𝐇𝐀𝐓 𝐁𝐎𝐓`,
-                        body: '𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐛𝐲 Mesh Tech'
+                        title: `${botName} AUDIO-CHAT BOT`,
+                        body: 'Powered by MESH-TECH MD'
                     }))
                 }, { quoted: msg });
             }
