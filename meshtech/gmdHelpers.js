@@ -76,41 +76,33 @@ function setupConsoleFilters() {
 setupConsoleFilters();
 
 const createContext = async (userJid, options = {}) => {
-    const botName = (await getSetting("BOT_NAME")) || "MESH TECH MD";
-    const botPic =
-        (await getSetting("BOT_PIC")) ||
-        "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
-    const newsletterJid = await getSetting("NEWSLETTER_JID");
-    const newsletterUrl =
-        (await getSetting("NEWSLETTER_URL")) ||
-        "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R";
+    try {
+        const botName = (await getSetting("BOT_NAME")) || "MESH TECH MD";
+        const botPic =
+            (await getSetting("BOT_PIC")) ||
+            "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
+        const newsletterUrl =
+            (await getSetting("NEWSLETTER_URL")) ||
+            "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R";
 
-    return {
-        contextInfo: {
-            mentionedJid: [userJid],
-            // isForwarded removed for professional clean display
-            ...(newsletterJid ? {
-                businessMessageForwardInfo: {
-                    businessOwnerJid: newsletterJid,
+        return {
+            contextInfo: {
+                mentionedJid: [userJid],
+                externalAdReply: {
+                    title: options.title || botName,
+                    body: options.body || "Powered by MESH-TECH MD",
+                    thumbnailUrl: botPic,
+                    mediaType: 1,
+                    mediaUrl: options.mediaUrl || botPic,
+                    sourceUrl: options.sourceUrl || newsletterUrl,
+                    showAdAttribution: false,
+                    renderLargerThumbnail: false,
                 },
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid,
-                    newsletterName: botName,
-                    serverMessageId: Math.floor(100000 + Math.random() * 900000),
-                },
-            } : {}),
-            externalAdReply: {
-                title: options.title || botName,
-                body: options.body || "Powered by Mesh Tech",
-                thumbnailUrl: botPic,
-                mediaType: 1,
-                mediaUrl: options.mediaUrl || botPic,
-                sourceUrl: options.sourceUrl || newsletterUrl,
-                showAdAttribution: false,
-                renderLargerThumbnail: false,
             },
-        },
-    };
+        };
+    } catch (e) {
+        return { contextInfo: {} };
+    }
 };
 
 const createContext2 = async (userJid, options = {}) => {
