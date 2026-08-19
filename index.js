@@ -788,7 +788,10 @@ function setupCommandHandler(MeshTech) {
             setTimeout(() => processedMessages.delete(messageId), 60000);
 
             const serialized = await serializeMessage(ms, MeshTech, settings);
-            if (!serialized) continue;
+            if (!serialized) {
+                console.log(`[DEBUG] Message ${messageId} serialization failed or skipped.`);
+                continue;
+            }
 
         const {
             from,
@@ -809,6 +812,15 @@ function setupCommandHandler(MeshTech) {
             quotedKey,
             quotedUser,
         } = serialized;
+
+        if (isGroup) {
+            console.log(`[DEBUG] Group Message Detected:
+            - From: ${from}
+            - Sender: ${rawSender}
+            - Body: "${body}"
+            - isCommand: ${isCommand}
+            - Command: ${command}`);
+        }
 
         rememberRecipient(from);
         const groupData = await getGroupInfo(MeshTech, from, botId, rawSender);
@@ -832,11 +844,22 @@ function setupCommandHandler(MeshTech) {
             botId,
             settings.OWNER_NUMBER || "",
         );
-        const isSuperUser = superUser.includes(sender);
+        const standardizedSender = standardizeJid(sender);
+        const isSuperUser = superUser.includes(standardizedSender);
         const configuredPrimaryOwner = standardizeJid(settings.OWNER_NUMBER || "");
         const isPrimaryOwner = configuredPrimaryOwner
-            ? configuredPrimaryOwner === sender
+            ? configuredPrimaryOwner === standardizedSender
             : isSuperUser;
+
+        if (isGroup && isCommand) {
+            console.log(`[DEBUG] Group Command Logic:
+            - Mode: ${settings.MODE}
+            - Raw Sender: ${sender}
+            - Standardized Sender: ${standardizedSender}
+            - isSuperUser: ${isSuperUser}
+            - isPrimaryOwner: ${isPrimaryOwner}
+            - superUserList: ${JSON.stringify(superUser)}`);
+        }
 
         if (settings.AUTO_BLOCK && sender && !isSuperUser && !isGroup) {
             const countryCodes = settings.AUTO_BLOCK.split(",").map((code) =>
@@ -881,7 +904,7 @@ function setupCommandHandler(MeshTech) {
                     isBotAdmin,
                     isAdmin,
                     isSuperAdmin,
-                    sender,
+                    sender: standardizedSender,
                     superUser,
                     isSuperUser,
                     isPrimaryOwner,
@@ -942,7 +965,7 @@ function setupCommandHandler(MeshTech) {
                     isBotAdmin,
                     isAdmin,
                     isSuperAdmin,
-                    sender,
+                    sender: standardizedSender,
                     superUser,
                     isSuperUser,
                     isPrimaryOwner,
