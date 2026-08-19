@@ -283,13 +283,11 @@ async function startMeshTech() {
         setupStatusHandlers(MeshTech);
         setupGroupEventsListeners(MeshTech);
 
-        // Background plugin loading to prevent blocking the event loop during pairing
-        setTimeout(() => {
-            console.log("ℹ️ Loading plugins in background...");
-            loadPlugins(pluginsPath);
-            setupCommandHandler(MeshTech);
-            console.log("✅ Plugins loaded.");
-        }, 1000);
+        // Load plugins and command handler synchronously
+        console.log("ℹ️ Loading plugins...");
+        loadPlugins(pluginsPath);
+        setupCommandHandler(MeshTech);
+        console.log("✅ Plugins loaded.");
 
         setupConnectionHandler(MeshTech, sessionDir, startMeshTech, {
             onOpen: async (MeshTech) => {
