@@ -570,6 +570,9 @@ function processForTTS(text) {
 }
 
 const identityPatterns = [
+                /who\s*is\s*(mesh|meshtech|mesh-tech|mesh\s*tech\s*md)/i,
+                /what\s*is\s*(mesh|meshtech|mesh-tech|mesh\s*tech\s*md)/i,
+                /tell\s*me\s*about\s*(mesh|meshtech|mesh-tech|mesh\s*tech\s*md)/i,
                 /who\s*(made|created|built)\s*you/i,
                 /who\s*is\s*your\s*(creator|developer|maker|owner|father|parent)/i,
                 /what('?s| is)\s*your\s*name\??/i,
@@ -609,9 +612,9 @@ function isIdentityQuestion(query) {
 }
 
 async function getAIResponse(query) {
-    if (isIdentityQuestion(query)) {
-        return 'I am MESH-TECH MD, an advanced AI assistant created by Mesh Tech!';
-    }
+	    if (isIdentityQuestion(query)) {
+	        return 'I am MESH-TECH MD, your elite AI assistant designed to handle research, assignments, and smart automation!';
+	    }
     
     const endpoints = [
         { url: "https://gpt-3-5.apis-bj-devs.workers.dev/", param: "prompt", type: "bj" },
