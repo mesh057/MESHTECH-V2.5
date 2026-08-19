@@ -84,6 +84,7 @@ const {
     setupConnectionHandler,
     setupGroupEventsListeners,
     initializeLidStore,
+    getJidFromParticipant,
 } = require("./meshtech");
 
 const {
@@ -1143,7 +1144,7 @@ function buildContext(ms, settings, helpers, data) {
         botFooter: settings.FOOTER,
         botCaption: settings.CAPTION,
         botVersion: settings.VERSION,
-        ownerNumber: MeshTech?.user?.id ? MeshTech.user.id.split(":")[0] : "254746844168",
+        ownerNumber: data.botId ? data.botId.split(":")[0] : (settings.OWNER_NUMBER || "254746844168"),
         ownerName: settings.OWNER_NAME,
         botName: settings.BOT_NAME,
         meshtechRepo: settings.BOT_REPO,
