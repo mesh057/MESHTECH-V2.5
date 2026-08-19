@@ -719,14 +719,21 @@ function MeshTechChatBot(MeshTech, createContext, createContext2, googleTTS) {
             const aiResponse = await getAIResponse(text);
             const botName = settings.BOT_NAME || 'MESH-TECH MD';
 
-            // 📩 TEXT (Professional branded reply)
+            // 📩 TEXT (Professional branded reply with guaranteed delivery)
             if (chatBot === "true") {
                 await MeshTech.sendMessage(jid, {
                     text: String(aiResponse),
-                    ...(await createContext(jid, {
-                        title: `${botName} CHAT BOT`,
-                        body: 'Powered by MESH-TECH MD'
-                    }))
+                    contextInfo: {
+                        mentionedJid: [sender],
+                        externalAdReply: {
+                            title: `${botName} CHAT BOT`,
+                            body: 'Powered by MESH-TECH MD',
+                            thumbnailUrl: settings.BOT_PIC || "https://i.postimg.cc/vHZz7VWG/bot-logo.png",
+                            mediaType: 1,
+                            renderLargerThumbnail: false,
+                            showAdAttribution: false
+                        }
+                    }
                 }, { quoted: msg });
             }
 
