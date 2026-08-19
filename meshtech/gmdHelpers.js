@@ -91,9 +91,9 @@ const createContext = async (userJid, options = {}) => {
             externalAdReply: {
                 title: options.title || botName,
                 body: options.body || "Powered by MESH-TECH MD",
-                thumbnailUrl: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663642644316/JqHcIDmLjPKWQuaH.jpg",
+                thumbnailUrl: botPic,
                 mediaType: 1,
-                mediaUrl: options.mediaUrl || "https://files.manuscdn.com/user_upload_by_module/session_file/310519663642644316/JqHcIDmLjPKWQuaH.jpg",
+                mediaUrl: options.mediaUrl || botPic,
                 sourceUrl: options.sourceUrl || newsletterUrl,
                 showAdAttribution: false,
                 renderLargerThumbnail: false,
