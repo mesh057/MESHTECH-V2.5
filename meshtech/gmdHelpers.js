@@ -88,8 +88,7 @@ const createContext = async (userJid, options = {}) => {
     return {
         contextInfo: {
             mentionedJid: [userJid],
-            forwardingScore: 1,
-            isForwarded: true,
+            // isForwarded removed for professional clean display
             ...(newsletterJid ? {
                 businessMessageForwardInfo: {
                     businessOwnerJid: newsletterJid,
@@ -124,8 +123,7 @@ const createContext2 = async (userJid, options = {}) => {
     return {
         contextInfo: {
             mentionedJid: [userJid],
-            forwardingScore: 1,
-            isForwarded: true,
+            // isForwarded removed for professional clean display
             ...(newsletterJid ? {
                 forwardedNewsletterMessageInfo: {
                     newsletterJid,

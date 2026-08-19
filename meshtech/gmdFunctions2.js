@@ -612,18 +612,28 @@ async function getAIResponse(query) {
         return 'I am MESH-TECH MD, an advanced AI assistant created by Mesh Tech!';
     }
     
-    const endpoints = [
-        `https://gpt-3-5.apis-bj-devs.workers.dev/?prompt=${encodeURIComponent(query)}`,
-        `https://api.siputzx.my.id/api/ai/duckai?message=${encodeURIComponent(query)}`
+    const fallbacks = [
+        { url: "https://gpt-3-5.apis-bj-devs.workers.dev/", param: "prompt", type: "bj" },
+        { url: "https://api.siputzx.my.id/api/ai/gptoss120b", param: "prompt", type: "siputzx" },
+        { url: "https://api.siputzx.my.id/api/ai/duckai", param: "message", type: "siputzx" }
     ];
 
-    for (const url of endpoints) {
+    for (const fallback of fallbacks) {
         try {
-            const res = await axios.get(url, { timeout: 15000 });
-            const data = res.data;
-            const ans = data.result || data.response || data.message || data.reply || (data.data && (data.data.text || data.data.message)) || (typeof data === 'string' ? data : null);
-            if (ans && typeof ans === 'string' && ans.trim().length > 0) {
-                return ans;
+            const { data } = await axios.get(fallback.url, {
+                params: { [fallback.param]: query },
+                timeout: 10000,
+            });
+            
+            let result = null;
+            if (fallback.type === "bj") {
+                result = data?.reply || (typeof data === "string" ? data : null);
+            } else {
+                result = data?.data?.response || data?.data?.message || data?.result;
+            }
+            
+            if (result && typeof result === "string" && result.trim().length > 0) {
+                return result;
             }
         } catch (e) {
             continue;
