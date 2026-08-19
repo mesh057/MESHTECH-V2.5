@@ -819,7 +819,6 @@ function setupCommandHandler(MeshTech) {
         } = serialized;
 
         rememberRecipient(from);
-        rememberActivity(sender || rawSender || from);
         const groupData = await getGroupInfo(MeshTech, from, botId, rawSender);
         const {
             groupInfo,
@@ -832,6 +831,8 @@ function setupCommandHandler(MeshTech) {
             isSuperAdmin,
             sender,
         } = groupData;
+
+        rememberActivity(sender || rawSender || from);
 
         const superUser = await buildSuperUsers(
             settings,

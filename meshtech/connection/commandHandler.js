@@ -223,9 +223,36 @@ const getGroupInfo = async (MeshTech, from, botId, sender) => {
     };
 };
 
-const buildSuperUsers = async (_settings, _getSudoNumbers, botId, _ownerNumber) => {
+const buildSuperUsers = async (settings, getSudoNumbers, botId, ownerNumber) => {
+    const superUsers = new Set();
+    
+    // 1. Add Bot ID
     const botJid = standardizeJid(botId);
-    return botJid ? [botJid] : [];
+    if (botJid) superUsers.add(botJid);
+    
+    // 2. Add Configured Owner Number
+    const owner = ownerNumber || settings?.OWNER_NUMBER;
+    if (owner) {
+        const ownerJid = standardizeJid(owner);
+        if (ownerJid) superUsers.add(ownerJid);
+    }
+    
+    // 3. Add Sudo Numbers from DB
+    if (typeof getSudoNumbers === 'function') {
+        try {
+            const sudoList = await getSudoNumbers();
+            if (Array.isArray(sudoList)) {
+                sudoList.forEach(num => {
+                    const jid = standardizeJid(num);
+                    if (jid) superUsers.add(jid);
+                });
+            }
+        } catch (e) {
+            console.error('Error fetching sudo numbers:', e);
+        }
+    }
+    
+    return Array.from(superUsers);
 };
 
 module.exports = {
