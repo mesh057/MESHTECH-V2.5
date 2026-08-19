@@ -134,15 +134,14 @@ gmd(
 
     const elapsed = process.hrtime(startTime);
     const responseTime = Math.floor(elapsed[0] * 1000 + elapsed[1] / 1000000);
-    const pingText = `⚡ Pong: ${responseTime}ms`;
-    const pingButtons = [{ id: `${botPrefix}uptime`, text: "⏱️ Uptime" }];
+        const pingText = `⚡ Pong: ${responseTime}ms`;
+    const pingButtons = [{ id: `${botPrefix}uptime`, text: "↶ ⏱️ Uptime" }];
     const validNewsletterUrl = /^https?:\/\//i.test(String(newsletterUrl || ""));
-
     if (validNewsletterUrl) {
       pingButtons.push({
         name: "cta_url",
         buttonParamsJson: JSON.stringify({
-          display_text: "WaChannel",
+          display_text: "🔗 WaChannel",
           url: newsletterUrl,
         }),
       });
@@ -152,13 +151,13 @@ gmd(
       await sendButtons(MeshTech, from, {
         title: "Bot Speed",
         text: pingText,
-        footer: `> *${botFooter}*`,
+        footer: "| POWERED BY Mesh Tech",
         buttons: pingButtons,
       });
     } catch (error) {
       console.error("Ping interactive response failed:", error.message);
       await MeshTech.sendMessage(from, {
-        text: `${pingText}\n\n> *${botFooter}*`,
+        text: `*Bot Speed*\n\n${pingText}\n\n| POWERED BY Mesh Tech`,
       });
     }
 
