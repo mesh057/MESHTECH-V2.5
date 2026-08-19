@@ -3,7 +3,7 @@ if (fs.existsSync(".env"))
     require("dotenv").config({ path: __dirname + "/.env", quiet: true });
 
 module.exports = {
-    MODE: process.env.MODE,
+    MODE: process.env.MODE || process.env.MESH_MULTI_USER_SESSION_MODE || "public",
     SESSION_ID: process.env.SESSION_ID,
     TIME_ZONE: process.env.TIME_ZONE,
     AUTO_READ_STATUS: process.env.AUTO_READ_STATUS,

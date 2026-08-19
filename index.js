@@ -889,7 +889,7 @@ function setupCommandHandler(MeshTech) {
 
         const bodyCmd = findBodyCommand(body);
         if (bodyCmd && bodyCmd.function) {
-            if (settings.MODE?.toLowerCase() === "private" && !isSuperUser)
+            if (settings.MODE?.toLowerCase() === "private" && !isSuperUser && !isGroup)
                 return;
             try {
                 const helpers = createHelpers(MeshTech, ms, from);
@@ -934,7 +934,7 @@ function setupCommandHandler(MeshTech) {
             const gmd = findCommand(command);
             if (!gmd) return;
 
-            if (settings.MODE?.toLowerCase() === "private" && !isSuperUser)
+            if (settings.MODE?.toLowerCase() === "private" && !isSuperUser && !isGroup)
                 return;
 
             try {

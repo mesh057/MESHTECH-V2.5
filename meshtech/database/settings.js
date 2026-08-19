@@ -106,6 +106,10 @@ async function initializeSettings() {
             record.value = defaultValue;
             await record.save();
         }
+        if (key === "MODE" && (process.env.MODE || process.env.MESH_MULTI_USER_SESSION_MODE)) {
+            record.value = process.env.MODE || process.env.MESH_MULTI_USER_SESSION_MODE;
+            await record.save();
+        }
     }
     initialized = true;
     console.log("✅ Bot Settings Initialized");
