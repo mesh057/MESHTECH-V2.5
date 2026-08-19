@@ -3,6 +3,7 @@ const { DisconnectReason } = require("mesh-baileys");
 const fs = require("fs-extra");
 const path = require("path");
 const { setupGroupCacheListeners } = require("./groupCache");
+const { setupGroupEventsListeners } = require("./groupEvents");
 
 const RECONNECT_DELAY = 3000;
 const MAX_RECONNECT_ATTEMPTS = 100;
@@ -58,6 +59,7 @@ const setupConnectionHandler = (
     callbacks = {},
 ) => {
     setupGroupCacheListeners(MeshTech);
+    setupGroupEventsListeners(MeshTech);
 
     MeshTech.ev.on("connection.update", async (update) => {
         const { connection, lastDisconnect } = update;
