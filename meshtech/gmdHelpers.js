@@ -95,8 +95,8 @@ const createContext = async (userJid, options = {}) => {
                     mediaType: 1,
                     mediaUrl: options.mediaUrl || botPic,
                     sourceUrl: options.sourceUrl || newsletterUrl,
-                    showAdAttribution: false,
-                    renderLargerThumbnail: false,
+                showAdAttribution: false,
+                renderLargerThumbnail: true,
                 },
             },
         };
