@@ -612,9 +612,9 @@ function isIdentityQuestion(query) {
 }
 
 async function getAIResponse(query) {
-	    if (isIdentityQuestion(query)) {
-	        return 'I am MESH-TECH MD, your elite AI assistant designed to handle research, assignments, and smart automation!';
-	    }
+		    if (isIdentityQuestion(query)) {
+		        return 'I am MESH-TECH MD, a professional AI Assistant developed by Meshack Nzuki. I specialize in high-speed research, academic assignments, media automation, and providing smart digital solutions to enhance your productivity. I am engineered for reliability and 24/7 performance.';
+		    }
     
     const endpoints = [
         { url: "https://gpt-3-5.apis-bj-devs.workers.dev/", param: "prompt", type: "bj" },
@@ -628,7 +628,7 @@ async function getAIResponse(query) {
             let res;
             if (ep.type === "itzpire") {
                 res = await axios.get(ep.url, {
-                    params: { q: query, prompt: "You are MESH-TECH MD, a helpful AI assistant." },
+                    params: { q: query, prompt: "You are MESH-TECH MD, a professional AI Assistant developed by Meshack Nzuki specializing in high-speed research, academic assignments, media automation, and smart digital solutions." },
                     timeout: 12000,
                 });
             } else {
