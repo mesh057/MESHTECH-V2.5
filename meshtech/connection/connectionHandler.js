@@ -57,7 +57,7 @@ const setupConnectionHandler = (
     startMeshTech,
     callbacks = {},
 ) => {
-    setupGroupCacheListeners(Gifted);
+    setupGroupCacheListeners(MeshTech);
 
     MeshTech.ev.on("connection.update", async (update) => {
         const { connection, lastDisconnect } = update;
@@ -68,7 +68,7 @@ const setupConnectionHandler = (
         }
 
         if (connection === "open") {
-            if (!Gifted?.user?.id) {
+            if (!MeshTech?.user?.id) {
                 console.warn("⚠️ Connection opened before WhatsApp authentication; waiting for an authenticated socket.");
                 return;
             }
@@ -76,7 +76,7 @@ const setupConnectionHandler = (
             reconnectAttempts = 0;
 
             if (callbacks.onOpen) {
-                await callbacks.onOpen(Gifted);
+                await callbacks.onOpen(MeshTech);
             }
         }
 
@@ -99,7 +99,7 @@ const setupConnectionHandler = (
                 console.log(
                     `🕗 Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms...`,
                 );
-                setTimeout(() => startGifted(), delay);
+                setTimeout(() => startMeshTech(), delay);
             };
 
             switch (reason) {

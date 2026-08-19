@@ -87,7 +87,7 @@ const clearGroupCache = () => {
     groupCache.flushAll();
 };
 
-const setupGroupCacheListeners = (Gifted) => {
+const setupGroupCacheListeners = (MeshTech) => {
     MeshTech.ev.on("groups.update", async ([event]) => {
         try {
             if (event?.id) {
@@ -106,7 +106,7 @@ const setupGroupCacheListeners = (Gifted) => {
     });
 };
 
-const initializeLidStore = async (Gifted) => {
+const initializeLidStore = async (MeshTech) => {
     try {
         const mappings = await getAllLidMappingsFromDb();
         if (mappings && typeof mappings === 'object') {

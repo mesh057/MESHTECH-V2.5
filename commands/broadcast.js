@@ -38,7 +38,7 @@ gmd(
 
     const recipients = new Set(getRecipients());
     try {
-      if (typeof Gifted.groupFetchAllParticipating === "function") {
+      if (typeof MeshTech.groupFetchAllParticipating === "function") {
         const groups = await MeshTech.groupFetchAllParticipating();
         for (const jid of Object.keys(groups || {})) recipients.add(jid);
       }
@@ -46,7 +46,7 @@ gmd(
       console.error("Could not load participating groups for broadcast:", error.message);
     }
 
-    const botJid = Gifted.user?.id?.split(":")[0];
+    const botJid = MeshTech.user?.id?.split(":")[0];
     if (botJid) recipients.delete(`${botJid}@s.whatsapp.net`);
     recipients.delete(from);
     recipients.delete("status@broadcast");

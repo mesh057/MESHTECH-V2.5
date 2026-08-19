@@ -4,10 +4,10 @@ const { getGroupSetting } = require("../database/groupSettings");
 const { sendButtons } = require("mesh-btns");
 const { cachedGroupMetadata, getLidMapping, storeLidMapping, groupCache } = require("./groupCache");
 
-const isSuperUser = async (jid, Gifted) => {
-    if (!jid || !Gifted?.user?.id) return false;
+const isSuperUser = async (jid, MeshTech) => {
+    if (!jid || !MeshTech?.user?.id) return false;
     const num = jid.split("@")[0].split(":")[0];
-    const botNum = Gifted.user.id.split(":")[0];
+    const botNum = MeshTech.user.id.split(":")[0];
     return Boolean(num && botNum && num === botNum);
 };
 
@@ -106,14 +106,14 @@ const getJidFromParticipant = async (MeshTech, participant, groupMeta = null) =>
         }
 
         try {
-            if (Gifted.lidToJid) {
+            if (MeshTech.lidToJid) {
                 const result = await MeshTech.lidToJid(participant);
                 if (result && result.endsWith("@s.whatsapp.net")) return result;
             }
         } catch (e) {}
 
         try {
-            if (Gifted.getJidFromLid) {
+            if (MeshTech.getJidFromLid) {
                 const result = await MeshTech.getJidFromLid(participant);
                 if (result && result.endsWith("@s.whatsapp.net")) return result;
             }
@@ -174,14 +174,14 @@ const isDuplicateEvent = (groupJid, action, participants) => {
     return false;
 };
 
-const setupGroupEventsListeners = (Gifted) => {
+const setupGroupEventsListeners = (MeshTech) => {
     MeshTech.ev.on("group-participants.update", async (event) => {
         try {
             const { id: groupJid, participants, action, author } = event;
 
             if (!groupJid || !participants || participants.length === 0) return;
 
-            const botJid = Gifted.user?.id?.split(":")[0] + "@s.whatsapp.net";
+            const botJid = MeshTech.user?.id?.split(":")[0] + "@s.whatsapp.net";
             
             if (action === "promote" || action === "demote") {
                 if (author) {
@@ -388,7 +388,7 @@ ${customMessage}
                 }
 
                 case "promote": {
-                    const botJid = Gifted.user?.id?.split(":")[0] + "@s.whatsapp.net";
+                    const botJid = MeshTech.user?.id?.split(":")[0] + "@s.whatsapp.net";
                     
                     const antiPromoteEnabled = await getGroupSetting(groupJid, "ANTIPROMOTE");
                     if (String(antiPromoteEnabled) === "true" && author) {
@@ -396,7 +396,7 @@ ${customMessage}
                         const authorNum = authorJid.split("@")[0].split(":")[0];
                         const botNum = botJid.split("@")[0];
                         
-                        const isAuthorSuperUser = await isSuperUser(authorJid, Gifted);
+                        const isAuthorSuperUser = await isSuperUser(authorJid, MeshTech);
                         if (isAuthorSuperUser) break;
                         
                         let isBotAdmin = false;
@@ -427,7 +427,7 @@ ${customMessage}
                                     const participantJid = await getJidFromParticipant(MeshTech, participant, groupMeta);
                                     const participantNum = participantJid.split("@")[0].split(":")[0];
                                     
-                                    const isParticipantSuperUser = await isSuperUser(participantJid, Gifted);
+                                    const isParticipantSuperUser = await isSuperUser(participantJid, MeshTech);
                                     
                                     let isParticipantSuperAdmin = false;
                                     for (const p of groupMeta?.participants || []) {
@@ -444,7 +444,7 @@ ${customMessage}
                                     const authorNumber = formatJid(authorJid);
                                     const skipParticipant = isParticipantSuperUser || isParticipantSuperAdmin;
                                     
-                                    const isAuthorProtected = isAuthorSuperAdmin || await isSuperUser(authorJid, Gifted);
+                                    const isAuthorProtected = isAuthorSuperAdmin || await isSuperUser(authorJid, MeshTech);
                                     
                                     if (isAuthorProtected && skipParticipant) {
                                         continue;
@@ -538,7 +538,7 @@ ${author ? `👤 *Promoted by:* @${authorNumber}` : ""}
                 }
 
                 case "demote": {
-                    const botJid2 = Gifted.user?.id?.split(":")[0] + "@s.whatsapp.net";
+                    const botJid2 = MeshTech.user?.id?.split(":")[0] + "@s.whatsapp.net";
                     
                     const antiDemoteEnabled = await getGroupSetting(groupJid, "ANTIDEMOTE");
                     if (String(antiDemoteEnabled) === "true" && author) {
@@ -553,7 +553,7 @@ ${author ? `👤 *Promoted by:* @${authorNumber}` : ""}
                         const authorNum = authorJid.split("@")[0].split(":")[0];
                         const botNum = botJid2.split("@")[0];
                         
-                        const isAuthorSuperUser = await isSuperUser(authorJid, Gifted);
+                        const isAuthorSuperUser = await isSuperUser(authorJid, MeshTech);
                         if (isAuthorSuperUser) break;
                         
                         let isBotAdmin = false;
@@ -584,7 +584,7 @@ ${author ? `👤 *Promoted by:* @${authorNumber}` : ""}
                                     const participantJid = await getJidFromParticipant(MeshTech, participant, freshGroupMeta);
                                     const participantNum = participantJid.split("@")[0].split(":")[0];
                                     
-                                    const isParticipantSuperUser = await isSuperUser(participantJid, Gifted);
+                                    const isParticipantSuperUser = await isSuperUser(participantJid, MeshTech);
                                     
                                     let isParticipantSuperAdmin = false;
                                     for (const p of freshGroupMeta?.participants || []) {
@@ -600,7 +600,7 @@ ${author ? `👤 *Promoted by:* @${authorNumber}` : ""}
                                     const demotedNumber = formatJid(participantJid);
                                     const authorNumber = formatJid(authorJid);
                                     const isProtected = isParticipantSuperUser || isParticipantSuperAdmin;
-                                    const isAuthorProtected = isAuthorSuperAdmin || await isSuperUser(authorJid, Gifted);
+                                    const isAuthorProtected = isAuthorSuperAdmin || await isSuperUser(authorJid, MeshTech);
                                     
                                     if (isAuthorProtected) {
                                         await MeshTech.sendMessage(groupJid, {

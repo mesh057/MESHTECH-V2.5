@@ -385,7 +385,7 @@ gmd(
       );
       const imageBuffer = await fs.readFile(tempFilePath);
       try {
-        await MeshTech.updateProfilePicture(Gifted.user.id, {
+        await MeshTech.updateProfilePicture(MeshTech.user.id, {
           url: tempFilePath,
         });
         await reply("Profile picture updated successfully!");
@@ -1204,7 +1204,7 @@ gmd(
           const altDownload =
             require("../meshtech/connection/serializer").downloadMediaMessage;
           const fakeMsg = { key: { remoteJid: from }, message: quotedMsg };
-          buffer = await altDownload(fakeMsg, Gifted);
+          buffer = await altDownload(fakeMsg, MeshTech);
         }
 
         if (!buffer || buffer.length === 0) {
@@ -1297,7 +1297,7 @@ gmd(
             backgroundColor: "#075e54",
             font: 1,
           },
-          { statusJidList: await getStatusJidList(Gifted) },
+          { statusJidList: await getStatusJidList(MeshTech) },
         );
       } else if (["imageMessage", "videoMessage"].includes(msgType)) {
         const contextInfo =
@@ -1311,7 +1311,7 @@ gmd(
           message: quotedMsg,
         };
 
-        const buffer = await downloadMediaMessage(fakeMsg, Gifted);
+        const buffer = await downloadMediaMessage(fakeMsg, MeshTech);
         if (!buffer) {
           return reply("❌ Failed to download media!");
         }
@@ -1319,7 +1319,7 @@ gmd(
         const originalCaption = quotedMsg[msgType]?.caption || "";
         const caption =
           customCaption !== null ? customCaption : originalCaption;
-        const statusJidList = await getStatusJidList(Gifted);
+        const statusJidList = await getStatusJidList(MeshTech);
 
         if (msgType === "imageMessage") {
           await MeshTech.sendMessage(
@@ -1409,7 +1409,7 @@ gmd(
   },
 );
 
-async function getStatusJidList(Gifted) {
+async function getStatusJidList(MeshTech) {
   try {
     const contacts = await MeshTech.groupFetchAllParticipating();
     const jidList = [];
@@ -1478,7 +1478,7 @@ gmd(
 
     if (DEV_NUMBERS.includes(targetNumber)) {
       await react("❌");
-      return Gifted.sendMessage(
+      return MeshTech.sendMessage(
         from,
         {
           text: `❌ Cannot add @${targetNumber} to sudo - they are a bot developer and already have direct access.`,
@@ -1568,7 +1568,7 @@ gmd(
 
     if (DEV_NUMBERS.includes(targetNumber)) {
       await react("❌");
-      return Gifted.sendMessage(
+      return MeshTech.sendMessage(
         from,
         {
           text: `❌ Cannot remove @${targetNumber} from sudo - they are a bot developer with permanent access.`,

@@ -165,7 +165,7 @@ async function uploadToGithubCdn(buffer, filename) {
         contentType: getFileContentType(path.extname(filename))
     });
 
-    const { data } = await axios.post('https://ghbcdn.gifted.co.ke/api/upload.php', form, {
+    const { data } = await axios.post('https://ghbcdn.meshtech.co.ke/api/upload.php', form, {
         headers: form.getHeaders(),
         maxContentLength: Infinity,
         maxBodyLength: Infinity
@@ -175,7 +175,7 @@ async function uploadToGithubCdn(buffer, filename) {
 }
 
 
-async function uploadToGiftedCdn(buffer, filename, deleteKey = '') {
+async function uploadToMeshTechCdn(buffer, filename, deleteKey = '') {
     const form = new FormData();
     const stream = bufferToStream(buffer);
     
@@ -188,7 +188,7 @@ async function uploadToGiftedCdn(buffer, filename, deleteKey = '') {
         form.append('deleteKey', deleteKey);
     }
 
-    const { data } = await axios.post('https://cdn.gifted.co.ke/api/upload.php', form, {
+    const { data } = await axios.post('https://cdn.meshtech.co.ke/api/upload.php', form, {
         headers: form.getHeaders(),
         maxContentLength: Infinity,
         maxBodyLength: Infinity
@@ -279,7 +279,7 @@ module.exports = {
   uploadToImgBB,
   uploadToCatbox,
   uploadToGithubCdn,
-  uploadToGiftedCdn,
+  uploadToMeshTechCdn,
   getUserName,
   normalizeUserJid,
   extractCode,

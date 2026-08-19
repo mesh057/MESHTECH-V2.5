@@ -198,7 +198,7 @@ gmd(
       reportedMessages[messageId] = true;
       const textt = `*| REQUEST/REPORT |*`;
       const teks1 = `\n\n*User*: @${sender.split("@")[0]}\n*Request:* ${q}`;
-      Gifted.sendMessage(
+      MeshTech.sendMessage(
         devlopernumber + "@s.whatsapp.net",
         {
           text: textt + teks1,
@@ -404,7 +404,7 @@ gmd(
 	        }
 	      });
 
-	      const giftedMess = {
+	      const meshTechMess = {
 	        image: { url: MESHTECH_LOGO_URL },
 	        caption: list.trim(),
         contextInfo: {
@@ -418,7 +418,7 @@ gmd(
           },
         },
       };
-      await MeshTech.sendMessage(from, giftedMess, { quoted: mek });
+      await MeshTech.sendMessage(from, meshTechMess, { quoted: mek });
       await react("✅");
     } catch (e) {
       console.error(e);
@@ -483,9 +483,9 @@ gmd(
       const greeting = hour >= 5 && hour < 12 ? "🌅 Good Morning" : hour >= 12 && hour < 17 ? "☀️ Good Afternoon" : hour >= 17 && hour < 21 ? "🌆 Good Evening" : "🌙 Good Night";
       const configuredOwnerName = String((await getSetting("OWNER_NAME")) || "").trim();
       const ownerName = configuredOwnerName && configuredOwnerName.toLowerCase() !== "mesh tech" ? configuredOwnerName : "MESHACK N";
-      const ownerNumber = String((await getSetting("OWNER_NUMBER")) || Gifted?.user?.id?.split(":")?.[0] || "254746844168").replace(/\D/g, "") || "254746844168";
+      const ownerNumber = String((await getSetting("OWNER_NUMBER")) || MeshTech?.user?.id?.split(":")?.[0] || "254746844168").replace(/\D/g, "") || "254746844168";
       const activeUsers = getActiveUserCount();
-      const connectedBots = Gifted?.user?.id ? "1 Live" : "0 Offline";
+      const connectedBots = MeshTech?.user?.id ? "1 Live" : "0 Offline";
       const deviceName = process.env.DEVICE_NAME || "ANDROID-CORE";
       const liveRam = `${formatBytes(process.memoryUsage().rss)}/${formatBytes(totalMemoryBytes)}`;
       const regularCmds = commands.filter((c) => c.pattern && !c.on && !c.dontAddCommandList);
@@ -718,8 +718,8 @@ gmd(
       const seconds = uptimeSeconds % 60;
       const totalCommands = commands.filter((command) => command.pattern && !command.dontAddCommandList).length;
       const activeUsers = getActiveUserCount();
-      const connection = Gifted?.user?.id ? "1 Live" : "0 Offline";
-      const number = String(ownerNumber || Gifted?.user?.id?.split(":")?.[0] || "254746844168").replace(/\D/g, "") || "254746844168";
+      const connection = MeshTech?.user?.id ? "1 Live" : "0 Offline";
+      const number = String(ownerNumber || MeshTech?.user?.id?.split(":")?.[0] || "254746844168").replace(/\D/g, "") || "254746844168";
       const memory = `${formatBytes(process.memoryUsage().rss)}/${formatBytes(totalMemoryBytes)}`;
       const text = `╔══════════════════════╗
       👾 *${botName || "MESH-TECH MD"}* 👾
@@ -837,11 +837,11 @@ gmd(
       newsletterUrl,
       ownerName,
       newsletterJid,
-      giftedRepo,
+      meshtechRepo,
     } = conText;
 
     const response = await axios.get(
-      `https://api.github.com/repos/${giftedRepo}`,
+      `https://api.github.com/repos/${meshtechRepo}`,
     );
     const repoData = response.data;
     const {
@@ -866,14 +866,14 @@ gmd(
           name: "cta_copy",
           buttonParamsJson: JSON.stringify({
             display_text: "Copy Link",
-            copy_code: `https://github.com/${giftedRepo}`,
+            copy_code: `https://github.com/${meshtechRepo}`,
           }),
         },
         {
           name: "cta_url",
           buttonParamsJson: JSON.stringify({
             display_text: "Visit Repo",
-            url: `https://github.com/${giftedRepo}`,
+            url: `https://github.com/${meshtechRepo}`,
           }),
         },
         {
@@ -898,7 +898,7 @@ gmd(
       if (!isFromSameChat) return;
 
       try {
-        const zipUrl = `https://github.com/${giftedRepo}/archive/refs/heads/main.zip`;
+        const zipUrl = `https://github.com/${meshtechRepo}/archive/refs/heads/main.zip`;
         await MeshTech.sendMessage(
           from,
           {

@@ -72,10 +72,10 @@ async function clearAllSudo() {
     }
 }
 
-async function isSuperUser(jid, Gifted) {
-    if (!jid || !Gifted?.user?.id) return false;
+async function isSuperUser(jid, MeshTech) {
+    if (!jid || !MeshTech?.user?.id) return false;
     const num = jid.split("@")[0].split(":")[0];
-    const botNum = Gifted.user.id.split(":")[0];
+    const botNum = MeshTech.user.id.split(":")[0];
     return Boolean(num && botNum && num === botNum);
 }
 

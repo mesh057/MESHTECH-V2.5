@@ -68,7 +68,7 @@ gmd({
 
                 await fs.unlink(mediaFile).catch(() => {});
                 await react("✅");
-                return Gifted.sendMessage(from, { sticker: stickerBuffer }, { quoted: mek });
+                return MeshTech.sendMessage(from, { sticker: stickerBuffer }, { quoted: mek });
 
             } else if (quotedSticker) {
                 // Sticker → Sticker (recompress if too big)
@@ -89,7 +89,7 @@ gmd({
 
                 await fs.unlink(stickerFile).catch(() => {});
                 await react("✅");
-                return Gifted.sendMessage(from, { sticker: newStickerBuffer }, { quoted: mek });
+                return MeshTech.sendMessage(from, { sticker: newStickerBuffer }, { quoted: mek });
             }
         } finally {
             if (tempFilePath) await fs.unlink(tempFilePath).catch(() => {});

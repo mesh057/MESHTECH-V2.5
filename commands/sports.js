@@ -192,7 +192,7 @@ gmd(
       };
 
       if (!optionMap[choice]) {
-        return Gifted.sendMessage(
+        return MeshTech.sendMessage(
           chatId,
           {
             text: "❌ Invalid option. Reply with 1, 2, or 3.",
@@ -215,7 +215,7 @@ gmd(
         const data = res.data;
 
         if (!data.status || !data.result?.games) {
-          return Gifted.sendMessage(
+          return MeshTech.sendMessage(
             chatId,
             {
               text: `❌ No match data available at the moment.`,
@@ -250,7 +250,7 @@ gmd(
           }));
 
         if (filteredGames.length === 0) {
-          return Gifted.sendMessage(
+          return MeshTech.sendMessage(
             chatId,
             {
               text: `╭━━━━━━━━━━━━━━━⬣\n│ ${selected.emoji} *${selected.name}*\n╰━━━━━━━━━━━━━━━⬣\n\n_No matches found._`,
@@ -439,7 +439,7 @@ gmd(
       const league = LEAGUE_CONFIG[choice];
 
       if (!league) {
-        return Gifted.sendMessage(
+        return MeshTech.sendMessage(
           chatId,
           {
             text: "❌ Invalid option. Reply with a number between 1 and 8.",
@@ -461,7 +461,7 @@ gmd(
         const data = res.data;
 
         if (!data.status || !Array.isArray(data.result?.topScorers)) {
-          return Gifted.sendMessage(
+          return MeshTech.sendMessage(
             chatId,
             {
               text: `❌ Failed to fetch ${league.name} scorers.`,
@@ -563,7 +563,7 @@ gmd(
       const league = LEAGUE_CONFIG[choice];
 
       if (!league) {
-        return Gifted.sendMessage(
+        return MeshTech.sendMessage(
           chatId,
           {
             text: "❌ Invalid option. Reply with 1-8.",
@@ -585,7 +585,7 @@ gmd(
         const data = res.data;
 
         if (!data.status || !Array.isArray(data.result?.standings)) {
-          return Gifted.sendMessage(
+          return MeshTech.sendMessage(
             chatId,
             {
               text: `❌ Failed to fetch ${league.name} standings.`,
@@ -688,7 +688,7 @@ gmd(
       const league = LEAGUE_CONFIG[choice];
 
       if (!league) {
-        return Gifted.sendMessage(
+        return MeshTech.sendMessage(
           chatId,
           {
             text: "❌ Invalid option. Reply with 1-8.",
@@ -710,7 +710,7 @@ gmd(
         const data = res.data;
 
         if (!data.status || !Array.isArray(data.result?.upcomingMatches)) {
-          return Gifted.sendMessage(
+          return MeshTech.sendMessage(
             chatId,
             {
               text: `❌ No upcoming ${league.name} fixtures found.`,
@@ -803,7 +803,7 @@ gmd(
       const league = LEAGUE_CONFIG[choice];
 
       if (!league) {
-        return Gifted.sendMessage(
+        return MeshTech.sendMessage(
           chatId,
           {
             text: "❌ Invalid option. Reply with 1-8.",
@@ -825,7 +825,7 @@ gmd(
         const data = res.data;
 
         if (!data.status || !Array.isArray(data.result?.matches)) {
-          return Gifted.sendMessage(
+          return MeshTech.sendMessage(
             chatId,
             {
               text: `❌ No match history found for ${league.name}.`,

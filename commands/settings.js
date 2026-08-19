@@ -48,7 +48,7 @@ function isSettingEnabled(val) {
   );
 }
 
-async function formatGroupsWithNames(jids, Gifted) {
+async function formatGroupsWithNames(jids, MeshTech) {
   if (!jids || jids.length === 0) return "None";
 
   const groupInfos = await Promise.all(
@@ -109,12 +109,12 @@ gmd(
         antibadGroups,
         antigroupmentionGroups,
       ] = await Promise.all([
-        formatGroupsWithNames(enabledGroupSettings.WELCOME_MESSAGE, Gifted),
-        formatGroupsWithNames(enabledGroupSettings.GOODBYE_MESSAGE, Gifted),
-        formatGroupsWithNames(enabledGroupSettings.GROUP_EVENTS, Gifted),
-        formatGroupsWithNames(enabledGroupSettings.ANTILINK, Gifted),
-        formatGroupsWithNames(enabledGroupSettings.ANTIBAD, Gifted),
-        formatGroupsWithNames(enabledGroupSettings.ANTIGROUPMENTION, Gifted),
+        formatGroupsWithNames(enabledGroupSettings.WELCOME_MESSAGE, MeshTech),
+        formatGroupsWithNames(enabledGroupSettings.GOODBYE_MESSAGE, MeshTech),
+        formatGroupsWithNames(enabledGroupSettings.GROUP_EVENTS, MeshTech),
+        formatGroupsWithNames(enabledGroupSettings.ANTILINK, MeshTech),
+        formatGroupsWithNames(enabledGroupSettings.ANTIBAD, MeshTech),
+        formatGroupsWithNames(enabledGroupSettings.ANTIGROUPMENTION, MeshTech),
       ]);
 
       msg += `*🎉 WELCOME MESSAGE:*\n${welcomeGroups}\n\n`;

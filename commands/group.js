@@ -60,10 +60,10 @@ gmd(
           }
           
           // Last resort: if it's the bot itself, use its own JID
-          if (jid.includes("@lid") && Gifted?.user?.id) {
-              const botLid = Gifted.user.id.split(":")[0];
+          if (jid.includes("@lid") && MeshTech?.user?.id) {
+              const botLid = MeshTech.user.id.split(":")[0];
               if (jid.startsWith(botLid)) {
-                  jid = Gifted.user.id.split(":")[0] + "@s.whatsapp.net";
+                  jid = MeshTech.user.id.split(":")[0] + "@s.whatsapp.net";
               }
           }
           
@@ -423,7 +423,7 @@ gmd(
 
     const { isSuperUser } = require("../meshtech/database/sudo");
     const targetNum = targetJid.split("@")[0];
-    const isTargetSuperUser = await isSuperUser(targetJid, Gifted);
+    const isTargetSuperUser = await isSuperUser(targetJid, MeshTech);
     
     const standardizedSuperUsers = superUser.map((u) => u.split("@")[0]);
     if (isTargetSuperUser || standardizedSuperUsers.includes(targetNum)) {
@@ -727,7 +727,7 @@ gmd(
       return reply("❌ I cannot kick my creator!");
     }
 
-    const botJid = Gifted.user?.id?.split(":")[0] + "@s.whatsapp.net";
+    const botJid = MeshTech.user?.id?.split(":")[0] + "@s.whatsapp.net";
     if (targetJid.toLowerCase() === botJid.toLowerCase()) {
       await react("❌");
       return reply("❌ I cannot kick myself!");
@@ -1095,7 +1095,7 @@ gmd(
 
       const meta = await MeshTech.groupMetadata(from);
       const participants = meta.participants;
-      const botJid = Gifted.user?.id?.split(":")[0] + "@s.whatsapp.net";
+      const botJid = MeshTech.user?.id?.split(":")[0] + "@s.whatsapp.net";
 
       const membersToRemove = participants
         .filter((p) => p.id !== botJid && p.id !== sender)
@@ -1597,7 +1597,7 @@ gmd(
             const cachedJid = getLidMapping(jid);
             if (cachedJid) {
               jid = cachedJid;
-            } else if (Gifted.getJidFromLid) {
+            } else if (MeshTech.getJidFromLid) {
               try {
                 const resolved = await MeshTech.getJidFromLid(jid);
                 if (resolved) jid = resolved;
@@ -1727,7 +1727,7 @@ gmd(
         statusPayload.text = q;
       }
 
-      await MeshTech.giftedStatus.sendGroupStatus(from, statusPayload);
+      await MeshTech.meshtechStatus.sendGroupStatus(from, statusPayload);
       await react("✅");
     } catch (error) {
       console.error("togroupstatus error:", error);

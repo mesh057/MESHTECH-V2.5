@@ -25,7 +25,7 @@ gmd({
     const images = groups.flatMap((group) => group.images || []).slice(0, 10);
     if (!images.length) return reply("No Bing results were returned.");
     const text = `🔎 *BING RESULTS FOR:* ${q.trim()}\n\n${images.map((url, index) => `${index + 1}. ${url.replace(/&amp;/g, "&")}`).join("\n")}`;
-    return Gifted.sendMessage(from, { text }, { quoted: mek });
+    return MeshTech.sendMessage(from, { text }, { quoted: mek });
   } catch (error) {
     console.error("[bing linked endpoint]", error.message);
     return reply("Bing search is temporarily unavailable.");
@@ -79,7 +79,7 @@ gmd({
     const time = data.time_details || {};
     const weather = data.weather_details || {};
     const text = `🌍 *${safeText(data.country)}*\n\n🏙️ City: ${safeText(data.city)}\n🕒 Timezone: ${safeText(data.timezone)}\n📅 Local time: ${safeText(time.times12 || time.readable_date_time)}\n🌦️ Weather: ${safeText(weather.weather)}\n🌡️ Temperature: ${safeText(weather.temperature)}\n💧 Humidity: ${safeText(weather.humidity)}\n💨 Wind: ${safeText(weather.wind_speed)}`;
-    return Gifted.sendMessage(from, { text }, { quoted: mek });
+    return MeshTech.sendMessage(from, { text }, { quoted: mek });
   } catch (error) {
     console.error("[nation linked endpoint]", error.message);
     return reply("Nation information is temporarily unavailable.");

@@ -59,9 +59,9 @@ const findBodyCommand = (body) => {
 const createHelpers = (MeshTech, ms, from) => {
     const reply = (text, options = {}) => {
         if (typeof text === 'string') {
-            Gifted.sendMessage(from, { text, ...options }, { quoted: ms });
+            MeshTech.sendMessage(from, { text, ...options }, { quoted: ms });
         } else {
-            Gifted.sendMessage(from, { ...text, ...options }, { quoted: ms });
+            MeshTech.sendMessage(from, { ...text, ...options }, { quoted: ms });
         }
     };
 

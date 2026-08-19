@@ -40,7 +40,7 @@ gmd({
     ]);
     const url = Math.random() < 0.5 ? cats?.[0]?.url : dogs?.message;
     if (!url) return safeReply(reply, "No animal image was returned.");
-    return Gifted.sendMessage(from, { image: { url }, caption: "🐾 *Random animal*" }, { quoted: mek });
+    return MeshTech.sendMessage(from, { image: { url }, caption: "🐾 *Random animal*" }, { quoted: mek });
   } catch (error) {
     console.error("[animal]", error.message);
     return safeReply(reply, "Animal image service is temporarily unavailable.");
@@ -58,7 +58,7 @@ gmd({
   try {
     const { data } = await axios.get("https://meme-api.com/gimme", REQUEST);
     if (!data?.url) return safeReply(reply, "No meme was returned.");
-    return Gifted.sendMessage(from, { image: { url: data.url }, caption: `😂 *${data.title || "Random meme"}*` }, { quoted: mek });
+    return MeshTech.sendMessage(from, { image: { url: data.url }, caption: `😂 *${data.title || "Random meme"}*` }, { quoted: mek });
   } catch (error) {
     console.error("[meme]", error.message);
     return safeReply(reply, "Meme service is temporarily unavailable.");
@@ -77,7 +77,7 @@ gmd({
     const { data } = await axios.get("https://zenquotes.io/api/random", REQUEST);
     const item = Array.isArray(data) ? data[0] : null;
     if (!item?.q) return safeReply(reply, "No quote was returned.");
-    return Gifted.sendMessage(from, { text: `💬 *${item.q}*\n\n— ${item.a || "Unknown"}` }, { quoted: mek });
+    return MeshTech.sendMessage(from, { text: `💬 *${item.q}*\n\n— ${item.a || "Unknown"}` }, { quoted: mek });
   } catch (error) {
     console.error("[quote]", error.message);
     return safeReply(reply, "Quote service is temporarily unavailable.");
@@ -98,7 +98,7 @@ gmd({
     if (!item) return safeReply(reply, "No trivia question was returned.");
     const answers = [item.correct_answer, ...(item.incorrect_answers || [])].sort(() => Math.random() - 0.5);
     const options = answers.map((answer, index) => `${String.fromCharCode(65 + index)}. ${decodeHtml(answer)}`).join("\n");
-    return Gifted.sendMessage(from, {
+    return MeshTech.sendMessage(from, {
       text: `🧠 *TRIVIA*\n\n${decodeHtml(item.question)}\n\n${options}\n\n✅ Answer: *${decodeHtml(item.correct_answer)}*`,
     }, { quoted: mek });
   } catch (error) {
@@ -124,7 +124,7 @@ gmd({
     });
     const translated = data?.responseData?.translatedText;
     if (!translated) return safeReply(reply, "No translation was returned.");
-    return Gifted.sendMessage(from, { text: `🌐 *Translation:*\n${translated}` }, { quoted: mek });
+    return MeshTech.sendMessage(from, { text: `🌐 *Translation:*\n${translated}` }, { quoted: mek });
   } catch (error) {
     console.error("[trt]", error.message);
     return safeReply(reply, "Translation service is temporarily unavailable.");
@@ -144,7 +144,7 @@ gmd({
     const { data } = await axios.get(`https://api.truthordarebot.xyz/v1/${type}`, REQUEST);
     const prompt = data?.question || data?.translations?.en || data?.text;
     if (!prompt) return safeReply(reply, "No challenge was returned.");
-    return Gifted.sendMessage(from, { text: `🎲 *${type.toUpperCase()}*\n\n${prompt}` }, { quoted: mek });
+    return MeshTech.sendMessage(from, { text: `🎲 *${type.toUpperCase()}*\n\n${prompt}` }, { quoted: mek });
   } catch (error) {
     console.error("[truthordare]", error.message);
     return safeReply(reply, "Truth or Dare service is temporarily unavailable.");
@@ -162,7 +162,7 @@ gmd({
   try {
     const { data } = await axios.get("https://riddles-api.vercel.app/random", REQUEST);
     if (!data?.riddle) return safeReply(reply, "No riddle was returned.");
-    return Gifted.sendMessage(from, { text: `🧩 *RIDDLE*\n\n${data.riddle}\n\n✅ Answer: *${data.answer || "Unknown"}*` }, { quoted: mek });
+    return MeshTech.sendMessage(from, { text: `🧩 *RIDDLE*\n\n${data.riddle}\n\n✅ Answer: *${data.answer || "Unknown"}*` }, { quoted: mek });
   } catch (error) {
     console.error("[riddle]", error.message);
     return safeReply(reply, "Riddle service is temporarily unavailable.");
@@ -181,7 +181,7 @@ gmd({
   if (!prompt) return reply("Use .dall followed by an image description.");
   const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=768&nologo=true&seed=${Math.floor(Math.random() * 999999)}`;
   try {
-    return Gifted.sendMessage(from, { image: { url }, caption: `🎨 *Generated image*\nPrompt: ${prompt}` }, { quoted: mek });
+    return MeshTech.sendMessage(from, { image: { url }, caption: `🎨 *Generated image*\nPrompt: ${prompt}` }, { quoted: mek });
   } catch (error) {
     console.error("[dall]", error.message);
     return safeReply(reply, "Image generation service is temporarily unavailable.");

@@ -41,7 +41,7 @@ gmd(
       }
 
       if (contentType.includes("image/")) {
-        return Gifted.sendMessage(
+        return MeshTech.sendMessage(
           from,
           { image: buffer, caption: q },
           { quoted: mek },
@@ -50,7 +50,7 @@ gmd(
 
       if (contentType.includes("video/")) {
         const formattedVideo = await formatVideo(buffer);
-        return Gifted.sendMessage(
+        return MeshTech.sendMessage(
           from,
           { video: formattedVideo, caption: q },
           { quoted: mek },
@@ -60,7 +60,7 @@ gmd(
       if (contentType.includes("audio/")) {
         try {
           const formattedAudio = await formatAudio(buffer);
-          return Gifted.sendMessage(
+          return MeshTech.sendMessage(
             from,
             {
               audio: formattedAudio,
@@ -70,7 +70,7 @@ gmd(
             { quoted: mek },
           );
         } catch {
-          return Gifted.sendMessage(
+          return MeshTech.sendMessage(
             from,
             {
               audio: buffer,
@@ -112,7 +112,7 @@ gmd(
         return reply(textContent);
       }
 
-      return Gifted.sendMessage(
+      return MeshTech.sendMessage(
         from,
         {
           document: buffer,

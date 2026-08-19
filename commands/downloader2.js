@@ -5,8 +5,8 @@ const {
         getMimeCategory,
         getMimeFromUrl,
     } = require("../meshtech"),
-    GIFTED_DLS = require("mesh-dls"),
-    giftedDls = new GIFTED_DLS(),
+    MESHTECH_DLS = require("mesh-dls"),
+    meshTechDls = new MESHTECH_DLS(),
     axios = require("axios"),
     { sendButtons } = require("mesh-btns");
 
@@ -805,7 +805,7 @@ gmd(
                             );
                     }
 
-                    const downloadResult = await giftedDls.ytmp4(q, quality);
+                    const downloadResult = await meshTechDls.ytmp4(q, quality);
                     const downloadUrl = downloadResult.result.download_url;
                     const videoBuffer = await gmdBuffer(downloadUrl);
 

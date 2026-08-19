@@ -3,7 +3,7 @@
   "version": "2.5.0",
   "description": "meshtech-md-v2.5, a Multi Device Whatsapp Bot built by Mesh Tech to Enhance Whatsapp Communication Experience",
   "logo": "https://files.catbox.moe/wfh6gr.jpg",
-  "keywords": ["meshtech-md-v2.5", "mesh-baileys", "gifted-btns", "gifted-api"],
+  "keywords": ["meshtech-md-v2.5", "mesh-baileys", "mesh-btns", "meshtech-api"],
   "success_url": "/",
   "stack": "heroku-22",
   "env": {

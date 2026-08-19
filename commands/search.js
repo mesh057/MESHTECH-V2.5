@@ -33,7 +33,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `https://yts.giftedtech.co.ke/?q=${encodeURIComponent(q)}`;
+      const apiUrl = `https://yts.meshtechtech.co.ke/?q=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 100000 });
       const results = res.data?.videos;
 
@@ -286,7 +286,7 @@ gmd(
       const results = res.data.results.slice(0, 5);
 
       const defaultImg =
-        "https://files.giftedtech.co.ke/image/ZAwgoogle-images-1548419288.jpg";
+        "https://files.meshtechtech.co.ke/image/ZAwgoogle-images-1548419288.jpg";
 
       const cards = await Promise.all(
         results.map(async (result) => ({

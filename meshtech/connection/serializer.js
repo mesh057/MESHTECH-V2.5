@@ -30,7 +30,7 @@ const convertLidToJid = (lid) => {
 const serializeMessage = async (ms, MeshTech, settings = {}) => {
     if (!ms?.message || !ms?.key) return null;
 
-    const botId = standardizeJid(Gifted.user?.id);
+    const botId = standardizeJid(MeshTech.user?.id);
     const type = getContentType(ms.message);
     
     const hasEntryPointContext = 
@@ -45,7 +45,7 @@ const serializeMessage = async (ms, MeshTech, settings = {}) => {
     const isGroup = from.endsWith('@g.us');
     
     let sendr = ms.key.fromMe 
-        ? (Gifted.user.id.split(':')[0] + '@s.whatsapp.net' || Gifted.user.id) 
+        ? (MeshTech.user.id.split(':')[0] + '@s.whatsapp.net' || MeshTech.user.id) 
         : (ms.key.senderPn || ms.key.participantPn || ms.key.participantAlt || ms.key.remoteJidAlt || ms.key.remoteJid || ms.key.participant);
 
     // Auto-map LID to PN if both are present in the message key
@@ -158,7 +158,7 @@ const serializeMessage = async (ms, MeshTech, settings = {}) => {
         command,
         args,
         q: args.join(' '),
-        pushName: ms.pushName || (ms.key.fromMe ? Gifted.user?.name : null) || 'MESHTECH MD BOT v2.5 User',
+        pushName: ms.pushName || (ms.key.fromMe ? MeshTech.user?.name : null) || 'MESHTECH MD BOT v2.5 User',
         quoted,
         repliedMessage,
         mentionedJid,

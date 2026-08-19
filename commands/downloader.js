@@ -6,8 +6,8 @@ const {
         getMimeCategory,
         getMimeFromUrl,
     } = require("../meshtech"),
-    GIFTED_DLS = require("mesh-dls"),
-    giftedDls = new GIFTED_DLS(),
+    MESHTECH_DLS = require("mesh-dls"),
+    meshTechDls = new MESHTECH_DLS(),
     axios = require("axios"),
     { sendButtons } = require("mesh-btns");
 

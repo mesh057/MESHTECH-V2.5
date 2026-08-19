@@ -4,13 +4,13 @@ const fs = require('fs').promises;
 const { sendButtons } = require('mesh-btns');
 
 gmd({
-    pattern: "giftedcdn",
+    pattern: "meshtechcdn",
     aliases: ["url1"],
     react: "⬆️",
     category: "uploader",
-    description: "Upload any file to GiftedCDN",
+    description: "Upload any file to MeshTechCDN",
 }, async (from, MeshTech, conText) => {
-    await handleUpload(from, MeshTech, conText, 'giftedcdn');
+    await handleUpload(from, MeshTech, conText, 'meshtechcdn');
 });
 
 gmd({
@@ -54,7 +54,7 @@ gmd({
 });
 
 async function handleUpload(from, MeshTech, conText, service) {
-    const { mek, reply, react, botFooter, botPrefix, quoted, getMediaBuffer, uploadToGiftedCdn, uploadToGithubCdn, uploadToPixhost, getFileContentType, uploadToImgBB, uploadToCatbox, pushName, newsletterUrl } = conText;
+    const { mek, reply, react, botFooter, botPrefix, quoted, getMediaBuffer, uploadToMeshTechCdn, uploadToGithubCdn, uploadToPixhost, getFileContentType, uploadToImgBB, uploadToCatbox, pushName, newsletterUrl } = conText;
 
     if (!quoted) {
         return reply(`⚠️ Please reply to/quote a media message.`);
@@ -88,8 +88,8 @@ async function handleUpload(from, MeshTech, conText, service) {
             mediaType = 'image';
         } 
         else if (quotedVideo) {
-            if (service !== 'catbox' && service !== 'giftedcdn' && service !== 'githubcdn') {
-                return reply(`❌ ${service} only supports images. Use ${botPrefix}catbox or ${botPrefix}giftedcdn or ${botPrefix}githubcdn  for videos and any other file type.`);
+            if (service !== 'catbox' && service !== 'meshtechcdn' && service !== 'githubcdn') {
+                return reply(`❌ ${service} only supports images. Use ${botPrefix}catbox or ${botPrefix}meshtechcdn or ${botPrefix}githubcdn  for videos and any other file type.`);
             }
             buffer = await getMediaBuffer(quotedVideo, "video");
             fileExt = '.mp4';
@@ -98,8 +98,8 @@ async function handleUpload(from, MeshTech, conText, service) {
             mediaType = 'video';
         } 
         else if (quotedAudio) {
-            if (service !== 'catbox' && service !== 'giftedcdn' && service !== 'githubcdn') {
-                return reply(`❌ ${service} only supports images. Use ${botPrefix}catbox or ${botPrefix}giftedcdn or ${botPrefix}githubcdn  for audios and any other file type.`);
+            if (service !== 'catbox' && service !== 'meshtechcdn' && service !== 'githubcdn') {
+                return reply(`❌ ${service} only supports images. Use ${botPrefix}catbox or ${botPrefix}meshtechcdn or ${botPrefix}githubcdn  for audios and any other file type.`);
             }
             buffer = await getMediaBuffer(quotedAudio, "audio");
             fileExt = '.mp3';
@@ -109,7 +109,7 @@ async function handleUpload(from, MeshTech, conText, service) {
         } 
         else if (quotedSticker) {
             if (service === 'pixhost') {
-                return reply(`❌ ${service} does not support sticker uploads. Use ${botPrefix}imgbb, ${botPrefix}catbox, ${botPrefix}giftedcdn or ${botPrefix}githubcdn instead.`);
+                return reply(`❌ ${service} does not support sticker uploads. Use ${botPrefix}imgbb, ${botPrefix}catbox, ${botPrefix}meshtechcdn or ${botPrefix}githubcdn instead.`);
             }
             buffer = await getMediaBuffer(quotedSticker, "sticker");
             fileExt = '.webp';
@@ -119,8 +119,8 @@ async function handleUpload(from, MeshTech, conText, service) {
             mediaType = 'sticker';
         } 
         else if (quotedDocument) {
-            if (service !== 'catbox' && service !== 'giftedcdn' && service !== 'githubcdn') {
-                return reply(`❌ ${service} only supports images. Use ${botPrefix}catbox or ${botPrefix}giftedcdn or ${botPrefix}githubcdn  for documents and any other file type.`);
+            if (service !== 'catbox' && service !== 'meshtechcdn' && service !== 'githubcdn') {
+                return reply(`❌ ${service} only supports images. Use ${botPrefix}catbox or ${botPrefix}meshtechcdn or ${botPrefix}githubcdn  for documents and any other file type.`);
             }
             buffer = await getMediaBuffer(quotedDocument, "document");
             fileExt = quotedDocument.fileName ? path.extname(quotedDocument.fileName).toLowerCase() : '.bin';
@@ -131,14 +131,14 @@ async function handleUpload(from, MeshTech, conText, service) {
             return reply(`❌ Unsupported message type.`);
         }
 
-        if (!isImage && service !== 'catbox' && service !== 'giftedcdn' && service !== 'githubcdn') {
-            return reply(`❌ ${service} only supports image files. Use ${botPrefix}catbox or ${botPrefix}giftedcdn or ${botPrefix}githubcdn for any other file types.`);
+        if (!isImage && service !== 'catbox' && service !== 'meshtechcdn' && service !== 'githubcdn') {
+            return reply(`❌ ${service} only supports image files. Use ${botPrefix}catbox or ${botPrefix}meshtechcdn or ${botPrefix}githubcdn for any other file types.`);
         }
 
         let uploadResult;
         switch (service) {
-            case 'giftedcdn':
-                uploadResult = await uploadToGiftedCdn(buffer, fileName);
+            case 'meshtechcdn':
+                uploadResult = await uploadToMeshTechCdn(buffer, fileName);
                 break;
             case 'catbox':
                 uploadResult = await uploadToCatbox(buffer, fileName);

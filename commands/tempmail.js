@@ -120,7 +120,7 @@ Use *.delmail* first to delete it, then generate a new one.
 
         try {
             const res = await axios.get(
-                `${MeshTechApi}/api/tempgen/v2/generate?apikey=gifted&mode=random`,
+                `${MeshTechApi}/api/tempgen/v2/generate?apikey=meshtech&mode=random`,
                 {
                     params: { apikey: MeshTechApiKey },
                     timeout: 30000,

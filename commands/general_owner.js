@@ -50,11 +50,11 @@ gmd(
         }
 
         try {
-            const giftedRepo = "mesh057/MESHTECH-V2.5";
+            const meshtechRepo = "mesh057/MESHTECH-V2.5";
             await reply("🔍 Checking for New Updates...");
 
             const { data: commitData } = await axios.get(
-                `https://api.github.com/repos/${giftedRepo}/commits/main`,
+                `https://api.github.com/repos/${meshtechRepo}/commits/main`,
             );
             const latestCommitHash = commitData.sha;
             const currentHash = await getCommitHash();
@@ -72,7 +72,7 @@ gmd(
 
             const zipPath = path.join(__dirname, "..", "update.zip");
             const { data: zipData } = await axios.get(
-                `https://github.com/${giftedRepo}/archive/main.zip`,
+                `https://github.com/${meshtechRepo}/archive/main.zip`,
                 { responseType: "arraybuffer" },
             );
             fs.writeFileSync(zipPath, zipData);

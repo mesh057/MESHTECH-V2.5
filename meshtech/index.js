@@ -7,10 +7,10 @@ const { SudoDB, getSudoNumbers, setSudo, delSudo } = require('./database/sudo');
 const { SettingsDB, initializeSettings, getSetting, setSetting, getAllSettings, resetSetting, resetAllSettings, DEFAULT_SETTINGS } = require('./database/settings');
 const { GroupSettingsDB, initializeGroupSettings, getGroupSetting, setGroupSetting, getAllGroupSettings, resetGroupSetting, GROUP_SETTING_DEFAULTS } = require('./database/groupSettings');
 const { createContext, createContext2 } = require('./gmdHelpers');
-const { getMediaBuffer, getFileContentType, bufferToStream, uploadToGiftedCdn, uploadToGithubCdn, uploadToPixhost, uploadToImgBB, uploadToCatbox } = require('./gmdFunctions3');
-const { logger, emojis, GiftedAutoReact, MeshTechApi, MeshTechApiKey, GiftedAntiLink, GiftedAntibad, GiftedAntiGroupMention, GiftedAutoBio, GiftedChatBot, GiftedPresence, GiftedAntiDelete, GiftedAnticall, GiftedAntiViewOnce, GiftedAntiEdit, antiStickerHandler } = require('./gmdFunctions2');
+const { getMediaBuffer, getFileContentType, bufferToStream, uploadToMeshTechCdn, uploadToGithubCdn, uploadToPixhost, uploadToImgBB, uploadToCatbox } = require('./gmdFunctions3');
+const { logger, emojis, MeshTechAutoReact, MeshTechApi, MeshTechApiKey, MeshTechAntiLink, MeshTechAntibad, MeshTechAntiGroupMention, MeshTechAutoBio, MeshTechChatBot, MeshTechPresence, MeshTechAntiDelete, MeshTechAnticall, MeshTechAntiViewOnce, MeshTechAntiEdit, antiStickerHandler } = require('./gmdFunctions2');
 const { handleGameMessage } = require('./gameHandler');
-const { toAudio, toVideo, toPtt, formatVideo, formatAudio, monospace, runtime, sleep, gmdFancy, GiftedUploader, stickerToImage, formatBytes, gmdBuffer, webp2mp4File, gmdJson, latestWaVersion, gmdRandom, isUrl, gmdStore, isNumber, loadSession, useSQLiteAuthState, verifyJidState, runFFmpeg, getVideoDuration, gmdSticker, copyFolderSync, gitRepoRegex, MAX_MEDIA_SIZE, getFileSize, getMimeCategory, getMimeFromUrl, MIME_EXTENSIONS, getExtensionFromMime, isTextContent } = require('./gmdFunctions');
+const { toAudio, toVideo, toPtt, formatVideo, formatAudio, monospace, runtime, sleep, gmdFancy, MeshTechUploader, stickerToImage, formatBytes, gmdBuffer, webp2mp4File, gmdJson, latestWaVersion, gmdRandom, isUrl, gmdStore, isNumber, loadSession, useSQLiteAuthState, verifyJidState, runFFmpeg, getVideoDuration, gmdSticker, copyFolderSync, gitRepoRegex, MAX_MEDIA_SIZE, getFileSize, getMimeCategory, getMimeFromUrl, MIME_EXTENSIONS, getExtensionFromMime, isTextContent } = require('./gmdFunctions');
 
 const { 
     groupCache, getGroupMetadata, updateGroupCache, deleteGroupCache, clearGroupCache, 
@@ -31,16 +31,16 @@ module.exports = {
     evt, gmd, config, emojis, commands, syncDatabase,
     toAudio, toVideo, toPtt, formatVideo, formatAudio,
     gitRepoRegex, MAX_MEDIA_SIZE, getFileSize, getMimeCategory, getMimeFromUrl, MIME_EXTENSIONS, getExtensionFromMime, isTextContent,
-    uploadToGiftedCdn, uploadToGithubCdn, 
+    uploadToMeshTechCdn, uploadToGithubCdn, 
     UpdateDB, setCommitHash, getCommitHash, 
-    runtime, sleep, gmdFancy, GiftedUploader, stickerToImage, monospace, formatBytes, 
+    runtime, sleep, gmdFancy, MeshTechUploader, stickerToImage, monospace, formatBytes, 
     createContext, createContext2, 
     SudoDB, getSudoNumbers, setSudo, delSudo, 
     SettingsDB, initializeSettings, getSetting, setSetting, getAllSettings, resetSetting, resetAllSettings, DEFAULT_SETTINGS,
     GroupSettingsDB, initializeGroupSettings, getGroupSetting, setGroupSetting, getAllGroupSettings, resetGroupSetting, GROUP_SETTING_DEFAULTS, 
     MeshTechApi, MeshTechApiKey, 
     getMediaBuffer, getFileContentType, bufferToStream, uploadToPixhost, uploadToImgBB, uploadToCatbox, 
-    GiftedAutoReact, GiftedChatBot, GiftedAntiLink, GiftedAntibad, GiftedAntiGroupMention, GiftedAntiDelete, GiftedAnticall, GiftedPresence, GiftedAutoBio, GiftedAntiViewOnce, GiftedAntiEdit, antiStickerHandler, handleGameMessage, 
+    MeshTechAutoReact, MeshTechChatBot, MeshTechAntiLink, MeshTechAntibad, MeshTechAntiGroupMention, MeshTechAntiDelete, MeshTechAnticall, MeshTechPresence, MeshTechAutoBio, MeshTechAntiViewOnce, MeshTechAntiEdit, antiStickerHandler, handleGameMessage, 
     logger, gmdBuffer, webp2mp4File, gmdJson, latestWaVersion, gmdRandom, isUrl, gmdStore, isNumber, loadSession, useSQLiteAuthState, verifyJidState,
     standardizeJid, serializeMessage, downloadMediaMessage,
     loadPlugins, findCommand, findBodyCommand, createHelpers, getGroupInfo, buildSuperUsers,
