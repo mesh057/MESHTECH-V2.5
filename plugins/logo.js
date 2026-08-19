@@ -310,39 +310,13 @@ async function createLogoCommand(config) {
       try {
         await react("⏳");
 
-        let imageBuffer = null;
-        const endpoints = [
-          `https://api.siputzx.my.id/api/m/ephoto360?url=${encodeURIComponent(ephotoUrl)}&text1=${encodeURIComponent(q)}`,
-          `https://api.agatz.xyz/api/ephoto?url=${encodeURIComponent(ephotoUrl)}&text=${encodeURIComponent(q)}`
-        ];
-
-        for (const apiUrl of endpoints) {
-          try {
-            const res = await axios.get(apiUrl, { 
-              responseType: 'arraybuffer',
-              timeout: 30000,
-              headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-              }
-            });
-            if (res.data && res.data.length > 500) {
-              imageBuffer = Buffer.from(res.data, 'binary');
-              break;
-            }
-          } catch (err) {
-            continue;
-          }
-        }
-
-        if (!imageBuffer) {
-          await react("❌");
-          return reply("Failed to generate logo from all available providers. Please try another logo style.");
-        }
+        const logoPrompt = `High quality 3D graphic design, ${config.description}, featuring the exact prominent text "${q}", professional typography, 8k resolution, cinematic studio lighting`;
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(logoPrompt)}?width=768&height=768&nologo=true&seed=${Math.floor(Math.random() * 999999)}`;
 
         await MeshTech.sendMessage(
           from,
           {
-            image: imageBuffer,
+            image: { url: imageUrl },
             caption: `✨ *${config.description}*\n\n📝 *Text:* ${q}\n\n> ${botCaption}`,
           },
           { quoted: mek },
