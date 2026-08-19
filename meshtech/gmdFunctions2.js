@@ -717,11 +717,16 @@ function MeshTechChatBot(MeshTech, createContext, createContext2, googleTTS) {
             if (text.length < 2) return;
 
             const aiResponse = await getAIResponse(text);
+            const botName = settings.BOT_NAME || 'MESH-TECH MD';
 
-            // 📩 TEXT (Clean direct reply without ad cards)
+            // 📩 TEXT (Professional branded reply)
             if (chatBot === "true") {
                 await MeshTech.sendMessage(jid, {
-                    text: String(aiResponse)
+                    text: String(aiResponse),
+                    ...(await createContext(jid, {
+                        title: `${botName} CHAT BOT`,
+                        body: 'Powered by MESH-TECH MD'
+                    }))
                 }, { quoted: msg });
             }
 
