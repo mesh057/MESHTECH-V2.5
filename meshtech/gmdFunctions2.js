@@ -655,10 +655,10 @@ async function getAIResponse(query) {
     return "Kenya gained independence from the United Kingdom on December 12, 1963.";
 }
 
-const processedMessages = new Set();
-const userCooldown = new Map();
-
 function MeshTechChatBot(MeshTech, createContext, createContext2, googleTTS) {
+    const processedMessages = new Set();
+    const userCooldown = new Map();
+
     MeshTech.ev.on("messages.upsert", async (m) => {
         if (m.type !== "notify") return;
 
@@ -712,18 +712,12 @@ function MeshTechChatBot(MeshTech, createContext, createContext2, googleTTS) {
             // 🚫 ignore short spam
             if (text.length < 2) return;
 
-            const botName = settings.BOT_NAME || 'MESH-TECH MD';
-
             const aiResponse = await getAIResponse(text);
 
-            // 📩 TEXT
+            // 📩 TEXT (Clean direct reply without ad cards)
             if (chatBot === "true") {
                 await MeshTech.sendMessage(jid, {
-                    text: String(aiResponse),
-                    ...(await createContext(jid, {
-                        title: `${botName} CHAT BOT`,
-                        body: 'Powered by MESH-TECH MD'
-                    }))
+                    text: String(aiResponse)
                 }, { quoted: msg });
             }
 
