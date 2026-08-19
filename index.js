@@ -678,15 +678,20 @@ function setupAntiEdit(MeshTech) {
 }
 
 function setupStatusHandlers(MeshTech) {
-    MeshTech.ev.on("messages.upsert", async (mek) => {
+    MeshTech.ev.on("messages.upsert", async (upsert) => {
         try {
-            mek = mek.messages[0];
+            const type = upsert.type;
+            // Ignore history/append status storms on startup to prevent SIGTERM crashes
+            if (type === "append" || type === "other") return;
+
+            const mek = upsert.messages?.[0];
             if (!mek || !mek.message) return;
 
-            mek.message =
+            let actualMsg =
                 getContentType(mek.message) === "ephemeralMessage"
                     ? mek.message.ephemeralMessage.message
                     : mek.message;
+            mek.message = actualMsg;
 
             if (mek.key?.remoteJid !== "status@broadcast") return;
 
