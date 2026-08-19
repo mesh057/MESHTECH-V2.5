@@ -72,7 +72,7 @@ const setupConnectionHandler = (
                 console.warn("⚠️ Connection opened before WhatsApp authentication; waiting for an authenticated socket.");
                 return;
             }
-            console.log("✅ Connection Instance is Online");
+            console.log("✅ MESH-TECH MD: Connection Instance is Online & Fully Synchronized!");
             reconnectAttempts = 0;
 
             if (callbacks.onOpen) {

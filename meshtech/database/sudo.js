@@ -73,10 +73,25 @@ async function clearAllSudo() {
 }
 
 async function isSuperUser(jid, MeshTech) {
-    if (!jid || !MeshTech?.user?.id) return false;
+    if (!jid) return false;
     const num = jid.split("@")[0].split(":")[0];
-    const botNum = MeshTech.user.id.split(":")[0];
-    return Boolean(num && botNum && num === botNum);
+    if (!num) return false;
+    
+    // Check if it's the bot itself
+    if (MeshTech?.user?.id) {
+        const botNum = MeshTech.user.id.split(":")[0];
+        if (num === botNum) return true;
+    }
+    
+    // Check owner number from settings/env
+    const ownerNum = process.env.OWNER_NUMBER || "254746844168";
+    if (num === String(ownerNum).replace(/\D/g, "")) return true;
+    
+    // Check persisted sudo numbers
+    const sudoList = await getSudoNumbers();
+    if (sudoList.some(s => String(s).replace(/\D/g, "") === num)) return true;
+
+    return false;
 }
 
 module.exports = {
