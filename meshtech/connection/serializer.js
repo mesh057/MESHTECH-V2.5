@@ -27,18 +27,33 @@ const convertLidToJid = (lid) => {
     return lid;
 };
 
+const unwrapMessage = (msg) => {
+    if (!msg) return null;
+    let m = msg;
+    while (m) {
+        if (m.ephemeralMessage) m = m.ephemeralMessage.message;
+        else if (m.viewOnceMessage) m = m.viewOnceMessage.message;
+        else if (m.viewOnceMessageV2) m = m.viewOnceMessageV2.message;
+        else if (m.documentWithCaptionMessage) m = m.documentWithCaptionMessage.message;
+        else if (m.viewOnceMessageV2Extension) m = m.viewOnceMessageV2Extension.message;
+        else break;
+    }
+    return m;
+};
+
 const serializeMessage = async (ms, MeshTech, settings = {}) => {
     if (!ms?.message || !ms?.key) return null;
 
     const botId = standardizeJid(MeshTech.user?.id);
-    const type = getContentType(ms.message);
+    const actualMessage = unwrapMessage(ms.message) || ms.message;
+    const type = getContentType(actualMessage);
     
     const hasEntryPointContext = 
-        ms.message?.extendedTextMessage?.contextInfo?.entryPointConversionApp === 'whatsapp' ||
-        ms.message?.imageMessage?.contextInfo?.entryPointConversionApp === 'whatsapp' ||
-        ms.message?.videoMessage?.contextInfo?.entryPointConversionApp === 'whatsapp' ||
-        ms.message?.documentMessage?.contextInfo?.entryPointConversionApp === 'whatsapp' ||
-        ms.message?.audioMessage?.contextInfo?.entryPointConversionApp === 'whatsapp';
+        actualMessage?.extendedTextMessage?.contextInfo?.entryPointConversionApp === 'whatsapp' ||
+        actualMessage?.imageMessage?.contextInfo?.entryPointConversionApp === 'whatsapp' ||
+        actualMessage?.videoMessage?.contextInfo?.entryPointConversionApp === 'whatsapp' ||
+        actualMessage?.documentMessage?.contextInfo?.entryPointConversionApp === 'whatsapp' ||
+        actualMessage?.audioMessage?.contextInfo?.entryPointConversionApp === 'whatsapp';
 
     const isMessageYourself = hasEntryPointContext && ms.key.remoteJid.endsWith('@lid') && ms.key.fromMe;
     const from = isMessageYourself ? botId : standardizeJid(ms.key.remoteJid);
@@ -62,10 +77,10 @@ const serializeMessage = async (ms, MeshTech, settings = {}) => {
     let isButtonResponse = false;
     let buttonId = null;
     
-    if (ms.message?.interactiveResponseMessage) {
+    if (actualMessage?.interactiveResponseMessage) {
         isButtonResponse = true;
         try {
-            const paramsJson = ms.message.interactiveResponseMessage.nativeFlowResponseMessage?.paramsJson;
+            const paramsJson = actualMessage.interactiveResponseMessage.nativeFlowResponseMessage?.paramsJson;
             if (paramsJson) {
                 buttonId = JSON.parse(paramsJson)?.id || null;
             }
@@ -73,29 +88,29 @@ const serializeMessage = async (ms, MeshTech, settings = {}) => {
             buttonId = null;
         }
         if (!buttonId) {
-            buttonId = ms.message.interactiveResponseMessage.buttonId || null;
+            buttonId = actualMessage.interactiveResponseMessage.buttonId || null;
         }
-        body = buttonId || ms.message.interactiveResponseMessage?.body?.text || '';
-    } else if (ms.message?.buttonsResponseMessage?.selectedButtonId) {
+        body = buttonId || actualMessage.interactiveResponseMessage?.body?.text || '';
+    } else if (actualMessage?.buttonsResponseMessage?.selectedButtonId) {
         isButtonResponse = true;
-        buttonId = ms.message.buttonsResponseMessage.selectedButtonId;
+        buttonId = actualMessage.buttonsResponseMessage.selectedButtonId;
         body = buttonId;
-    } else if (ms.message?.listResponseMessage?.singleSelectReply?.selectedRowId) {
+    } else if (actualMessage?.listResponseMessage?.singleSelectReply?.selectedRowId) {
         isButtonResponse = true;
-        buttonId = ms.message.listResponseMessage.singleSelectReply.selectedRowId;
+        buttonId = actualMessage.listResponseMessage.singleSelectReply.selectedRowId;
         body = buttonId;
-    } else if (ms.message?.templateButtonReplyMessage?.selectedId) {
+    } else if (actualMessage?.templateButtonReplyMessage?.selectedId) {
         isButtonResponse = true;
-        buttonId = ms.message.templateButtonReplyMessage.selectedId;
+        buttonId = actualMessage.templateButtonReplyMessage.selectedId;
         body = buttonId;
     } else if (type === 'conversation') {
-        body = ms.message.conversation;
+        body = actualMessage.conversation;
     } else if (type === 'extendedTextMessage') {
-        body = ms.message.extendedTextMessage.text;
-    } else if (type === 'imageMessage' && ms.message.imageMessage.caption) {
-        body = ms.message.imageMessage.caption;
-    } else if (type === 'videoMessage' && ms.message.videoMessage.caption) {
-        body = ms.message.videoMessage.caption;
+        body = actualMessage.extendedTextMessage?.text || '';
+    } else if (type === 'imageMessage' && actualMessage.imageMessage?.caption) {
+        body = actualMessage.imageMessage.caption;
+    } else if (type === 'videoMessage' && actualMessage.videoMessage?.caption) {
+        body = actualMessage.videoMessage.caption;
     }
 
     const botPrefix = settings.PREFIX || '.';
@@ -103,23 +118,23 @@ const serializeMessage = async (ms, MeshTech, settings = {}) => {
     const command = isCommand ? body.slice(botPrefix.length).trim().split(' ').shift().toLowerCase() : '';
     const args = typeof body === 'string' ? body.trim().split(/\s+/).slice(1) : [];
 
-    const repliedMessage = ms.message?.extendedTextMessage?.contextInfo?.quotedMessage || null;
+    const repliedMessage = actualMessage?.extendedTextMessage?.contextInfo?.quotedMessage || null;
     const quoted = type == 'extendedTextMessage' && 
-        ms.message.extendedTextMessage.contextInfo != null 
-        ? ms.message.extendedTextMessage.contextInfo.quotedMessage || [] 
+        actualMessage?.extendedTextMessage?.contextInfo != null 
+        ? actualMessage.extendedTextMessage.contextInfo.quotedMessage || [] 
         : [];
     
-    const mentionedJid = (ms.message?.extendedTextMessage?.contextInfo?.mentionedJid || []).map(standardizeJid);
-    const tagged = ms.mtype === 'extendedTextMessage' && ms.message.extendedTextMessage.contextInfo != null
-        ? ms.message.extendedTextMessage.contextInfo.mentionedJid
+    const mentionedJid = (actualMessage?.extendedTextMessage?.contextInfo?.mentionedJid || []).map(standardizeJid);
+    const tagged = ms.mtype === 'extendedTextMessage' && actualMessage?.extendedTextMessage?.contextInfo != null
+        ? actualMessage.extendedTextMessage.contextInfo.mentionedJid
         : [];
     
-    const contextInfo = ms.message?.extendedTextMessage?.contextInfo || 
-        ms.message?.imageMessage?.contextInfo ||
-        ms.message?.videoMessage?.contextInfo ||
-        ms.message?.audioMessage?.contextInfo ||
-        ms.message?.documentMessage?.contextInfo ||
-        ms.message?.stickerMessage?.contextInfo || null;
+    const contextInfo = actualMessage?.extendedTextMessage?.contextInfo || 
+        actualMessage?.imageMessage?.contextInfo ||
+        actualMessage?.videoMessage?.contextInfo ||
+        actualMessage?.audioMessage?.contextInfo ||
+        actualMessage?.documentMessage?.contextInfo ||
+        actualMessage?.stickerMessage?.contextInfo || null;
     
     const quotedMsg = contextInfo?.quotedMessage || null;
     const rawQuotedUser = contextInfo?.participant || contextInfo?.remoteJid;

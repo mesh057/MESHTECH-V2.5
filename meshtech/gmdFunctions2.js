@@ -717,13 +717,26 @@ function MeshTechChatBot(MeshTech, createContext, createContext2, googleTTS) {
             if (chatBotMode === 'groups' && !isGroup) return;
             if (chatBotMode === 'inbox' && isGroup) return;
 
-            const mmsg = msg.message;
+            const unwrapMsg = (msgObj) => {
+                let cur = msgObj;
+                while (cur) {
+                    if (cur.ephemeralMessage) cur = cur.ephemeralMessage.message;
+                    else if (cur.viewOnceMessage) cur = cur.viewOnceMessage.message;
+                    else if (cur.viewOnceMessageV2) cur = cur.viewOnceMessageV2.message;
+                    else if (cur.documentWithCaptionMessage) cur = cur.documentWithCaptionMessage.message;
+                    else if (cur.viewOnceMessageV2Extension) cur = cur.viewOnceMessageV2Extension.message;
+                    else break;
+                }
+                return cur;
+            };
+
+            const actualMsg = unwrapMsg(msg.message) || msg.message;
 
             let text =
-                mmsg.conversation ||
-                mmsg.extendedTextMessage?.text ||
-                mmsg.imageMessage?.caption ||
-                mmsg.videoMessage?.caption ||
+                actualMsg.conversation ||
+                actualMsg.extendedTextMessage?.text ||
+                actualMsg.imageMessage?.caption ||
+                actualMsg.videoMessage?.caption ||
                 '';
 
             if (!text || typeof text !== 'string') return;
