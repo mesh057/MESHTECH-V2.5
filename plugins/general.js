@@ -61,23 +61,23 @@ const MENU_CATEGORY_ORDER = [
 ];
 
 const MENU_CATEGORY_META = {
-  ai: { label: "AI mEnu", emoji: "🧠" },
-  converter: { label: "ConvErTer mEnu", emoji: "💐" },
-  cpanel: { label: "CpAnEL mEnu", emoji: "💐" },
-  downloader: { label: "DownLoADer mEnu", emoji: "💐" },
-  game: { label: "GAmE mEnu", emoji: "🎮" },
-  general: { label: "GEnErAL mEnu", emoji: "✨" },
-  group: { label: "Group mEnu", emoji: "👥" },
-  logo: { label: "LoGo mEnu", emoji: "🎨" },
-  notes: { label: "notEs mEnu", emoji: "💐" },
-  owner: { label: "ownEr mEnu", emoji: "🐦‍🔥" },
-  religion: { label: "rELIGIon mEnu", emoji: "💐" },
-  search: { label: "sEArCH mEnu", emoji: "💐" },
-  sports: { label: "sports mEnu", emoji: "💐" },
-  tempmail: { label: "tEmPmAIL mEnu", emoji: "💐" },
-  tools: { label: "tooLs mEnu", emoji: "🛠️" },
-  uploader: { label: "upLOADEr mEnu", emoji: "💐" },
-  utility: { label: "utILity mEnu", emoji: "🔧" },
+  ai: { label: "AI Menu", emoji: "🧠" },
+  converter: { label: "Converter Menu", emoji: "💐" },
+  cpanel: { label: "CPanel Menu", emoji: "💐" },
+  downloader: { label: "Downloader Menu", emoji: "💐" },
+  game: { label: "Game Menu", emoji: "🎮" },
+  general: { label: "General Menu", emoji: "✨" },
+  group: { label: "Group Menu", emoji: "👥" },
+  logo: { label: "Logo Menu", emoji: "🎨" },
+  notes: { label: "Notes Menu", emoji: "💐" },
+  owner: { label: "Owner Menu", emoji: "🐦‍🔥" },
+  religion: { label: "Religion Menu", emoji: "💐" },
+  search: { label: "Search Menu", emoji: "💐" },
+  sports: { label: "Sports Menu", emoji: "💐" },
+  tempmail: { label: "Tempmail Menu", emoji: "💐" },
+  tools: { label: "Tools Menu", emoji: "🛠️" },
+  uploader: { label: "Uploader Menu", emoji: "💐" },
+  utility: { label: "Utility Menu", emoji: "🔧" },
 };
 
 function menuCategoryKey(value) {
@@ -105,7 +105,7 @@ gmd(
       return reply("ℹ️ The owner has not configured a group invite yet.");
     }
     await MeshTech.sendMessage(from, {
-      text: `🔗 *${botName || "MESH TECH MD"} GROUP INVITE*\n\nYou requested to join the owner’s group. Tap the link below to join voluntarily:\n\n${inviteLink}\n\n> *${botFooter || "Please join only if you agree."}*`,
+      text: `🔗 *${botName || "MESH TECH MD"}* GROUP INVITE\n\nYou requested to join the owner’s group. Tap the link below to join voluntarily:\n\n${inviteLink}\n\n> *${botFooter || "Please join only if you agree."}*`,
     });
     await react("✅");
   },
@@ -384,40 +384,65 @@ gmd(
         (command) => command.pattern && !command.dontAddCommandList,
       ).length;
 
-	      let list = `╭━━━〔 ${toBold("MESH TECH MD V2.5")} 〕━━━┈⊷
+		      let list = `╭━━━〔 ${toBold("MESH TECH MD V2.5")} 〕━━━┈⊷
 ┃ *𝑴𝒐𝒅𝒆:*  ${monospace(botMode)}
 ┃ *𝑷𝒓𝒆𝒇𝒊𝒙:*  [ ${monospace(botPrefix)} ]
 ┃ *𝑼𝒔𝒆𝒓:*  ${monospace(pushName)}
 ┃ *𝑷𝒍𝒖𝒈𝒊𝒏𝒔:*  ${monospace(totalCommands.toString())}
 ┃ *𝑽𝒆𝒓𝒔𝒊𝒐𝒏:*  ${monospace(botVersion)}
 ┃ *𝑼𝒑𝒕𝒊𝒎𝒆:*  ${monospace(uptime)}
-┃ *𝑻𝒊𝒎𝒆 𝑵𝒐𝒘:*  ${monospace(time)}
-┃ *𝑫𝒂𝒕𝒆 𝑻𝒐𝒅𝒂𝒚:*  ${monospace(date)}
-┃ *𝑻𝒊𝒎𝒆.𝒁𝒐𝒏𝒆:*  ${monospace(timeZone)}
-┃ *𝑺𝒆𝒓𝒗𝒆𝒓 𝑹𝒂𝒎:*  ${monospace(ram)}
-╰━━━━━━━━━━━━━━━━━━━━━━━━━━┈⊷\n${readmore}\n`;
+┃ *𝑻𝒊𝒎𝒆:*  ${monospace(time)}
+┃ *𝑫𝒂𝒕𝒆:*  ${monospace(date)}
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━┈⊷\n\n${readmore}\n`;
 
-	      commands.forEach((gmd, index) => {
-	        if (gmd.pattern && gmd.description) {
-	          list += `║ ${String(index + 1).padStart(3, "0")} ⟿ ୧⍤⃝${commandEmoji(gmd)} ${toBold(`${botPrefix}${gmd.pattern}`)} ୧⍤⃝${commandEmoji(gmd)} — ${gmd.description}\n`;
-	        }
-	      });
+      const categorized = {};
+      for (const category of MENU_CATEGORY_ORDER) {
+        categorized[category] = [];
+      }
 
-	      const meshTechMess = {
-	        image: { url: MESHTECH_LOGO_URL },
-	        caption: list.trim(),
-        contextInfo: {
-          mentionedJid: [sender],
-          forwardingScore: 5,
-          isForwarded: true,
-          forwardedNewsletterMessageInfo: {
-            newsletterJid: newsletterJid,
-            newsletterName: botName,
-            serverMessageId: 0,
+      for (const command of commands) {
+        if (!command.pattern || command.dontAddCommandList) continue;
+        const category = menuCategoryKey(command.category);
+        if (categorized[category]) {
+          categorized[category].push(command);
+        } else {
+          categorized.utility.push(command);
+        }
+      }
+
+      for (const category of MENU_CATEGORY_ORDER) {
+        const meta = menuCategoryMeta(category);
+        const categoryCommands = categorized[category].sort((a, b) => a.pattern.localeCompare(b.pattern));
+        if (categoryCommands.length > 0) {
+          list += `╔═❖•⊰ ୧⍤⃝${meta.emoji} ${toBold(meta.label)} ⊱•❖═╗\n`;
+          categoryCommands.forEach((command, index) => {
+            const prefix = command.on === "body" ? "" : botPrefix;
+            list += `║${String(index + 1).padStart(2, "0")} ⟿ ୧⍤⃝${commandEmoji(command)} ${toBold(`${prefix}${command.pattern}`)} ୧⍤⃝${commandEmoji(command)}\n`;
+          });
+          list += `╚═══════════════════╝\n\n`;
+        }
+      }
+
+      list += `> *${botFooter}*`;
+
+      await MeshTech.sendMessage(
+        from,
+        {
+          image: { url: botPic },
+          caption: list,
+          contextInfo: {
+            mentionedJid: [sender],
+            forwardingScore: 5,
+            isForwarded: true,
+            forwardedNewsletterMessageInfo: {
+              newsletterJid: newsletterJid,
+              newsletterName: botName,
+              serverMessageId: 143,
+            },
           },
         },
-      };
-      await MeshTech.sendMessage(from, meshTechMess, { quoted: mek });
+        { quoted: mek },
+      );
       await react("✅");
     } catch (e) {
       console.error(e);
@@ -429,10 +454,10 @@ gmd(
 gmd(
   {
     pattern: "menu",
-    aliases: ["men", "allmenu", "menus", "mainmenu", "mainmens"],
-    react: "🪀",
+    aliases: ["help", "h", "m"],
+    description: "Show command categories and help menu",
+    react: "📂",
     category: "general",
-    description: "Fetch bot main menu",
   },
   async (from, MeshTech, conText) => {
     const {
@@ -447,7 +472,8 @@ gmd(
       botFooter,
       timeZone,
       botPrefix,
-      newsletterJid,
+      ownerName,
+      ownerNumber,
       reply,
     } = conText;
     try {
@@ -462,43 +488,30 @@ gmd(
       }
 
       const now = new Date();
-      const date = new Intl.DateTimeFormat("en-GB", {
-        timeZone: timeZone,
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }).format(now);
-
-      const time = new Intl.DateTimeFormat("en-GB", {
-        timeZone: timeZone,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true,
-      }).format(now);
-
-      const uptime = formatUptime(process.uptime());
       const hour = Number(new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone }).format(now));
       const greeting = hour >= 5 && hour < 12 ? "🌅 Good Morning" : hour >= 12 && hour < 17 ? "☀️ Good Afternoon" : hour >= 17 && hour < 21 ? "🌆 Good Evening" : "🌙 Good Night";
-      const configuredOwnerName = String((await getSetting("OWNER_NAME")) || "").trim();
-      const ownerName = configuredOwnerName && configuredOwnerName.toLowerCase() !== "mesh tech" ? configuredOwnerName : "MESHACK N";
-      const ownerNumber = String((await getSetting("OWNER_NUMBER")) || MeshTech?.user?.id?.split(":")?.[0] || "254746844168").replace(/\D/g, "") || "254746844168";
+      const date = new Intl.DateTimeFormat("en-GB", { timeZone, day: "2-digit", month: "2-digit", year: "numeric" }).format(now);
+      const time = new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }).format(now);
+      const uptime = formatUptime(process.uptime());
+      const totalCommands = commands.filter((command) => command.pattern && !command.dontAddCommandList).length;
       const activeUsers = getActiveUserCount();
-      const connectedBots = MeshTech?.user?.id ? "1 Live" : "0 Offline";
+      const connectedBots = MeshTech?.user?.id ? "1 Active" : "0 Inactive";
       const deviceName = process.env.DEVICE_NAME || "ANDROID-CORE";
       const liveRam = `${formatBytes(process.memoryUsage().rss)}/${formatBytes(totalMemoryBytes)}`;
-      const regularCmds = commands.filter((c) => c.pattern && !c.on && !c.dontAddCommandList);
-      const bodyCmds = commands.filter((c) => c.pattern && c.on === "body" && !c.dontAddCommandList);
-      const totalCommands = regularCmds.length + bodyCmds.length;
 
-      const categorized = Object.fromEntries(MENU_CATEGORY_ORDER.map((category) => [category, []]));
+      const categorized = {};
+      for (const category of MENU_CATEGORY_ORDER) {
+        categorized[category] = [];
+      }
+
       for (const command of commands) {
         if (!command.pattern || command.dontAddCommandList) continue;
         const category = menuCategoryKey(command.category);
-        categorized[category].push({
-          pattern: command.pattern,
-          isBody: command.on === "body",
-        });
+        if (categorized[category]) {
+          categorized[category].push(command);
+        } else {
+          categorized.utility.push(command);
+        }
       }
 
       for (const category of MENU_CATEGORY_ORDER) {
@@ -668,23 +681,6 @@ gmd(
             },
           ],
         });
-
-        /* await MeshTech.sendMessage(
-        from,
-        {
-          text: formattedMessage,
-          contextInfo: {
-            forwardingScore: 5,
-            isForwarded: true,
-            forwardedNewsletterMessageInfo: {
-              newsletterJid: newsletterJid,
-              newsletterName: botName,
-              serverMessageId: 143
-            },
-          },
-        },
-        { quoted: mek }
-      );*/
         await react("✅");
       }
     } catch (error) {
@@ -720,34 +716,30 @@ gmd(
       const connection = MeshTech?.user?.id ? "1 Live" : "0 Offline";
       const number = String(ownerNumber || MeshTech?.user?.id?.split(":")?.[0] || "254746844168").replace(/\D/g, "") || "254746844168";
       const memory = `${formatBytes(process.memoryUsage().rss)}/${formatBytes(totalMemoryBytes)}`;
-      const text = `╔══════════════════════╗
-      👾 *${botName || "MESH-TECH MD"}* 👾
-╚══════════════════════╝
+      
+      const text = `╭━━━━━━━━━━━━━━━❍
+│ 🌟 *${botName || "MESH-TECH MD"}*
+│━━━━━━━━━━━━━━━❍
+│
+│ 👋 *${greeting}*
+│ 🤖 *Status:* System Online & Stable
+│
+│━━━━━━━━━━━━━━━❍
+│ 👤 *Owner:* ${ownerName || "MESHACK N"}
+│ 📞 *Number:* ${number}
+│ ⚙️ *Version:* ${botVersion || "V2.5"}
+│ 🔥 *Mode:* ${String(botMode || "PUBLIC").toUpperCase()} | FULL POWER
+│ ⏳ *Uptime:* ${days}d ${hours}h ${minutes}m ${seconds}s
+│ 📅 *Date:* ${formattedDate}
+│ 🕒 *Time:* ${formattedTime}
+│ 📌 *Commands:* ${totalCommands} Loaded
+│ 👥 *Users:* ${activeUsers} Active
+│ 🤖 *Bots:* ${connection}
+│ 🧠 *RAM:* ${memory}
+│━━━━━━━━━━━━━━━❍
+│ 🚀 *Ready to serve you!*
+╰━━━━━━━━━━━━━━━⬣`;
 
-😈 *I'M ALIVE MATE!* 😡
-
-☠️ *WE ARE LEGION*
-☠️ *WE DO NOT FORGIVE*
-☠️ *WE DO NOT FORGET*
-🔥 *EXPECT US ALWAYS* 🔥
-
-━━━━━━━━━━━━━━━━━━━━━━━
-┃ ${greeting}
-┃ 👑 *Owner:* ${ownerName || "MESHACK N"}
-┃ 📞 *Number:* ${number}
-┃ ⚙️ *Version:* ${botVersion || "V2.5"}
-┃ 🔥 *Mode:* ${String(botMode || "PUBLIC").toUpperCase()} | FULL POWER
-┃ ⏳ *Uptime:* ${days}d ${hours}h ${minutes}m ${seconds}s
-┃ 📅 *Date:* ${formattedDate}
-┃ 🕒 *Time:* ${formattedTime}
-┃ 📌 *Commands:* ${totalCommands} Loaded
-┃ 👥 *Users:* ${activeUsers} Active (real-time)
-┃ 🤖 *Bots Connected:* ${connection}
-┃ 📱 *Device:* ${process.env.DEVICE_NAME || "ANDROID-CORE"}
-┃ 🧠 *RAM:* ${memory}
-━━━━━━━━━━━━━━━━━━━━━━━
-💀 *Ready for your next command...*
-━━━━━━━━━━━━━━━━━━━━━━━`;
       await MeshTech.sendMessage(from, { text }, { quoted: mek });
 
       const audioPath = path.join(__dirname, "../assets/alive.m4a");
@@ -898,132 +890,14 @@ gmd(
 
       try {
         const zipUrl = `https://github.com/${meshtechRepo}/archive/refs/heads/main.zip`;
-        await MeshTech.sendMessage(
-          from,
-          {
-            document: { url: zipUrl },
-            fileName: `${name}.zip`,
-            mimetype: "application/zip",
-          },
-          { quoted: messageData },
-        );
-        await react("✅");
-      } catch (dlErr) {
-        await MeshTech.sendMessage(from, { text: "Failed to download repo zip: " + dlErr.message }, { quoted: messageData });
+        await MeshTech.sendMessage(from, { document: { url: zipUrl }, fileName: `${name}.zip`, mimetype: "application/zip" }, { quoted: messageData });
+      } catch (e) {
+        console.error("Repo download error:", e);
       }
-
-      MeshTech.ev.off("messages.upsert", handleResponse);
     };
 
     MeshTech.ev.on("messages.upsert", handleResponse);
-    setTimeout(
-      () => MeshTech.ev.off("messages.upsert", handleResponse),
-      120000,
-    );
-
+    setTimeout(() => MeshTech.ev.off("messages.upsert", handleResponse), 300000);
     await react("✅");
-  },
-);
-
-gmd(
-  {
-    pattern: "save",
-    aliases: ["sv", "s", "sav", "."],
-    react: "⚡",
-    category: "owner",
-    description:
-      "Save messages (supports images, videos, audio, stickers, and text).",
-  },
-  async (from, MeshTech, conText) => {
-    const { mek, reply, react, sender, isSuperUser, getMediaBuffer } = conText;
-
-    if (!isSuperUser) {
-      return reply(`❌ Owner Only Command!`);
-    }
-
-    const quotedMsg =
-      mek.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-
-    if (!quotedMsg) {
-      return reply(`⚠️ Please reply to/quote a message.`);
-    }
-
-    try {
-      let mediaData;
-
-      if (quotedMsg.imageMessage) {
-        const buffer = await getMediaBuffer(quotedMsg.imageMessage, "image");
-        mediaData = {
-          image: buffer,
-          caption: quotedMsg.imageMessage.caption || "",
-        };
-      } else if (quotedMsg.videoMessage) {
-        const buffer = await getMediaBuffer(quotedMsg.videoMessage, "video");
-        mediaData = {
-          video: buffer,
-          caption: quotedMsg.videoMessage.caption || "",
-        };
-      } else if (quotedMsg.audioMessage) {
-        const buffer = await getMediaBuffer(quotedMsg.audioMessage, "audio");
-        mediaData = {
-          audio: buffer,
-          mimetype: "audio/mp4",
-        };
-      } else if (quotedMsg.stickerMessage) {
-        const buffer = await getMediaBuffer(
-          quotedMsg.stickerMessage,
-          "sticker",
-        );
-        mediaData = {
-          sticker: buffer,
-        };
-      } else if (quotedMsg.documentMessage || quotedMsg.documentWithCaptionMessage?.message?.documentMessage) {
-        const docMsg = quotedMsg.documentMessage || quotedMsg.documentWithCaptionMessage.message.documentMessage;
-        const buffer = await getMediaBuffer(docMsg, "document");
-        mediaData = {
-          document: buffer,
-          fileName: docMsg.fileName || "document",
-          mimetype: docMsg.mimetype || "application/octet-stream",
-        };
-      } else if (
-        quotedMsg.conversation ||
-        quotedMsg.extendedTextMessage?.text
-      ) {
-        const text =
-          quotedMsg.conversation || quotedMsg.extendedTextMessage.text;
-        mediaData = {
-          text: text,
-        };
-      } else if (quotedMsg.buttonsMessage || quotedMsg.templateMessage || quotedMsg.interactiveMessage || quotedMsg.listMessage || quotedMsg.buttonsResponseMessage || quotedMsg.templateButtonReplyMessage) {
-        let text = "";
-        if (quotedMsg.buttonsMessage) {
-          text = quotedMsg.buttonsMessage.contentText || quotedMsg.buttonsMessage.text || "";
-        } else if (quotedMsg.templateMessage?.hydratedTemplate) {
-          text = quotedMsg.templateMessage.hydratedTemplate.hydratedContentText || "";
-        } else if (quotedMsg.interactiveMessage?.body?.text) {
-          text = quotedMsg.interactiveMessage.body.text;
-        } else if (quotedMsg.listMessage) {
-          text = quotedMsg.listMessage.description || quotedMsg.listMessage.title || "";
-        } else if (quotedMsg.buttonsResponseMessage) {
-          text = quotedMsg.buttonsResponseMessage.selectedDisplayText || "";
-        } else if (quotedMsg.templateButtonReplyMessage) {
-          text = quotedMsg.templateButtonReplyMessage.selectedDisplayText || "";
-        }
-        if (!text) {
-          return reply(`❌ Could not extract text from the quoted message.`);
-        }
-        mediaData = {
-          text: text,
-        };
-      } else {
-        return reply(`❌ Unsupported message type.`);
-      }
-
-      await MeshTech.sendMessage(sender, mediaData, { quoted: mek });
-      await react("✅");
-    } catch (error) {
-      console.error("Save Error:", error);
-      await reply(`❌ Failed to save the message. Error: ${error.message}`);
-    }
   },
 );
