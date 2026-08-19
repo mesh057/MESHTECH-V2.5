@@ -1,4 +1,4 @@
-const { getContentType } = require('mesh-baileys');
+const { getContentType, downloadMediaMessage } = require('mesh-baileys');
 const { getLidMapping, storeLidMapping } = require('./groupCache');
 
 const standardizeJid = (jid) => {
