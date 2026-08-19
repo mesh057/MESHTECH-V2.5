@@ -652,7 +652,11 @@ async function getAIResponse(query) {
             continue;
         }
     }
-    return "Kenya gained independence from the United Kingdom on December 12, 1963.";
+    // Natural conversational fallback based on input
+    const lower = query.toLowerCase();
+    if (lower.includes("how are you")) return "I'm doing great, thank you! How can I assist you today?";
+    if (lower.includes("math") || lower.includes("*") || lower.includes("+")) return "I'm here to help with calculations and assignments. Feel free to ask!";
+    return "I hear you! Let me know if you need help with research, assignments, or anything else.";
 }
 
 function MeshTechChatBot(MeshTech, createContext, createContext2, googleTTS) {
