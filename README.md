@@ -241,7 +241,7 @@ pm2 restart MESHTECH-V2.5
 <details>
 <summary>𝗖𝗟𝗜𝗖𝗞 𝗛𝗘𝗥𝗘</summary>
   
-- **[CONTACT SUPPORT](https://clevertech.qzz.io/) For More Info**
+- **[CONTACT SUPPORT](https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R) For More Info**
 - **Join [WHATSAPP CHANNEL](https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R) for Daily Updates.**
 - **Check out my [Github Profile](https://github.com/mesh057) for More Projects.**
 </details>

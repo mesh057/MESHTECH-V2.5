@@ -51,6 +51,14 @@ services:
         value: ""
         scopes:
           - region:was
+      - key: MULTI_USER_AUTH_DIR
+        value: /data/meshtech/auth_sessions
+        scopes:
+          - region:was
+      - key: MAX_BOT_INSTANCES
+        value: unlimited
+        scopes:
+          - region:was
 
 # ─────────────────────────────────────────────────────────────
 # SETUP INSTRUCTIONS (Koyeb)
@@ -63,7 +71,7 @@ services:
 # 1. Create a free PostgreSQL database on one of the above.
 # 2. Copy the connection string and set it as DATABASE_URL
 #    in the Koyeb service environment variables.
-# 3. Set SESSION_ID to your BlakHat~ session ID.
+# 3. Set SESSION_ID to your MeshTech~ session ID.
 # 4. Deploy via Koyeb dashboard → "Create App" → "GitHub" → pick repo,
 #    or use the Koyeb CLI:
 #      koyeb app init meshtech-md-v2.5 --config koyeb.yaml
