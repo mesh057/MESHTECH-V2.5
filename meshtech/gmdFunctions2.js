@@ -721,7 +721,7 @@ function MeshTechChatBot(MeshTech, createContext, createContext2, googleTTS) {
 
             // 📩 TEXT (Stable plain-text quoted reply with refined professional signature)
             if (chatBot === "true") {
-                const responseWithSignature = `${String(aiResponse)}\n\n───────────────────\n*MESH-TECH MD* | Your AI Assistant`;
+                const responseWithSignature = `${String(aiResponse)}\n\n───────────────────\n*MESH-TECH MD* | AI ASSISTANT`;
                 await MeshTech.sendMessage(jid, {
                     text: responseWithSignature
                 }, { quoted: msg });
