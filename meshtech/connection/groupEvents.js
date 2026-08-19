@@ -29,29 +29,26 @@ const formatJid = (jid) => {
 const getJidFromLidUsingMetadata = (participant, groupMeta) => {
     if (!participant || !groupMeta?.participants) return null;
 
-    const lidNum = participant.split("@")[0];
+    const lidNum = participant.split("@")[0].split(":")[0];
 
     for (const p of groupMeta.participants) {
         const pId = p.id || p.jid || "";
         const pLid = p.lid || "";
         const pPn = p.pn || p.phoneNumber || "";
         
-        const isMatch = pId.startsWith(lidNum) || 
-                        pLid.startsWith(lidNum) || 
-                        (pId.includes("@lid") && pId.split("@")[0] === lidNum) ||
-                        (pLid.includes("@lid") && pLid.split("@")[0] === lidNum);
+        const isMatch = (pId && pId.split("@")[0].split(":")[0] === lidNum) || 
+                        (pLid && pLid.split("@")[0].split(":")[0] === lidNum) ||
+                        (pPn && pPn.split("@")[0].split(":")[0] === lidNum);
 
         if (isMatch) {
-            let jid = p.pn || p.jid || p.phoneNumber || p.id;
-            if (jid && jid.endsWith("@lid")) {
-                if (p.pn) jid = p.pn + "@s.whatsapp.net";
-                else if (p.phoneNumber) jid = p.phoneNumber + "@s.whatsapp.net";
-                else if (p.id && p.id.endsWith("@s.whatsapp.net")) jid = p.id;
-            }
+            // Prioritize Phone Number (PN) over LID
+            let jid = null;
             
-            if (jid && !jid.includes("@")) {
-                jid = `${jid}@s.whatsapp.net`;
-            }
+            if (p.pn) jid = p.pn.includes("@") ? p.pn : `${p.pn}@s.whatsapp.net`;
+            else if (p.phoneNumber) jid = p.phoneNumber.includes("@") ? p.phoneNumber : `${p.phoneNumber}@s.whatsapp.net`;
+            else if (p.id && p.id.endsWith("@s.whatsapp.net")) jid = p.id;
+            else if (p.jid && p.jid.endsWith("@s.whatsapp.net")) jid = p.jid;
+            
             if (jid && jid.endsWith("@s.whatsapp.net")) {
                 return jid;
             }

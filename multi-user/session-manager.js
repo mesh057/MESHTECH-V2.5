@@ -254,10 +254,31 @@ class MultiUserSessionManager {
       record.lastOutput = error.message;
     });
     child.on('exit', (code, signal) => {
-      if (record.status !== 'stopped') record.status = code === 0 ? 'stopped' : 'error';
+      const wasRunning = record.status === 'running';
+      // If it was running and exited with 0, we treat it as a requested restart
+      const isRestart = wasRunning && code === 0;
+      
+      if (record.status !== 'stopped') {
+        record.status = (code === 0 && !isRestart) ? 'stopped' : 'error';
+      }
+      
       record.exitCode = code;
       record.signal = signal;
-      if (record.status === 'error' && !record.error) record.error = record.lastOutput || 'The WhatsApp pairing session stopped unexpectedly.';
+      
+      if (record.status === 'error' && !record.error) {
+        record.error = record.lastOutput || 'The WhatsApp pairing session stopped unexpectedly.';
+      }
+
+      // Auto-restart if it was running and didn't stop intentionally, or if it's a requested restart
+      if ((wasRunning && record.status !== 'stopped') || isRestart) {
+        const delay = isRestart ? 2000 : 5000;
+        console.log(`[mesh-multi-user] Session ${normalized} ${isRestart ? 'restarting' : 'exited unexpectedly'}. Restarting in ${delay}ms...`);
+        setTimeout(() => {
+          this.start(normalized, false, true).catch(err => {
+            console.error(`[mesh-multi-user] Failed to auto-restart ${normalized}:`, err.message);
+          });
+        }, delay);
+      }
     });
 
     return this.publicSession(record);

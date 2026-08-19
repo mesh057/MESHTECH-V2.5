@@ -82,7 +82,13 @@ gmd(
             zip.extractAllTo(extractPath, true);
 
             // GitHub zip usually extracts to repo-name-branch
-            const sourcePath = path.join(extractPath, "MESHTECH-V2.5-main");
+            let sourcePath = path.join(extractPath, "MESHTECH-V2.5-main");
+            if (!fs.existsSync(sourcePath)) {
+                // Fallback: check if the folder name is just the repo name
+                const folders = fs.readdirSync(extractPath).filter(f => fs.statSync(path.join(extractPath, f)).isDirectory());
+                if (folders.length > 0) sourcePath = path.join(extractPath, folders[0]);
+            }
+            
             const destinationPath = path.join(__dirname, "..");
 
             const excludeList = [
@@ -90,6 +96,7 @@ gmd(
                 "meshtech/database/database.db",
                 "meshtech/session/session.db",
                 "meshtech/session",
+                "auth_sessions",
                 "node_modules",
                 ".git"
             ];
@@ -98,10 +105,12 @@ gmd(
                 copyFolderSync(sourcePath, destinationPath, excludeList);
                 await setCommitHash(latestCommitHash);
                 
-                fs.unlinkSync(zipPath);
+                if (fs.existsSync(zipPath)) fs.unlinkSync(zipPath);
                 fs.rmSync(extractPath, { recursive: true, force: true });
 
-                await reply("✅ Update Complete! Bot is Restarting...");
+                const isMultiUser = process.env.MESH_MULTI_USER_SESSION_OWNER ? true : false;
+                await reply(`✅ Update Complete! Bot is ${isMultiUser ? "Restarting (Managed)..." : "Restarting..."}`);
+                
                 setTimeout(() => {
                     process.exit(0);
                 }, 2000);
