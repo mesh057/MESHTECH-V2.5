@@ -34,6 +34,12 @@ class DatabaseManager {
                     dialectOptions: {
                         busyTimeout: 30000,
                     },
+                    hooks: {
+                        afterConnect: async (connection) => {
+                            await connection.run("PRAGMA journal_mode = WAL;");
+                            await connection.run("PRAGMA synchronous = NORMAL;");
+                        }
+                    },
                 });
             } else {
                 DatabaseManager.instance = new Sequelize(DATABASE_URL, {

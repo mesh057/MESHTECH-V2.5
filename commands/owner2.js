@@ -235,6 +235,25 @@ form.append("image_file", buffer, {
 
 gmd(
   {
+    pattern: "pair",
+    on: "text",
+    react: "🔗",
+    category: "owner",
+    description: "Show the self-hosted WhatsApp pairing instructions",
+  },
+  async (from, MeshTech, conText) => {
+    const { reply, react } = conText;
+    await react("ℹ️");
+    return reply(
+      "🔗 *Use the MESHTECH pairing service*\n\n" +
+      "This bot uses the official multi-user deployment portal on Railway.\n\n" +
+      "Visit your Railway URL, enter your phone number, and generate your pairing code instantly."
+    );
+  }
+);
+
+gmd(
+  {
     pattern: "wasted",
     category: "owner",
     react: "💀",
