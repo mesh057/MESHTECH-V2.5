@@ -118,7 +118,12 @@ const getGroupInfo = async (MeshTech, from, botId, sender) => {
         };
     }
 
-    const groupInfo = await getGroupMetadata(MeshTech, from);
+    let groupInfo = await getGroupMetadata(MeshTech, from);
+    if (!groupInfo || !groupInfo.participants) {
+        try {
+            groupInfo = await MeshTech.groupMetadata(from);
+        } catch (e) {}
+    }
     if (!groupInfo || !groupInfo.participants) {
         return {
             groupInfo: null,
