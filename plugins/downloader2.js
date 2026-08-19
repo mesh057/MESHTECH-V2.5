@@ -552,18 +552,37 @@ gmd(
         }
 
         try {
-         //   await reply(`Searching for *${q}* APK...`);
+            let result = null;
+            try {
+                const apiUrl = `${MeshTechApi}/api/download/apkdl?appName=${encodeURIComponent(q)}`;
+                const response = await axios.get(apiUrl, { timeout: 20000 });
+                if (response.data?.success && response.data?.result) {
+                    result = response.data.result;
+                }
+            } catch (e) {}
 
-            const apiUrl = `${MeshTechApi}/api/download/apkdl?appName=${encodeURIComponent(q)}`;
-            const response = await axios.get(apiUrl, { timeout: 60000 });
+            if (!result) {
+                try {
+                    const response = await axios.get(`https://api.siputzx.my.id/api/d/apk?query=${encodeURIComponent(q)}`, { timeout: 20000 });
+                    if (response.data?.status && response.data.data) {
+                        const d = response.data.data;
+                        result = {
+                            appname: d.name,
+                            appicon: d.icon,
+                            developer: d.developer,
+                            download_url: d.download,
+                            mimetype: "application/vnd.android.package-archive"
+                        };
+                    }
+                } catch (e) {}
+            }
 
-            if (!response.data?.success || !response.data?.result) {
+            if (!result) {
                 await react("❌");
                 return reply("App not found. Please try a different name.");
             }
 
-            const { appname, appicon, developer, mimetype, download_url } =
-                response.data.result;
+            const { appname, appicon, developer, mimetype, download_url } = result;
 
             if (!download_url) {
                 await react("❌");
@@ -640,17 +659,31 @@ gmd(
         try {
             await reply("Fetching paste content...");
 
-            const apiUrl = `${MeshTechApi}/api/download/pastebin?url=${encodeURIComponent(q)}`;
-            const response = await axios.get(apiUrl, { timeout: 30000 });
+            let content = null;
+            try {
+                const apiUrl = `${MeshTechApi}/api/download/pastebin?url=${encodeURIComponent(q)}`;
+                const response = await axios.get(apiUrl, { timeout: 15000 });
+                if (response.data?.success && response.data?.result) {
+                    content = response.data.result;
+                }
+            } catch (e) {}
 
-            if (!response.data?.success || !response.data?.result) {
+            if (!content) {
+                try {
+                    const rawUrl = q.includes("raw") ? q : q.replace("pastebin.com/", "pastebin.com/raw/");
+                    const response = await axios.get(rawUrl, { timeout: 15000 });
+                    if (response.data && typeof response.data === "string") {
+                        content = response.data;
+                    }
+                } catch (e) {}
+            }
+
+            if (!content) {
                 await react("❌");
                 return reply(
                     "Failed to fetch paste. Please check the URL and try again.",
                 );
             }
-
-            let content = response.data.result;
 
             content = content
                 .replace(/\\r\\n/g, "\n")

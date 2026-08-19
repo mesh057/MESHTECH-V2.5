@@ -523,23 +523,35 @@ gmd(
     }
 
     try {
-      const apiUrl = `${MeshTechApi}/api/s/spotifysearch?query=${encodeURIComponent(q)}`;
-      const res = await axios.get(apiUrl, { timeout: 60000 });
+      let tracks = [];
+      try {
+        const apiUrl = `${MeshTechApi}/api/s/spotifysearch?query=${encodeURIComponent(q)}`;
+        const res = await axios.get(apiUrl, { timeout: 20000 });
+        if (res.data?.success && Array.isArray(res.data.results)) {
+            tracks = res.data.results;
+        }
+      } catch (e) {}
 
-      if (
-        !res.data?.success ||
-        !res.data?.results ||
-        !Array.isArray(res.data.results) ||
-        res.data.results.length === 0
-      ) {
-        await react("❌");
-        const errorMsg =
-          res.data?.results?.msg ||
-          "No tracks found. Please try a different query.";
-        return reply(errorMsg);
+      if (tracks.length === 0) {
+        try {
+          const res = await axios.get(`https://api.siputzx.my.id/api/s/spotify?query=${encodeURIComponent(q)}`, { timeout: 20000 });
+          if (res.data?.status && Array.isArray(res.data.data)) {
+            tracks = res.data.data.map(t => ({
+              title: t.title || t.name,
+              artist: t.artist || t.artists,
+              url: t.url || t.link,
+              duration: t.duration || "N/A"
+            }));
+          }
+        } catch (e) {}
       }
 
-      const tracks = res.data.results.slice(0, 5);
+      if (tracks.length === 0) {
+        await react("❌");
+        return reply("No tracks found. Please try a different query.");
+      }
+
+      const finalTracks = tracks.slice(0, 5);
       const dateNow = Date.now();
 
       let txt = `*${botName} 𝐒𝐏𝐎𝐓𝐈𝐅𝐘 𝐒𝐄𝐀𝐑𝐂𝐇*\n\n`;
@@ -551,8 +563,8 @@ gmd(
         txt += `⏱️ Duration: ${track.duration}\n\n`;
       });
 
-      const buttons = tracks.map((track, i) => ({
-        id: `${botPrefix}spotify ${track.url}`,
+      const buttons = finalTracks.map((track, i) => ({
+        id: `spotify_dl_${dateNow}_${i}`,
         text: `${i + 1}. ${track.title.substring(0, 30)}`,
       }));
 
@@ -574,8 +586,9 @@ gmd(
         const isFromSameChat = messageData.key?.remoteJid === from;
         if (!isFromSameChat) return;
 
-        const trackIndex = parseInt(selectedButtonId.split("_").pop());
-        const selectedTrack = tracks[trackIndex];
+        const parts = selectedButtonId.split("_");
+        const trackIndex = parseInt(parts[parts.length - 1]);
+        const selectedTrack = finalTracks[trackIndex];
 
         if (selectedTrack) {
           await MeshTech.sendMessage(

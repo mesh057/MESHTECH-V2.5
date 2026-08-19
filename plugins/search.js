@@ -270,26 +270,39 @@ gmd(
     }
 
     try {
-      const apiUrl = `${MeshTechApi}/api/s/google?query=${encodeURIComponent(q)}`;
-      const res = await axios.get(apiUrl, { timeout: 60000 });
+      let results = [];
+      try {
+        const apiUrl = `${MeshTechApi}/api/s/google?query=${encodeURIComponent(q)}`;
+        const res = await axios.get(apiUrl, { timeout: 15000 });
+        if (res.data?.success && Array.isArray(res.data.results)) {
+            results = res.data.results;
+        }
+      } catch (e) {}
 
-      if (
-        !res.data?.success ||
-        !res.data?.results ||
-        !Array.isArray(res.data.results) ||
-        res.data.results.length === 0
-      ) {
+      if (results.length === 0) {
+        const bingUrl = `https://bing-search.apis-bj-devs.workers.dev/?search=${encodeURIComponent(q)}&limit=5`;
+        const res = await axios.get(bingUrl, { timeout: 15000 });
+        if (res.data?.status && res.data.result?.groups) {
+            results = res.data.result.groups.map(g => ({
+                title: g.title || "Search Result",
+                description: g.snippet || g.description || "",
+                link: g.url || g.link || "#"
+            }));
+        }
+      }
+
+      if (results.length === 0) {
         await react("❌");
         return reply("No results found. Please try a different query.");
       }
 
-      const results = res.data.results.slice(0, 5);
+      const finalResults = results.slice(0, 5);
 
       const defaultImg =
         "https://api.siputzx.my.id/image/ZAwgoogle-images-1548419288.jpg";
 
       const cards = await Promise.all(
-        results.map(async (result) => ({
+        finalResults.map(async (result) => ({
           header: {
             title: `🔍 *${result.title}*`,
             hasMediaAttachment: true,
@@ -337,7 +350,7 @@ gmd(
               interactiveMessage: {
                 body: { text: `🔍 Google Results for: *${q}*` },
                 footer: {
-                  text: `📂 Displaying first *${results.length}* results`,
+                  text: `📂 Displaying first *${finalResults.length}* results`,
                 },
                 carouselMessage: { cards },
               },

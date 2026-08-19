@@ -315,7 +315,10 @@ async function createLogoCommand(config) {
         
         const res = await axios.get(apiUrl, { 
           responseType: 'arraybuffer',
-          timeout: 60000 
+          timeout: 60000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+          }
         });
 
         if (!res.data || res.data.length < 100) {

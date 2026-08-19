@@ -351,45 +351,47 @@ gmd(
         }
 
         try {
-            const endpoints = [
-                "tiktok",
-                "tiktokdlv2",
-                "tiktokdlv3",
-                "tiktokdlv4",
-            ];
-
-            const t0 = Date.now();
-            let result = await Promise.any(
-                endpoints.map(endpoint => {
-                    const apiUrl = `${MeshTechApi}/api/d/${endpoint === 'tiktok' ? 'tiktok' : endpoint}?url=${encodeURIComponent(q)}`;
-                    return axios.get(apiUrl, { timeout: 20000 }).then(res => {
-                        if (res.data?.success && res.data?.result) {
-                            return res.data.result;
-                        }
-                        throw new Error(`${endpoint}: no result`);
-                    });
-                })
-            ).catch(() => null);
+            // Prioritize TikWM as it's the most stable
+            let result = null;
+            try {
+                const linked = await axios.get("https://tikwm.com/api/", {
+                    params: { url: q },
+                    timeout: 20000,
+                });
+                const data = linked.data?.code === 0 ? linked.data.data : null;
+                if (data?.play) {
+                    result = {
+                        title: data.title || data.content_desc?.join(" ") || "TikTok Video",
+                        video: data.play,
+                        music: data.music_info?.play || data.music || null,
+                        cover: data.cover || data.origin_cover,
+                        author: { name: data.author?.nickname || data.author?.unique_id || "Unknown" },
+                    };
+                }
+            } catch (e) {
+                console.error("TikWM primary error:", e.message);
+            }
 
             if (!result) {
-                try {
-                    const linked = await axios.get("https://tikwm.com/api/", {
-                        params: { url: q },
-                        timeout: 40000,
-                    });
-                    const data = linked.data?.code === 0 ? linked.data.data : null;
-                    if (data?.play) {
-                        result = {
-                            title: data.title || data.content_desc?.join(" ") || "TikTok Video",
-                            video: data.play,
-                            music: data.music_info?.play || data.music || null,
-                            cover: data.cover || data.origin_cover,
-                            author: { name: data.author?.nickname || data.author?.unique_id || "Unknown" },
-                        };
-                    }
-                } catch (fallbackError) {
-                    console.error("TikWM fallback error:", fallbackError.message);
-                }
+                const endpoints = [
+                    "tiktok",
+                    "tiktok/v2",
+                    "tiktokdlv2",
+                    "tiktokdlv3",
+                    "tiktokdlv4",
+                ];
+
+                result = await Promise.any(
+                    endpoints.map(endpoint => {
+                        const apiUrl = `${MeshTechApi}/api/d/${endpoint === 'tiktok' ? 'tiktok' : endpoint}?url=${encodeURIComponent(q)}`;
+                        return axios.get(apiUrl, { timeout: 15000 }).then(res => {
+                            if (res.data?.success && res.data?.result) {
+                                return res.data.result;
+                            }
+                            throw new Error(`${endpoint}: no result`);
+                        });
+                    })
+                ).catch(() => null);
             }
 
             if (!result) {
@@ -549,17 +551,34 @@ gmd(
         }
 
         try {
-            const apiUrl = `${MeshTechApi}/api/d/twitter?url=${encodeURIComponent(q)}`;
-            const response = await axios.get(apiUrl, { timeout: 60000 });
+            let result = null;
+            try {
+                const apiUrl = `${MeshTechApi}/api/d/twitter?url=${encodeURIComponent(q)}`;
+                const response = await axios.get(apiUrl, { timeout: 20000 });
+                if (response.data?.success && response.data?.result) {
+                    result = response.data.result;
+                }
+            } catch (e) {}
 
-            if (!response.data?.success || !response.data?.result) {
-                await react("❌");
-                return reply(
-                    "Failed to fetch video. Please check the URL and try again.",
-                );
+            if (!result) {
+                try {
+                    const response = await axios.get(`https://api.siputzx.my.id/api/d/twitter?url=${encodeURIComponent(q)}`, { timeout: 20000 });
+                    if (response.data?.status && response.data.data) {
+                        const d = response.data.data;
+                        result = {
+                            thumbnail: d.thumbnail,
+                            videoUrls: d.urls.map(u => ({ quality: u.quality, url: u.url }))
+                        };
+                    }
+                } catch (e) {}
             }
 
-            const { thumbnail, videoUrls } = response.data.result;
+            if (!result || !result.videoUrls || result.videoUrls.length === 0) {
+                await react("❌");
+                return reply("Failed to fetch video. Please check the URL and try again.");
+            }
+
+            const { thumbnail, videoUrls } = result;
 
             if (!videoUrls || videoUrls.length === 0) {
                 await react("❌");
@@ -725,17 +744,34 @@ gmd(
         }
 
         try {
-            const apiUrl = `${MeshTechApi}/api/d/igram?url=${encodeURIComponent(q)}`;
-            const response = await axios.get(apiUrl, { timeout: 60000 });
+            let result = null;
+            try {
+                const apiUrl = `${MeshTechApi}/api/d/igram?url=${encodeURIComponent(q)}`;
+                const response = await axios.get(apiUrl, { timeout: 20000 });
+                if (response.data?.success && response.data?.result) {
+                    result = response.data.result;
+                }
+            } catch (e) {}
 
-            if (!response.data?.success || !response.data?.result) {
-                await react("❌");
-                return reply(
-                    "Failed to fetch content. Please check the URL and try again.",
-                );
+            if (!result) {
+                try {
+                    const response = await axios.get(`https://api.siputzx.my.id/api/d/instagram?url=${encodeURIComponent(q)}`, { timeout: 20000 });
+                    if (response.data?.status && response.data.data) {
+                        const d = response.data.data[0];
+                        result = {
+                            thumbnail: d.thumbnail || d.url,
+                            download_url: d.url
+                        };
+                    }
+                } catch (e) {}
             }
 
-            const { thumbnail, download_url } = response.data.result;
+            if (!result || !result.download_url) {
+                await react("❌");
+                return reply("Failed to fetch content. Please check the URL and try again.");
+            }
+
+            const { thumbnail, download_url } = result;
 
             if (!download_url) {
                 await react("❌");

@@ -47,19 +47,25 @@ gmd(
         const lines = [];
         const mentions = [];
         for (const p of list) {
-          // Prefer PN (Phone Number) if available in metadata directly
-          let jid = p.pn ? (p.pn.includes("@") ? p.pn : `${p.pn}@s.whatsapp.net`) : 
-                    p.phoneNumber ? (p.phoneNumber.includes("@") ? p.phoneNumber : `${p.phoneNumber}@s.whatsapp.net`) : 
-                    p.id || p.jid;
+          // 1. Try to resolve via our improved helper
+          const participantId = p.id || p.jid || p.pn || p.phoneNumber;
+          let jid = await getJidFromParticipant(MeshTech, participantId, metadata);
+
+          // 2. Fallback to direct properties if helper failed
+          if (!jid || jid.endsWith("@lid")) {
+              jid = (p.pn && p.pn.endsWith("@s.whatsapp.net")) ? p.pn :
+                    (p.id && p.id.endsWith("@s.whatsapp.net")) ? p.id :
+                    (p.phoneNumber && p.phoneNumber.endsWith("@s.whatsapp.net")) ? p.phoneNumber : jid;
+          }
+
+          // 3. Final fallback to whatever ID we have
+          if (!jid) {
+            jid = p.id || p.jid || p.pn || p.phoneNumber;
+          }
 
           if (!jid) continue;
 
-          // If it's still an LID, try to resolve it using our helper
-          if (jid.includes("@lid")) {
-            jid = await getJidFromParticipant(MeshTech, jid, metadata);
-          }
-          
-          // Last resort: if it's the bot itself, use its own JID
+          // Final cleanup: if it's still an LID and we're the bot, fix it
           if (jid.includes("@lid") && MeshTech?.user?.id) {
               const botLid = MeshTech.user.id.split(":")[0];
               if (jid.startsWith(botLid)) {

@@ -27,9 +27,17 @@ const getLidMapping = (lid) => {
 const updateLidMappingsFromMetadata = (metadata) => {
     if (!metadata?.participants) return;
     for (const p of metadata.participants) {
-        const lid = p.lid || p.id;
-        const jid = p.pn || p.jid;
-        if (lid && jid) {
+        const lid = p.lid || (p.id && p.id.endsWith("@lid") ? p.id : null);
+        
+        // Try all possible fields where PN/JID might be stored
+        let jid = (p.pn && p.pn.endsWith("@s.whatsapp.net")) ? p.pn :
+                  (p.id && p.id.endsWith("@s.whatsapp.net")) ? p.id :
+                  (p.phoneNumber && p.phoneNumber.endsWith("@s.whatsapp.net")) ? p.phoneNumber : null;
+
+        if (!jid && p.pn) jid = p.pn.includes('@') ? p.pn : `${p.pn}@s.whatsapp.net`;
+        if (!jid && p.phoneNumber) jid = p.phoneNumber.includes('@') ? p.phoneNumber : `${p.phoneNumber}@s.whatsapp.net`;
+        
+        if (lid && jid && lid !== jid && jid.endsWith("@s.whatsapp.net")) {
             storeLidMapping(lid, jid);
         }
     }
