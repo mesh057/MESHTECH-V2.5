@@ -194,6 +194,11 @@ async function loadBotSettings() {
     await syncDatabase();
     await initializeSettings();
     await initializeGroupSettings();
+    // Force public mode if multi-user or env demands it
+    const envMode = process.env.MODE || process.env.MESH_MULTI_USER_SESSION_MODE;
+    if (envMode) {
+        await SettingsDB.upsert({ key: 'MODE', value: envMode });
+    }
     botSettings = await getAllSettings();
     return botSettings;
 }
