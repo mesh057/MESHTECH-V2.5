@@ -25,7 +25,7 @@ gmd(
     description: "perform youtube search",
   },
   async (from, MeshTech, conText) => {
-    const { q, mek, reply, react, sender, botFooter, gmdBuffer } = conText;
+    const { q, mek, reply, react, sender, botFooter, gmdBuffer, MeshTechApi, MeshTechApiKey } = conText;
 
     if (!q) {
       await react("❌");
