@@ -719,10 +719,11 @@ function MeshTechChatBot(MeshTech, createContext, createContext2, googleTTS) {
             const aiResponse = await getAIResponse(text);
             const botName = settings.BOT_NAME || 'MESH-TECH MD';
 
-            // 📩 TEXT (Stable plain-text quoted reply like working 4:16 PM version)
+            // 📩 TEXT (Stable plain-text quoted reply with refined professional signature)
             if (chatBot === "true") {
+                const responseWithSignature = `${String(aiResponse)}\n\n───────────────────\n*MESH-TECH MD* | Your AI Assistant`;
                 await MeshTech.sendMessage(jid, {
-                    text: String(aiResponse)
+                    text: responseWithSignature
                 }, { quoted: msg });
             }
 
