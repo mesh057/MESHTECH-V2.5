@@ -1,6 +1,6 @@
 const { DATABASE } = require("./database");
 const { DataTypes } = require("sequelize");
-const { globalLidMapping } = require("gifted-baileys/lib/Utils/lid-mapping");
+const { globalLidMapping } = require("mesh-baileys/lib/Utils/lid-mapping");
 
 const LidMappingDB = DATABASE.define(
     "LidMapping",

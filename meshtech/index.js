@@ -8,7 +8,7 @@ const { SettingsDB, initializeSettings, getSetting, setSetting, getAllSettings, 
 const { GroupSettingsDB, initializeGroupSettings, getGroupSetting, setGroupSetting, getAllGroupSettings, resetGroupSetting, GROUP_SETTING_DEFAULTS } = require('./database/groupSettings');
 const { createContext, createContext2 } = require('./gmdHelpers');
 const { getMediaBuffer, getFileContentType, bufferToStream, uploadToGiftedCdn, uploadToGithubCdn, uploadToPixhost, uploadToImgBB, uploadToCatbox } = require('./gmdFunctions3');
-const { logger, emojis, GiftedAutoReact, GiftedTechApi, GiftedApiKey, GiftedAntiLink, GiftedAntibad, GiftedAntiGroupMention, GiftedAutoBio, GiftedChatBot, GiftedPresence, GiftedAntiDelete, GiftedAnticall, GiftedAntiViewOnce, GiftedAntiEdit, antiStickerHandler } = require('./gmdFunctions2');
+const { logger, emojis, GiftedAutoReact, MeshTechApi, MeshTechApiKey, GiftedAntiLink, GiftedAntibad, GiftedAntiGroupMention, GiftedAutoBio, GiftedChatBot, GiftedPresence, GiftedAntiDelete, GiftedAnticall, GiftedAntiViewOnce, GiftedAntiEdit, antiStickerHandler } = require('./gmdFunctions2');
 const { handleGameMessage } = require('./gameHandler');
 const { toAudio, toVideo, toPtt, formatVideo, formatAudio, monospace, runtime, sleep, gmdFancy, GiftedUploader, stickerToImage, formatBytes, gmdBuffer, webp2mp4File, gmdJson, latestWaVersion, gmdRandom, isUrl, gmdStore, isNumber, loadSession, useSQLiteAuthState, verifyJidState, runFFmpeg, getVideoDuration, gmdSticker, copyFolderSync, gitRepoRegex, MAX_MEDIA_SIZE, getFileSize, getMimeCategory, getMimeFromUrl, MIME_EXTENSIONS, getExtensionFromMime, isTextContent } = require('./gmdFunctions');
 
@@ -38,7 +38,7 @@ module.exports = {
     SudoDB, getSudoNumbers, setSudo, delSudo, 
     SettingsDB, initializeSettings, getSetting, setSetting, getAllSettings, resetSetting, resetAllSettings, DEFAULT_SETTINGS,
     GroupSettingsDB, initializeGroupSettings, getGroupSetting, setGroupSetting, getAllGroupSettings, resetGroupSetting, GROUP_SETTING_DEFAULTS, 
-    GiftedTechApi, GiftedApiKey, 
+    MeshTechApi, MeshTechApiKey, 
     getMediaBuffer, getFileContentType, bufferToStream, uploadToPixhost, uploadToImgBB, uploadToCatbox, 
     GiftedAutoReact, GiftedChatBot, GiftedAntiLink, GiftedAntibad, GiftedAntiGroupMention, GiftedAntiDelete, GiftedAnticall, GiftedPresence, GiftedAutoBio, GiftedAntiViewOnce, GiftedAntiEdit, antiStickerHandler, handleGameMessage, 
     logger, gmdBuffer, webp2mp4File, gmdJson, latestWaVersion, gmdRandom, isUrl, gmdStore, isNumber, loadSession, useSQLiteAuthState, verifyJidState,

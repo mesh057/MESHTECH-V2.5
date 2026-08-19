@@ -12,7 +12,7 @@ gmd(
         description: "Restart the bot.",
         category: "owner",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const { reply, isSuperUser, react } = conText;
 
         if (!isSuperUser) {
@@ -35,7 +35,7 @@ gmd(
         description: "Update the bot to the latest version.",
         category: "owner",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const {
             reply,
             isSuperUser,

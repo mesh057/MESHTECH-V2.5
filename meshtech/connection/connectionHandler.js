@@ -1,5 +1,5 @@
 const { Boom } = require("@hapi/boom");
-const { DisconnectReason } = require("gifted-baileys");
+const { DisconnectReason } = require("mesh-baileys");
 const fs = require("fs-extra");
 const path = require("path");
 const { setupGroupCacheListeners } = require("./groupCache");
@@ -9,10 +9,10 @@ const MAX_RECONNECT_ATTEMPTS = 100;
 
 let reconnectAttempts = 0;
 
-const safeNewsletterFollow = async (Gifted, newsletterJid) => {
+const safeNewsletterFollow = async (MeshTech, newsletterJid) => {
     if (!newsletterJid) return false;
     try {
-        await Gifted.newsletterFollow(newsletterJid);
+        await MeshTech.newsletterFollow(newsletterJid);
         // console.log(`✅ Followed Channel: ${newsletterJid}`);
         return true;
     } catch (error) {
@@ -24,10 +24,10 @@ const safeNewsletterFollow = async (Gifted, newsletterJid) => {
     }
 };
 
-const safeGroupAcceptInvite = async (Gifted, groupJid) => {
+const safeGroupAcceptInvite = async (MeshTech, groupJid) => {
     if (!groupJid) return false;
     try {
-        await Gifted.groupAcceptInvite(groupJid);
+        await MeshTech.groupAcceptInvite(groupJid);
         // console.log(`✅ Joined group: ${groupJid}`);
         return true;
     } catch (error) {
@@ -52,14 +52,14 @@ const safeGroupAcceptInvite = async (Gifted, groupJid) => {
 };
 
 const setupConnectionHandler = (
-    Gifted,
+    MeshTech,
     sessionDir,
-    startGifted,
+    startMeshTech,
     callbacks = {},
 ) => {
     setupGroupCacheListeners(Gifted);
 
-    Gifted.ev.on("connection.update", async (update) => {
+    MeshTech.ev.on("connection.update", async (update) => {
         const { connection, lastDisconnect } = update;
 
         if (connection === "connecting") {

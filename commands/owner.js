@@ -1,7 +1,7 @@
 const { gmd, commands, getSetting } = require("../meshtech");
 const fs = require("fs").promises;
 const fsA = require("node:fs");
-const { S_WHATSAPP_NET } = require("gifted-baileys");
+const { S_WHATSAPP_NET } = require("mesh-baileys");
 const { Jimp } = require("jimp");
 const path = require("path");
 const moment = require("moment-timezone");
@@ -20,7 +20,7 @@ gmd(
     category: "owner",
     description: "Toggle Auto-Status Download.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, isSuperUser, args } = conText;
     const { setSetting } = require("../meshtech/database/settings");
 
@@ -49,7 +49,7 @@ gmd(
     category: "owner",
     description: "Get Bot Owner.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, reply, react, isSuperUser, ownerNumber, ownerName, botName } =
       conText;
 
@@ -67,7 +67,7 @@ gmd(
         `TEL;type=CELL;type=VOICE;waid=${ownerNumber}:${ownerNumber}\n` +
         "END:VCARD";
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           contacts: {
@@ -94,7 +94,7 @@ gmd(
     category: "group",
     description: "Set group full profile picture without cropping.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, reply, react, sender, quoted, isGroup, isSuperUser, isAdmin } =
       conText;
 
@@ -115,7 +115,7 @@ gmd(
         await react("❌");
         return reply("Please quote an image");
       }
-      tempFilePath = await Gifted.downloadAndSaveMediaMessage(
+      tempFilePath = await MeshTech.downloadAndSaveMediaMessage(
         quotedImg,
         "temp_media",
       );
@@ -142,7 +142,7 @@ gmd(
         content: [pictureNode],
       };
 
-      await Gifted.query(iqNode);
+      await MeshTech.query(iqNode);
       await react("✅");
       await fs.unlink(tempFilePath);
       await reply(
@@ -180,7 +180,7 @@ gmd(
     category: "owner",
     description: "Set full profile picture without cropping.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, reply, react, sender, quoted, isSuperUser } = conText;
 
     if (!isSuperUser) {
@@ -194,7 +194,7 @@ gmd(
         await react("❌");
         return reply("Please quote an image");
       }
-      tempFilePath = await Gifted.downloadAndSaveMediaMessage(
+      tempFilePath = await MeshTech.downloadAndSaveMediaMessage(
         quotedImg,
         "temp_media",
       );
@@ -220,7 +220,7 @@ gmd(
         content: [pictureNode],
       };
 
-      await Gifted.query(iqNode);
+      await MeshTech.query(iqNode);
       await react("✅");
       await fs.unlink(tempFilePath);
       await reply("✅ Profile picture updated successfully (full image)!");
@@ -245,7 +245,7 @@ gmd(
     category: "owner",
     description: "Get someone's full profile details.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       reply,
@@ -281,13 +281,13 @@ gmd(
       if (quoted) {
         if (isGroup && !targetUser.endsWith("@s.whatsapp.net")) {
           try {
-            const jid = await Gifted.getJidFromLid(targetUser);
+            const jid = await MeshTech.getJidFromLid(targetUser);
             if (jid) targetUser = jid;
           } catch (error) {}
         }
 
         try {
-          profilePictureUrl = await Gifted.profilePictureUrl(
+          profilePictureUrl = await MeshTech.profilePictureUrl(
             targetUser,
             "image",
           );
@@ -297,7 +297,7 @@ gmd(
         }
 
         try {
-          const statusData = await Gifted.fetchStatus(targetUser);
+          const statusData = await MeshTech.fetchStatus(targetUser);
           if (statusData && statusData.length > 0 && statusData[0].status) {
             statusText = statusData[0].status.status || "Not Found";
             const rawSetAt = statusData[0].status.setAt;
@@ -320,7 +320,7 @@ gmd(
 
         const number = targetUser.replace(/@s\.whatsapp\.net$/, "");
 
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           from,
           {
             image: { url: profilePictureUrl },
@@ -364,7 +364,7 @@ gmd(
     category: "owner",
     description: "Set new profile picture.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, reply, react, sender, quoted, isSuperUser } = conText;
 
     if (!isSuperUser) {
@@ -379,13 +379,13 @@ gmd(
         return reply("Please quote an image");
       }
 
-      const tempFilePath = await Gifted.downloadAndSaveMediaMessage(
+      const tempFilePath = await MeshTech.downloadAndSaveMediaMessage(
         quotedImg,
         "temp_media",
       );
       const imageBuffer = await fs.readFile(tempFilePath);
       try {
-        await Gifted.updateProfilePicture(Gifted.user.id, {
+        await MeshTech.updateProfilePicture(Gifted.user.id, {
           url: tempFilePath,
         });
         await reply("Profile picture updated successfully!");
@@ -411,7 +411,7 @@ gmd(
           ],
         };
 
-        await Gifted.query(iq);
+        await MeshTech.query(iq);
         await reply("Profile picture update requested (legacy method)");
         await react("✅");
       }
@@ -435,7 +435,7 @@ gmd(
     category: "owner",
     description: "Download someone's profile picture.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       reply,
@@ -467,7 +467,7 @@ gmd(
     try {
       if (quoted) {
         try {
-          profilePictureUrl = await Gifted.profilePictureUrl(
+          profilePictureUrl = await MeshTech.profilePictureUrl(
             quotedUser,
             "image",
           );
@@ -478,7 +478,7 @@ gmd(
           );
         }
 
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           from,
           {
             image: { url: profilePictureUrl },
@@ -514,7 +514,7 @@ gmd(
     category: "group",
     description: "Download group profile picture",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, reply, react, isGroup, newsletterJid, botName, botFooter } =
       conText;
 
@@ -526,13 +526,13 @@ gmd(
     try {
       let profilePictureUrl;
       try {
-        profilePictureUrl = await Gifted.profilePictureUrl(from, "image");
+        profilePictureUrl = await MeshTech.profilePictureUrl(from, "image");
       } catch (error) {
         await react("❌");
         return reply("❌ This group has no profile picture set!");
       }
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           image: { url: profilePictureUrl },
@@ -567,7 +567,7 @@ gmd(
     category: "owner",
     description: "Reveal View Once Media",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, reply, quoted, react, botName, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     if (!quoted) return reply(`Please reply to/quote a ViewOnce message`);
@@ -610,7 +610,7 @@ gmd(
       const path = require("path");
       const tempDir = path.join(__dirname, "..", "meshtech", "temp");
       const tempFileName = `vv2_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-      tempFilePath = await Gifted.downloadAndSaveMediaMessage(
+      tempFilePath = await MeshTech.downloadAndSaveMediaMessage(
         mediaMessage,
         path.join(tempDir, tempFileName),
       );
@@ -641,7 +641,7 @@ gmd(
         };
       }
 
-      await Gifted.sendMessage(from, msg);
+      await MeshTech.sendMessage(from, msg);
       await react("✅");
     } catch (e) {
       console.error("Error in vv2 command:", e);
@@ -666,7 +666,7 @@ gmd(
     category: "owner",
     description: "Reveal View Once Media",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, reply, quoted, react, botName, sender, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     if (!quoted) return reply(`Please reply to/quote a ViewOnce message`);
@@ -709,7 +709,7 @@ gmd(
       const path = require("path");
       const tempDir = path.join(__dirname, "..", "meshtech", "temp");
       const tempFileName = `vv_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-      tempFilePath = await Gifted.downloadAndSaveMediaMessage(
+      tempFilePath = await MeshTech.downloadAndSaveMediaMessage(
         mediaMessage,
         path.join(tempDir, tempFileName),
       );
@@ -740,7 +740,7 @@ gmd(
         };
       }
 
-      await Gifted.sendMessage(sender, msg);
+      await MeshTech.sendMessage(sender, msg);
       await react("✅");
     } catch (e) {
       console.error("Error in vv command:", e);
@@ -765,7 +765,7 @@ gmd(
     category: "group",
     description: "Toggle disappearing messages. Usage: .disapp on/off/1/7/90",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -819,7 +819,7 @@ gmd(
         return reply("❌ Invalid option. Use: on, off, 1, 7, or 90");
       }
 
-      await Gifted.sendMessage(from, { disappearingMessagesInChat: duration });
+      await MeshTech.sendMessage(from, { disappearingMessagesInChat: duration });
 
       await react("✅");
       if (duration === 0) {
@@ -844,7 +844,7 @@ gmd(
     category: "group",
     description: "Delete a quoted message",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       reply,
@@ -872,9 +872,9 @@ gmd(
         );
       }
 
-      await Gifted.sendMessage(from, { delete: quotedKey });
+      await MeshTech.sendMessage(from, { delete: quotedKey });
       if (mek?.key) {
-        await Gifted.sendMessage(from, { delete: mek.key });
+        await MeshTech.sendMessage(from, { delete: mek.key });
       }
       await react("✅");
     } catch (error) {
@@ -892,7 +892,7 @@ gmd(
     category: "owner",
     description: "List all groups the bot is in",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, isSuperUser } = conText;
 
     if (!isSuperUser) return reply("❌ Owner Only Command!");
@@ -900,7 +900,7 @@ gmd(
     try {
       await react("⏳");
 
-      const groups = await Gifted.groupFetchAllParticipating();
+      const groups = await MeshTech.groupFetchAllParticipating();
       const groupList = Object.values(groups);
 
       if (groupList.length === 0) {
@@ -928,7 +928,7 @@ gmd(
           message += `   🆔 ${group.id}\n\n`;
         });
 
-        await Gifted.sendMessage(from, { text: message });
+        await MeshTech.sendMessage(from, { text: message });
         if (chunkIndex < chunks.length - 1) {
           await new Promise((r) => setTimeout(r, 500));
         }
@@ -950,7 +950,7 @@ gmd(
     category: "owner",
     description: "Block a user. Reply to their message or provide number",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -960,7 +960,7 @@ gmd(
       mentionedJid,
       superUser,
     } = conText;
-    const { isJidGroup } = require("gifted-baileys");
+    const { isJidGroup } = require("mesh-baileys");
     const { convertLidToJid } = require("../meshtech/connection/serializer");
 
     if (!isSuperUser) return reply("❌ Owner Only Command!");
@@ -1001,7 +1001,7 @@ gmd(
     }
 
     try {
-      await Gifted.updateBlockStatus(targetJid, "block");
+      await MeshTech.updateBlockStatus(targetJid, "block");
       await react("✅");
       return reply(`✅ Blocked @${num}`, { mentions: [targetJid] });
     } catch (error) {
@@ -1019,10 +1019,10 @@ gmd(
     category: "owner",
     description: "Unblock a user. Reply to their message or provide number",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, isSuperUser, quotedUser, args, mentionedJid } =
       conText;
-    const { isJidGroup } = require("gifted-baileys");
+    const { isJidGroup } = require("mesh-baileys");
     const { convertLidToJid } = require("../meshtech/connection/serializer");
 
     if (!isSuperUser) return reply("❌ Owner Only Command!");
@@ -1058,7 +1058,7 @@ gmd(
     targetJid = `${num}@s.whatsapp.net`;
 
     try {
-      await Gifted.updateBlockStatus(targetJid, "unblock");
+      await MeshTech.updateBlockStatus(targetJid, "unblock");
       await react("✅");
       return reply(`✅ Unblocked @${num}`, { mentions: [targetJid] });
     } catch (error) {
@@ -1076,14 +1076,14 @@ gmd(
     category: "owner",
     description: "List all blocked contacts",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, isSuperUser } = conText;
     const { convertLidToJid } = require("../meshtech/connection/serializer");
 
     if (!isSuperUser) return reply("❌ Owner Only Command!");
 
     try {
-      const blockedList = await Gifted.fetchBlocklist();
+      const blockedList = await MeshTech.fetchBlocklist();
 
       if (blockedList.length === 0) {
         return reply("📭 No blocked contacts.");
@@ -1116,7 +1116,7 @@ gmd(
     description:
       "Forward a quoted message to a number/group. Usage: .fwd <jid> [custom caption]",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -1131,7 +1131,7 @@ gmd(
       botPrefix,
     } = conText;
     const { downloadMediaMessage } = require("../meshtech/connection/serializer");
-    const { isJidGroup } = require("gifted-baileys");
+    const { isJidGroup } = require("mesh-baileys");
 
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     if (!quotedMsg) return reply("❌ Please quote a message to forward!");
@@ -1171,12 +1171,12 @@ gmd(
 
       const customCaption = args.slice(1).join(" ") || null;
       const msgType = Object.keys(quotedMsg)[0];
-      const { downloadContentFromMessage } = require("gifted-baileys");
+      const { downloadContentFromMessage } = require("mesh-baileys");
 
       if (msgType === "conversation" || msgType === "extendedTextMessage") {
         const text =
           quotedMsg.conversation || quotedMsg.extendedTextMessage?.text || "";
-        await Gifted.sendMessage(targetJid, {
+        await MeshTech.sendMessage(targetJid, {
           text: customCaption || text,
           contextInfo: forwardContextInfo,
         });
@@ -1219,27 +1219,27 @@ gmd(
           mediaMsg?.fileName || `file.${mimetype?.split("/")[1] || "bin"}`;
 
         if (msgType === "imageMessage") {
-          await Gifted.sendMessage(targetJid, {
+          await MeshTech.sendMessage(targetJid, {
             image: buffer,
             caption,
             contextInfo: forwardContextInfo,
           });
         } else if (msgType === "videoMessage") {
-          await Gifted.sendMessage(targetJid, {
+          await MeshTech.sendMessage(targetJid, {
             video: buffer,
             caption,
             mimetype,
             contextInfo: forwardContextInfo,
           });
         } else if (msgType === "audioMessage") {
-          await Gifted.sendMessage(targetJid, {
+          await MeshTech.sendMessage(targetJid, {
             audio: buffer,
             mimetype,
             ptt: mediaMsg?.ptt,
             contextInfo: forwardContextInfo,
           });
         } else if (msgType === "documentMessage") {
-          await Gifted.sendMessage(targetJid, {
+          await MeshTech.sendMessage(targetJid, {
             document: buffer,
             mimetype,
             fileName: filename,
@@ -1247,7 +1247,7 @@ gmd(
             contextInfo: forwardContextInfo,
           });
         } else if (msgType === "stickerMessage") {
-          await Gifted.sendMessage(targetJid, { sticker: buffer });
+          await MeshTech.sendMessage(targetJid, { sticker: buffer });
         }
       } else {
         return reply(`❌ Unsupported message type: ${msgType}`);
@@ -1273,7 +1273,7 @@ gmd(
     description:
       "Forward quoted message to your WhatsApp status. Usage: .tostatus [custom caption]",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, isSuperUser, quotedMsg, q, mek } = conText;
     const { downloadMediaMessage } = require("../meshtech/connection/serializer");
 
@@ -1290,7 +1290,7 @@ gmd(
         const text =
           quotedMsg.conversation || quotedMsg.extendedTextMessage?.text || "";
         const statusText = customCaption || text;
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           statusJid,
           {
             text: statusText,
@@ -1322,13 +1322,13 @@ gmd(
         const statusJidList = await getStatusJidList(Gifted);
 
         if (msgType === "imageMessage") {
-          await Gifted.sendMessage(
+          await MeshTech.sendMessage(
             statusJid,
             { image: buffer, caption },
             { statusJidList },
           );
         } else if (msgType === "videoMessage") {
-          await Gifted.sendMessage(
+          await MeshTech.sendMessage(
             statusJid,
             { video: buffer, caption },
             { statusJidList },
@@ -1357,7 +1357,7 @@ gmd(
     category: "owner",
     description: "Join a group using invite link. Owner only.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, q, isSuperUser, mek, botName, newsletterJid } =
       conText;
 
@@ -1381,7 +1381,7 @@ gmd(
     const inviteCode = linkMatch[1];
 
     try {
-      const groupId = await Gifted.groupAcceptInvite(inviteCode);
+      const groupId = await MeshTech.groupAcceptInvite(inviteCode);
 
       if (groupId) {
         await react("✅");
@@ -1411,7 +1411,7 @@ gmd(
 
 async function getStatusJidList(Gifted) {
   try {
-    const contacts = await Gifted.groupFetchAllParticipating();
+    const contacts = await MeshTech.groupFetchAllParticipating();
     const jidList = [];
     for (const group of Object.values(contacts)) {
       if (group.participants) {
@@ -1444,7 +1444,7 @@ gmd(
     category: "owner",
     description: "Sets User as Sudo",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, mek, reply, react, isSuperUser, quotedUser, setSudo } = conText;
 
     if (!isSuperUser) {
@@ -1460,7 +1460,7 @@ gmd(
       let targetJid = quotedUser;
       if (quotedUser.endsWith("@lid")) {
         try {
-          const jid = await Gifted.getJidFromLid(quotedUser);
+          const jid = await MeshTech.getJidFromLid(quotedUser);
           if (jid) targetJid = jid;
         } catch (e) {
           console.error("LID to JID conversion failed:", e.message);
@@ -1489,7 +1489,7 @@ gmd(
     }
 
     try {
-      const [result] = await Gifted.onWhatsApp(targetNumber);
+      const [result] = await MeshTech.onWhatsApp(targetNumber);
       if (!result || !result.exists) {
         await react("❌");
         return reply(
@@ -1509,7 +1509,7 @@ gmd(
         ? `✅ Added @${targetNumber} to sudo list.`
         : `⚠️ @${targetNumber} is already in sudo list.`;
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           text: msg,
@@ -1534,7 +1534,7 @@ gmd(
     category: "owner",
     description: "Deletes User as Sudo",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, mek, reply, react, isSuperUser, quotedUser, delSudo } = conText;
 
     if (!isSuperUser) {
@@ -1550,7 +1550,7 @@ gmd(
       let targetJid = quotedUser;
       if (quotedUser.endsWith("@lid")) {
         try {
-          const jid = await Gifted.getJidFromLid(quotedUser);
+          const jid = await MeshTech.getJidFromLid(quotedUser);
           if (jid) targetJid = jid;
         } catch (e) {
           console.error("LID to JID conversion failed:", e.message);
@@ -1584,7 +1584,7 @@ gmd(
         ? `❌ Removed @${targetNumber} from sudo list.`
         : `⚠️ @${targetNumber} is not in the sudo list.`;
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           text: msg,
@@ -1609,7 +1609,7 @@ gmd(
     category: "owner",
     description: "Get All Sudo Users",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, isSuperUser, getSudoNumbers } = conText;
 
     try {

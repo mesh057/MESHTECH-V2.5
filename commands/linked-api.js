@@ -13,7 +13,7 @@ gmd({
   react: "🔎",
   category: "search",
   description: "Search Bing using the linked MeshTech endpoint.",
-}, async (from, Gifted, conText) => {
+}, async (from, MeshTech, conText) => {
   const { q, mek, reply } = conText;
   if (!q?.trim()) return reply("Use .bing followed by a search query.");
   try {
@@ -38,7 +38,7 @@ gmd({
   react: "📌",
   category: "search",
   description: "Search Pinterest images using the linked MeshTech endpoint.",
-}, async (from, Gifted, conText) => {
+}, async (from, MeshTech, conText) => {
   const { q, mek, reply } = conText;
   if (!q?.trim()) return reply("Use .pinterest followed by a search query.");
   try {
@@ -50,7 +50,7 @@ gmd({
     const usable = pins.filter((pin) => pin?.media?.images?.orig).slice(0, 5);
     if (!usable.length) return reply("No Pinterest images were returned.");
     for (const pin of usable) {
-      await Gifted.sendMessage(from, {
+      await MeshTech.sendMessage(from, {
         image: { url: pin.media.images.orig },
         caption: `📌 *${safeText(pin.title, "Pinterest result")}*\n${pin.pin_url || ""}`,
       }, { quoted: mek });
@@ -67,7 +67,7 @@ gmd({
   react: "🌍",
   category: "utility",
   description: "Show country time and weather information.",
-}, async (from, Gifted, conText) => {
+}, async (from, MeshTech, conText) => {
   const { q, mek, reply } = conText;
   if (!q?.trim()) return reply("Use .nation followed by a country name.");
   try {

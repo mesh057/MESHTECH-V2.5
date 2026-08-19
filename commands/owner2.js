@@ -1,11 +1,11 @@
 const { gmd, commands, getSetting } = require("../meshtech");
-const { downloadContentFromMessage } = require("gifted-baileys");
+const { downloadContentFromMessage } = require("mesh-baileys");
 const FormData = require("form-data");
 const { Blob } = require("buffer");
 const axios = require("axios");
 const fs = require("fs").promises;
 const fsA = require("node:fs");
-const { S_WHATSAPP_NET } = require("gifted-baileys");
+const { S_WHATSAPP_NET } = require("mesh-baileys");
 const { Jimp } = require("jimp");
 const path = require("path");
 const moment = require("moment-timezone");
@@ -26,7 +26,7 @@ gmd(
     dontAddCommandList: true,
     description: "Run shell command (OWNER ONLY)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, isSuperUser, body } = conText;
 
     if (!body.startsWith("$")) return;
@@ -81,7 +81,7 @@ gmd(
     dontAddCommandList: true,
     description: "Evaluate a JavaScript expression. Usage: > <code>",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, reply, react, isSuperUser, body } = conText;
     if (!body.startsWith(">")) return;
     if (!isSuperUser) return reply("❌ Owner only");
@@ -107,7 +107,7 @@ gmd(
           return target[key];
         }
       });
-      const bot = Gifted;
+      const bot = MeshTech;
       const m = mek;
       const {
         sender, isGroup, groupInfo, groupName, participants,
@@ -148,7 +148,7 @@ gmd(
     react: "🧠",
     description: "Remove background from an image (reply to image)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, mek, react, sender, botName, newsletterJid } = conText;
 
     try {
@@ -211,7 +211,7 @@ form.append("image_file", buffer, {
       await react("✅");
 
       // Send result
-      await Gifted.sendMessage(from, {
+      await MeshTech.sendMessage(from, {
         image: outputBuffer,
         caption: "✅ Background removed",
         contextInfo: {
@@ -240,7 +240,7 @@ gmd(
     react: "💀",
     description: "Make someone look WASTED 💀",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, mek, react, sender, botName, newsletterJid } = conText;
 
     try {
@@ -275,7 +275,7 @@ gmd(
       // Get profile picture
       let profilePic;
       try {
-        profilePic = await Gifted.profilePictureUrl(userToWaste, "image");
+        profilePic = await MeshTech.profilePictureUrl(userToWaste, "image");
       } catch {
         profilePic = "https://i.imgur.com/9aciic.jpeg";
       }
@@ -288,7 +288,7 @@ gmd(
 
       await react("💀");
 
-      await Gifted.sendMessage(from, {
+      await MeshTech.sendMessage(from, {
         image: Buffer.from(res.data),
         caption: `⚰️ *Wasted* : @${userToWaste.split("@")[0]} 💀\nRest in pieces!`,
         mentions: [userToWaste],
@@ -313,7 +313,7 @@ gmd(
 
 // ================== NEWSLETTER COMMAND (PRO + BUTTONS) ==================
 
-const { sendButtons } = require("gifted-btns");
+const { sendButtons } = require("mesh-btns");
 
 function extractCode(link) {
   try {
@@ -337,7 +337,7 @@ gmd(
     react: "📰",
     description: "Get WhatsApp channel info",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, body, botName, botFooter } = conText;
 
     try {
@@ -355,7 +355,7 @@ gmd(
 
       await react("⏳");
 
-      const meta = await Gifted.newsletterMetadata("invite", code);
+      const meta = await MeshTech.newsletterMetadata("invite", code);
 
       if (!meta) {
         return reply("❌ Channel not found");
@@ -371,7 +371,7 @@ gmd(
 
       await react("✅");
 
-      await sendButtons(Gifted, from, {
+      await sendButtons(MeshTech, from, {
         title: "📰 NEWSLETTER INFO",
         text: msg,
         footer: botFooter || botName || "Bot",
@@ -415,7 +415,7 @@ gmd(
     category: "owner",
     description: "Show the self-hosted WhatsApp pairing instructions",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react } = conText;
     await react("ℹ️");
     return reply(

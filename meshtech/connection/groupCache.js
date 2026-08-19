@@ -45,7 +45,7 @@ const isExpectedError = (errorMsg) => {
     return expectedErrors.some((e) => errorMsg?.toLowerCase().includes(e));
 };
 
-const getGroupMetadata = async (Gifted, jid) => {
+const getGroupMetadata = async (MeshTech, jid) => {
     if (!jid || !jid.endsWith("@g.us")) return null;
 
     try {
@@ -55,7 +55,7 @@ const getGroupMetadata = async (Gifted, jid) => {
             return cached;
         }
 
-        const metadata = await Gifted.groupMetadata(jid);
+        const metadata = await MeshTech.groupMetadata(jid);
         if (metadata) {
             groupCache.set(jid, metadata);
             updateLidMappingsFromMetadata(metadata);
@@ -88,10 +88,10 @@ const clearGroupCache = () => {
 };
 
 const setupGroupCacheListeners = (Gifted) => {
-    Gifted.ev.on("groups.update", async ([event]) => {
+    MeshTech.ev.on("groups.update", async ([event]) => {
         try {
             if (event?.id) {
-                const metadata = await Gifted.groupMetadata(event.id);
+                const metadata = await MeshTech.groupMetadata(event.id);
                 updateGroupCache(event.id, metadata);
             }
         } catch (error) {

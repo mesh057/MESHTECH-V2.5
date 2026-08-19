@@ -56,7 +56,7 @@ const findBodyCommand = (body) => {
     });
 };
 
-const createHelpers = (Gifted, ms, from) => {
+const createHelpers = (MeshTech, ms, from) => {
     const reply = (text, options = {}) => {
         if (typeof text === 'string') {
             Gifted.sendMessage(from, { text, ...options }, { quoted: ms });
@@ -68,7 +68,7 @@ const createHelpers = (Gifted, ms, from) => {
     const react = async (emoji) => {
         if (typeof emoji !== 'string') return;
         try {
-            await Gifted.sendMessage(from, { 
+            await MeshTech.sendMessage(from, { 
                 react: { key: ms.key, text: emoji }
             });
         } catch (err) {
@@ -79,7 +79,7 @@ const createHelpers = (Gifted, ms, from) => {
     const edit = async (text, message) => {
         if (typeof text !== 'string') return;
         try {
-            await Gifted.sendMessage(from, {
+            await MeshTech.sendMessage(from, {
                 text: text,
                 edit: message.key
             }, { quoted: ms });
@@ -91,7 +91,7 @@ const createHelpers = (Gifted, ms, from) => {
     const del = async (message) => {
         if (!message?.key) return;
         try {
-            await Gifted.sendMessage(from, {
+            await MeshTech.sendMessage(from, {
                 delete: message.key
             }, { quoted: ms });
         } catch (err) {
@@ -102,7 +102,7 @@ const createHelpers = (Gifted, ms, from) => {
     return { reply, react, edit, del };
 };
 
-const getGroupInfo = async (Gifted, from, botId, sender) => {
+const getGroupInfo = async (MeshTech, from, botId, sender) => {
     const isGroup = from.endsWith('@g.us');
     if (!isGroup) {
         return {
@@ -118,7 +118,7 @@ const getGroupInfo = async (Gifted, from, botId, sender) => {
         };
     }
 
-    const groupInfo = await getGroupMetadata(Gifted, from);
+    const groupInfo = await getGroupMetadata(MeshTech, from);
     if (!groupInfo || !groupInfo.participants) {
         return {
             groupInfo: null,

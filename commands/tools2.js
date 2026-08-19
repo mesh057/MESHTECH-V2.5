@@ -1,7 +1,7 @@
 const { gmd, getExtensionFromMime, isTextContent } = require("../meshtech");
 const axios = require("axios");
 const fs = require("fs").promises;
-const { sendButtons } = require("gifted-btns");
+const { sendButtons } = require("mesh-btns");
 const path = require("path");
 
 gmd(
@@ -12,7 +12,7 @@ gmd(
     category: "tools",
     description: "Take a screenshot of a website (mobile view)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       reply,
@@ -20,8 +20,8 @@ gmd(
       q,
       botFooter,
       botName,
-      GiftedTechApi,
-      GiftedApiKey,
+      MeshTechApi,
+      MeshTechApiKey,
     } = conText;
 
     const url = q?.trim();
@@ -35,12 +35,12 @@ gmd(
     await react("⏳");
 
     try {
-      const res = await axios.get(`${GiftedTechApi}/api/tools/ssphone`, {
-        params: { apikey: GiftedApiKey, url: url },
+      const res = await axios.get(`${MeshTechApi}/api/tools/ssphone`, {
+        params: { apikey: MeshTechApiKey, url: url },
         responseType: "arraybuffer",
       });
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           image: Buffer.from(res.data),
@@ -66,7 +66,7 @@ gmd(
     category: "tools",
     description: "Take a screenshot of a website (tablet view)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       reply,
@@ -74,8 +74,8 @@ gmd(
       q,
       botFooter,
       botName,
-      GiftedTechApi,
-      GiftedApiKey,
+      MeshTechApi,
+      MeshTechApiKey,
     } = conText;
 
     const url = q?.trim();
@@ -87,12 +87,12 @@ gmd(
     await react("⏳");
 
     try {
-      const res = await axios.get(`${GiftedTechApi}/api/tools/sstab`, {
-        params: { apikey: GiftedApiKey, url: url },
+      const res = await axios.get(`${MeshTechApi}/api/tools/sstab`, {
+        params: { apikey: MeshTechApiKey, url: url },
         responseType: "arraybuffer",
       });
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           image: Buffer.from(res.data),
@@ -118,7 +118,7 @@ gmd(
     category: "tools",
     description: "Take a screenshot of a website (PC view)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       reply,
@@ -126,8 +126,8 @@ gmd(
       q,
       botFooter,
       botName,
-      GiftedTechApi,
-      GiftedApiKey,
+      MeshTechApi,
+      MeshTechApiKey,
     } = conText;
 
     const url = q?.trim();
@@ -139,12 +139,12 @@ gmd(
     await react("⏳");
 
     try {
-      const res = await axios.get(`${GiftedTechApi}/api/tools/sspc`, {
-        params: { apikey: GiftedApiKey, url: url },
+      const res = await axios.get(`${MeshTechApi}/api/tools/sspc`, {
+        params: { apikey: MeshTechApiKey, url: url },
         responseType: "arraybuffer",
       });
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           image: Buffer.from(res.data),
@@ -170,7 +170,7 @@ gmd(
     category: "tools",
     description: "Create a QR code from text or link",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       reply,
@@ -181,8 +181,8 @@ gmd(
       botFooter,
       botName,
       botPrefix,
-      GiftedTechApi,
-      GiftedApiKey,
+      MeshTechApi,
+      MeshTechApiKey,
     } = conText;
 
     let content = q?.trim();
@@ -201,12 +201,12 @@ gmd(
     await react("⏳");
 
     try {
-      const res = await axios.get(`${GiftedTechApi}/api/tools/createqr`, {
-        params: { apikey: GiftedApiKey, query: content },
+      const res = await axios.get(`${MeshTechApi}/api/tools/createqr`, {
+        params: { apikey: MeshTechApiKey, query: content },
         responseType: "arraybuffer",
       });
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           image: Buffer.from(res.data),
@@ -232,7 +232,7 @@ gmd(
     category: "tools",
     description: "Read/decode a QR code from an image",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -242,8 +242,8 @@ gmd(
       botFooter,
       botName,
       botPrefix,
-      GiftedTechApi,
-      GiftedApiKey,
+      MeshTechApi,
+      MeshTechApiKey,
       uploadToImgBB,
     } = conText;
 
@@ -253,7 +253,7 @@ gmd(
       const quotedImage = quoted?.imageMessage || quoted?.message?.imageMessage;
       if (quotedImage) {
         try {
-          const tempPath = await Gifted.downloadAndSaveMediaMessage(
+          const tempPath = await MeshTech.downloadAndSaveMediaMessage(
             quotedImage,
             "temp_qr",
           );
@@ -278,8 +278,8 @@ gmd(
     await react("⏳");
 
     try {
-      const res = await axios.get(`${GiftedTechApi}/api/tools/readqr`, {
-        params: { apikey: GiftedApiKey, url: imageUrl },
+      const res = await axios.get(`${MeshTechApi}/api/tools/readqr`, {
+        params: { apikey: MeshTechApiKey, url: imageUrl },
       });
 
       if (!res.data?.success) {
@@ -290,7 +290,7 @@ gmd(
       const rawResult = res.data.result || res.data.data;
       const qrContent = typeof rawResult === 'object' ? (rawResult.qrcode_data || rawResult.data || JSON.stringify(rawResult)) : rawResult;
 
-      await sendButtons(Gifted, from, {
+      await sendButtons(MeshTech, from, {
         title: `${botName} QR READER`,
         text: `📱 *QR Code Content:*\n\n${qrContent}`,
         footer: botFooter,
@@ -322,7 +322,7 @@ gmd(
     category: "tools",
     description: "Convert text to picture sticker",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       reply,
@@ -330,8 +330,8 @@ gmd(
       q,
       botName,
       botPrefix,
-      GiftedTechApi,
-      GiftedApiKey,
+      MeshTechApi,
+      MeshTechApiKey,
       packName,
       packAuthor,
     } = conText;
@@ -345,8 +345,8 @@ gmd(
     await react("⏳");
 
     try {
-      const res = await axios.get(`${GiftedTechApi}/api/tools/ttp`, {
-        params: { apikey: GiftedApiKey, query: text },
+      const res = await axios.get(`${MeshTechApi}/api/tools/ttp`, {
+        params: { apikey: MeshTechApiKey, query: text },
       });
 
       if (!res.data?.success || !res.data?.image_url) {
@@ -358,7 +358,7 @@ gmd(
         responseType: "arraybuffer",
       });
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           sticker: Buffer.from(imgRes.data),
@@ -385,7 +385,7 @@ gmd(
     category: "tools",
     description: "Convert text to fancy fonts",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -394,8 +394,8 @@ gmd(
       botFooter,
       botName,
       botPrefix,
-      GiftedTechApi,
-      GiftedApiKey,
+      MeshTechApi,
+      MeshTechApiKey,
     } = conText;
 
     const text = q?.trim();
@@ -409,8 +409,8 @@ gmd(
     await react("⏳");
 
     try {
-      const res = await axios.get(`${GiftedTechApi}/api/tools/fancy`, {
-        params: { apikey: GiftedApiKey, text: text },
+      const res = await axios.get(`${MeshTechApi}/api/tools/fancy`, {
+        params: { apikey: MeshTechApiKey, text: text },
       });
 
       if (!res.data?.success || !res.data?.results) {
@@ -425,7 +425,7 @@ gmd(
         const index = parseInt(numMatch[1]) - 1;
         if (index >= 0 && index < results.length) {
           const selected = results[index];
-          await sendButtons(Gifted, from, {
+          await sendButtons(MeshTech, from, {
             title: `${botName} FANCY TEXT`,
             text: `✨ *Style:* ${selected.name}\n\n${selected.result}`,
             footer: botFooter,
@@ -471,8 +471,8 @@ gmd(
     category: "tools",
     description: "Get the meaning/definition of a word",
   },
-  async (from, Gifted, conText) => {
-    const { reply, react, q, botFooter, botName, botPrefix, GiftedTechApi, GiftedApiKey } =
+  async (from, MeshTech, conText) => {
+    const { reply, react, q, botFooter, botName, botPrefix, MeshTechApi, MeshTechApiKey } =
       conText;
 
     const term = q?.trim();
@@ -484,8 +484,8 @@ gmd(
     await react("⏳");
 
     try {
-      const res = await axios.get(`${GiftedTechApi}/api/tools/define`, {
-        params: { apikey: GiftedApiKey, term: term },
+      const res = await axios.get(`${MeshTechApi}/api/tools/define`, {
+        params: { apikey: MeshTechApiKey, term: term },
       });
 
       if (!res.data?.success || !res.data?.results?.length) {
@@ -527,7 +527,7 @@ gmd(
     category: "tools",
     description: "Download a website as a ZIP file",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       reply,
@@ -536,8 +536,8 @@ gmd(
       botFooter,
       botName,
       botPrefix,
-      GiftedTechApi,
-      GiftedApiKey,
+      MeshTechApi,
+      MeshTechApiKey,
     } = conText;
 
     const url = q?.trim();
@@ -551,8 +551,8 @@ gmd(
     await react("⏳");
 
     try {
-      const res = await axios.get(`${GiftedTechApi}/api/tools/web2zip`, {
-        params: { apikey: GiftedApiKey, url: url },
+      const res = await axios.get(`${MeshTechApi}/api/tools/web2zip`, {
+        params: { apikey: MeshTechApiKey, url: url },
         responseType: "arraybuffer",
       });
 
@@ -563,7 +563,7 @@ gmd(
         domain = "website";
       }
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           document: Buffer.from(res.data),
@@ -591,7 +591,7 @@ gmd(
     category: "tools",
     description: "Mix two emojis together",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       reply,
@@ -600,8 +600,8 @@ gmd(
       botFooter,
       botName,
       botPrefix,
-      GiftedTechApi,
-      GiftedApiKey,
+      MeshTechApi,
+      MeshTechApiKey,
     } = conText;
 
     const input = q?.trim();
@@ -635,12 +635,12 @@ gmd(
     await react("⏳");
 
     try {
-      const res = await axios.get(`${GiftedTechApi}/api/tools/emojimix`, {
-        params: { apikey: GiftedApiKey, emoji1: emoji1, emoji2: emoji2 },
+      const res = await axios.get(`${MeshTechApi}/api/tools/emojimix`, {
+        params: { apikey: MeshTechApiKey, emoji1: emoji1, emoji2: emoji2 },
         responseType: "arraybuffer",
       });
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           image: Buffer.from(res.data),
@@ -668,7 +668,7 @@ gmd(
     category: "tools",
     description: "Rename a quoted document/file with a new name",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       reply,
@@ -740,7 +740,7 @@ gmd(
         finalName = newName + originalExt;
       }
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           document: buffer,

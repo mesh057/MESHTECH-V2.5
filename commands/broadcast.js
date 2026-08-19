@@ -22,7 +22,7 @@ gmd(
     category: "owner",
     description: "Broadcast an announcement to connected chats (owner only)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, quotedMsg, reply, react, isSuperUser, botName, botFooter } = conText;
 
     if (!isSuperUser) return reply("❌ *Owner Only Command!*");
@@ -39,7 +39,7 @@ gmd(
     const recipients = new Set(getRecipients());
     try {
       if (typeof Gifted.groupFetchAllParticipating === "function") {
-        const groups = await Gifted.groupFetchAllParticipating();
+        const groups = await MeshTech.groupFetchAllParticipating();
         for (const jid of Object.keys(groups || {})) recipients.add(jid);
       }
     } catch (error) {
@@ -62,7 +62,7 @@ gmd(
 
     for (const jid of recipients) {
       try {
-        await Gifted.sendMessage(jid, { text });
+        await MeshTech.sendMessage(jid, { text });
         sent += 1;
       } catch (error) {
         failed += 1;

@@ -1,6 +1,6 @@
 const { gmd } = require("../meshtech");
 const axios = require("axios");
-const { sendButtons } = require("gifted-btns");
+const { sendButtons } = require("mesh-btns");
 
 gmd(
   {
@@ -10,8 +10,8 @@ gmd(
     category: "religion",
     description: "Get Bible verses",
   },
-  async (from, Gifted, conText) => {
-    const { reply, react, q, botFooter, botName, GiftedTechApi, GiftedApiKey } =
+  async (from, MeshTech, conText) => {
+    const { reply, react, q, botFooter, botName, MeshTechApi, MeshTechApiKey } =
       conText;
 
     const verse = q?.trim();
@@ -25,8 +25,8 @@ gmd(
     await react("⏳");
 
     try {
-      const res = await axios.get(`${GiftedTechApi}/api/search/bible`, {
-        params: { apikey: GiftedApiKey, verse: verse },
+      const res = await axios.get(`${MeshTechApi}/api/search/bible`, {
+        params: { apikey: MeshTechApiKey, verse: verse },
       });
 
       if (!res.data?.success || !res.data?.result) {
@@ -54,7 +54,7 @@ gmd(
 
       const copyContent = r.data?.trim() || "";
 
-      await sendButtons(Gifted, from, {
+      await sendButtons(MeshTech, from, {
         title: "",
         text: txt,
         footer: botFooter,

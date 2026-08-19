@@ -23,7 +23,7 @@ gmd(
         category: "notes",
         description: "Show all notes commands",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const helpText = `📝 *NOTES COMMANDS*
 
 *Add a note:*
@@ -55,7 +55,7 @@ gmd(
 
 _Notes are personal and stored securely in the database._`;
 
-        return await Gifted.sendMessage(from, {
+        return await MeshTech.sendMessage(from, {
             text: helpText,
             contextInfo: await getContextInfo(),
         });
@@ -70,7 +70,7 @@ gmd(
         category: "notes",
         description: "Add a new note",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const { sender, q, quoted } = conText;
 
         let noteContent = q?.trim() || "";
@@ -89,14 +89,14 @@ gmd(
         }
 
         if (!noteContent) {
-            return await Gifted.sendMessage(from, {
+            return await MeshTech.sendMessage(from, {
                 text: `❌ Hey @${getUserName(sender)}, provide content for your note.\n\nUsage: ${botPrefix}addnote <your note text>\nOr reply to a message with ${botPrefix}addnote`,
                 contextInfo: await getContextInfo([sender]),
             });
         }
 
         const note = await addNote(sender, noteContent);
-        return await Gifted.sendMessage(from, {
+        return await MeshTech.sendMessage(from, {
             text: `✅ Hey @${getUserName(sender)}, Note #${note.noteNumber} saved!\n\n📝 "${note.content}"`,
             contextInfo: await getContextInfo([sender]),
         });
@@ -111,11 +111,11 @@ gmd(
         category: "notes",
         description: "Get a specific note by number",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const { sender, q, botPrefix } = conText;
 
         if (!q || isNaN(parseInt(q))) {
-            return await Gifted.sendMessage(from, {
+            return await MeshTech.sendMessage(from, {
                 text: `❌ Hey @${getUserName(sender)}, provide a note number.\n\nUsage: ${botPrefix}getnote <number>`,
                 contextInfo: await getContextInfo([sender]),
             });
@@ -125,13 +125,13 @@ gmd(
         const note = await getNote(sender, noteNumber);
 
         if (!note) {
-            return await Gifted.sendMessage(from, {
+            return await MeshTech.sendMessage(from, {
                 text: `❌ Hey @${getUserName(sender)}, Note #${noteNumber} not found.`,
                 contextInfo: await getContextInfo([sender]),
             });
         }
 
-        return await Gifted.sendMessage(from, {
+        return await MeshTech.sendMessage(from, {
             text: `📝 Hey @${getUserName(sender)}, here's *Note #${note.noteNumber}*\n\n${note.content}\n\n_Created: ${note.createdAt.toLocaleString()}_`,
             contextInfo: await getContextInfo([sender]),
         });
@@ -152,13 +152,13 @@ gmd(
         category: "notes",
         description: "Get all your notes",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const { sender, botPrefix } = conText;
 
         const notes = await getAllNotes(sender);
 
         if (notes.length === 0) {
-            return await Gifted.sendMessage(from, {
+            return await MeshTech.sendMessage(from, {
                 text: `📭 Hey @${getUserName(sender)}, you have no notes yet.\n\nUse ${botPrefix}addnote <text> to create one!`,
                 contextInfo: await getContextInfo([sender]),
             });
@@ -174,7 +174,7 @@ gmd(
         });
         text += `\n_Use ${botPrefix}getnote <number> to view full note_`;
 
-        return await Gifted.sendMessage(from, {
+        return await MeshTech.sendMessage(from, {
             text,
             contextInfo: await getContextInfo([sender]),
         });
@@ -189,11 +189,11 @@ gmd(
         category: "notes",
         description: "Update an existing note",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const { sender, q, botPrefix } = conText;
 
         if (!q || q.trim() === "") {
-            return await Gifted.sendMessage(from, {
+            return await MeshTech.sendMessage(from, {
                 text: `❌ Hey @${getUserName(sender)}, provide note number and new content.\n\nUsage: ${botPrefix}updatenote <number> <new text>`,
                 contextInfo: await getContextInfo([sender]),
             });
@@ -203,7 +203,7 @@ gmd(
         const noteNumber = parseInt(parts[0]);
 
         if (isNaN(noteNumber)) {
-            return await Gifted.sendMessage(from, {
+            return await MeshTech.sendMessage(from, {
                 text: `❌ Hey @${getUserName(sender)}, first argument must be a note number.\n\nUsage: ${botPrefix}updatenote <number> <new text>`,
                 contextInfo: await getContextInfo([sender]),
             });
@@ -211,7 +211,7 @@ gmd(
 
         const newContent = parts.slice(1).join(" ");
         if (!newContent) {
-            return await Gifted.sendMessage(from, {
+            return await MeshTech.sendMessage(from, {
                 text: `❌ Hey @${getUserName(sender)}, provide new content for the note.\n\nUsage: ${botPrefix}updatenote <number> <new text>`,
                 contextInfo: await getContextInfo([sender]),
             });
@@ -220,13 +220,13 @@ gmd(
         const note = await updateNote(sender, noteNumber, newContent);
 
         if (!note) {
-            return await Gifted.sendMessage(from, {
+            return await MeshTech.sendMessage(from, {
                 text: `❌ Hey @${getUserName(sender)}, Note #${noteNumber} not found.`,
                 contextInfo: await getContextInfo([sender]),
             });
         }
 
-        return await Gifted.sendMessage(from, {
+        return await MeshTech.sendMessage(from, {
             text: `✅ Hey @${getUserName(sender)}, Note #${note.noteNumber} updated!\n\n📝 "${note.content}"`,
             contextInfo: await getContextInfo([sender]),
         });
@@ -241,11 +241,11 @@ gmd(
         category: "notes",
         description: "Delete a specific note",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const { sender, q, botPrefix } = conText;
 
         if (!q || isNaN(parseInt(q))) {
-            return await Gifted.sendMessage(from, {
+            return await MeshTech.sendMessage(from, {
                 text: `❌ Hey @${getUserName(sender)}, provide a note number to delete.\n\nUsage: ${botPrefix}delnote <number>`,
                 contextInfo: await getContextInfo([sender]),
             });
@@ -255,13 +255,13 @@ gmd(
         const deleted = await deleteNote(sender, noteNumber);
 
         if (!deleted) {
-            return await Gifted.sendMessage(from, {
+            return await MeshTech.sendMessage(from, {
                 text: `❌ Hey @${getUserName(sender)}, Note #${noteNumber} not found.`,
                 contextInfo: await getContextInfo([sender]),
             });
         }
 
-        return await Gifted.sendMessage(from, {
+        return await MeshTech.sendMessage(from, {
             text: `✅ Hey @${getUserName(sender)}, Note #${noteNumber} deleted!`,
             contextInfo: await getContextInfo([sender]),
         });
@@ -276,19 +276,19 @@ gmd(
         category: "notes",
         description: "Delete all your notes",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const { sender } = conText;
 
         const count = await deleteAllNotes(sender);
 
         if (count === 0) {
-            return await Gifted.sendMessage(from, {
+            return await MeshTech.sendMessage(from, {
                 text: `📭 Hey @${getUserName(sender)}, you have no notes to delete.`,
                 contextInfo: await getContextInfo([sender]),
             });
         }
 
-        return await Gifted.sendMessage(from, {
+        return await MeshTech.sendMessage(from, {
             text: `✅ Hey @${getUserName(sender)}, deleted ${count} note${count > 1 ? "s" : ""}!`,
             contextInfo: await getContextInfo([sender]),
         });

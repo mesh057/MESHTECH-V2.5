@@ -8,7 +8,7 @@ gmd({
     category: "converter",
     react: "🔄️",
     description: "Convert image/video/sticker to sticker.",
-}, async (from, Gifted, conText) => {
+}, async (from, MeshTech, conText) => {
     const { q, mek, reply, react, quoted, packName, packAuthor } = conText;
 
     try {
@@ -29,7 +29,7 @@ gmd({
         let tempFilePath;
         try {
             if (quotedImg || quotedVideo) {
-                tempFilePath = await Gifted.downloadAndSaveMediaMessage(
+                tempFilePath = await MeshTech.downloadAndSaveMediaMessage(
                     quotedImg || quotedVideo,
                     "temp_media"
                 );
@@ -72,7 +72,7 @@ gmd({
 
             } else if (quotedSticker) {
                 // Sticker → Sticker (recompress if too big)
-                tempFilePath = await Gifted.downloadAndSaveMediaMessage(quotedSticker, "temp_media");
+                tempFilePath = await MeshTech.downloadAndSaveMediaMessage(quotedSticker, "temp_media");
                 const stickerData = await fs.readFile(tempFilePath);
                 const stickerFile = gmdRandom(".webp");
                 await fs.writeFile(stickerFile, stickerData);
@@ -108,7 +108,7 @@ gmd({
     category: "converter",
     react: "🔄️",
     description: "Convert Sticker to Image.",
-}, async (from, Gifted, conText) => {
+}, async (from, MeshTech, conText) => {
     const { mek, reply, sender, botName, react, quoted, botFooter, quotedMsg, newsletterJid } = conText;
 
     try {
@@ -125,10 +125,10 @@ gmd({
         
         let tempFilePath;
         try {
-            tempFilePath = await Gifted.downloadAndSaveMediaMessage(quotedSticker, 'temp_media');
+            tempFilePath = await MeshTech.downloadAndSaveMediaMessage(quotedSticker, 'temp_media');
             const stickerBuffer = await fs.readFile(tempFilePath);
             const imageBuffer = await stickerToImage(stickerBuffer);  
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
         from,
         {
           image: imageBuffer,
@@ -165,7 +165,7 @@ gmd({
     react: "🔄️",
     description: "Convert video to audio"
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, reply, react, botPic, quoted, quotedMsg, newsletterUrl } = conText;
 
     if (!quotedMsg) {
@@ -182,11 +182,11 @@ gmd({
 
     let tempFilePath;
     try {
-      tempFilePath = await Gifted.downloadAndSaveMediaMessage(quotedVideo, 'temp_media');
+      tempFilePath = await MeshTech.downloadAndSaveMediaMessage(quotedVideo, 'temp_media');
       const buffer = await fs.readFile(tempFilePath);
       const convertedBuffer = await toAudio(buffer);
       
-      await Gifted.sendMessage(from, {
+      await MeshTech.sendMessage(from, {
         audio: convertedBuffer,
         mimetype: "audio/mpeg",
         externalAdReply: {
@@ -224,7 +224,7 @@ gmd({
     react: "🎙️",
     description: "Convert audio to WhatsApp voice note"
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, reply, react, botPic, quoted, quotedMsg } = conText;
 
     if (!quotedMsg) {
@@ -241,11 +241,11 @@ gmd({
 
     let tempFilePath;
     try {
-      tempFilePath = await Gifted.downloadAndSaveMediaMessage(quotedAudio, 'temp_media');
+      tempFilePath = await MeshTech.downloadAndSaveMediaMessage(quotedAudio, 'temp_media');
       const buffer = await fs.readFile(tempFilePath);
       const convertedBuffer = await toPtt(buffer);
       
-      await Gifted.sendMessage(from, {
+      await MeshTech.sendMessage(from, {
         audio: convertedBuffer,
         mimetype: "audio/ogg; codecs=opus",
         ptt: true,
@@ -270,7 +270,7 @@ gmd({
     react: "🎥",
     description: "Convert audio to video with black screen"
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, reply, react, botPic, quoted, quotedMsg } = conText;
 
     if (!quotedMsg) {
@@ -287,11 +287,11 @@ gmd({
 
     let tempFilePath;
     try {
-      tempFilePath = await Gifted.downloadAndSaveMediaMessage(quotedAudio, 'temp_media');
+      tempFilePath = await MeshTech.downloadAndSaveMediaMessage(quotedAudio, 'temp_media');
       const buffer = await fs.readFile(tempFilePath);
       const convertedBuffer = await toVideo(buffer);
       
-      await Gifted.sendMessage(from, {
+      await MeshTech.sendMessage(from, {
         video: convertedBuffer,
         mimetype: "video/mp4",
         caption: 'Converted Video',

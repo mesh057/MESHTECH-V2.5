@@ -16,7 +16,7 @@ const { gmd, commands, monospace, formatBytes } = require("../meshtech"),
   more = String.fromCharCode(8206),
   readmore = more.repeat(4001),
   ram = `${formatBytes(freeMemoryBytes)}/${formatBytes(totalMemoryBytes)}`;
-const { sendButtons } = require("gifted-btns");
+const { sendButtons } = require("mesh-btns");
 const { getSetting } = require("../meshtech/database/settings");
 const { getActiveUserCount } = require("../meshtech/broadcastRegistry");
 const MESHTECH_LOGO_URL = "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
@@ -98,13 +98,13 @@ gmd(
     category: "general",
     description: "Request the owner’s group invite link",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, botName, botFooter } = conText;
     const inviteLink = await getSetting("GROUP_INVITE_LINK");
     if (!inviteLink) {
       return reply("ℹ️ The owner has not configured a group invite yet.");
     }
-    await Gifted.sendMessage(from, {
+    await MeshTech.sendMessage(from, {
       text: `🔗 *${botName || "MESH TECH MD"} GROUP INVITE*\n\nYou requested to join the owner’s group. Tap the link below to join voluntarily:\n\n${inviteLink}\n\n> *${botFooter || "Please join only if you agree."}*`,
     });
     await react("✅");
@@ -119,7 +119,7 @@ gmd(
     category: "general",
     description: "Check bot response speed",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       react,
       newsletterUrl,
@@ -149,7 +149,7 @@ gmd(
     }
 
     try {
-      await sendButtons(Gifted, from, {
+      await sendButtons(MeshTech, from, {
         title: "Bot Speed",
         text: pingText,
         footer: `> *${botFooter}*`,
@@ -157,7 +157,7 @@ gmd(
       });
     } catch (error) {
       console.error("Ping interactive response failed:", error.message);
-      await Gifted.sendMessage(from, {
+      await MeshTech.sendMessage(from, {
         text: `${pingText}\n\n> *${botFooter}*`,
       });
     }
@@ -178,7 +178,7 @@ gmd(
     description: "Request New Features.",
     category: "owner",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, q, sender, react, pushName, botPrefix, isSuperUser, reply } =
       conText;
     const reportedMessages = {};
@@ -227,7 +227,7 @@ gmd(
     react: "📂",
     category: "general",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { args, botPrefix, botFooter, react, reply } = conText;
     const categoryName = String(args?.[0] || "").toLowerCase();
     if (!categoryName) return reply(`Use ${botPrefix}menu and select a category.`);
@@ -251,7 +251,7 @@ gmd(
       })
       .join("\n");
 
-    await sendButtons(Gifted, from, {
+    await sendButtons(MeshTech, from, {
       title: `୧⍤⃝${categoryMeta.emoji} ${categoryTitle}`,
       text: `╔═❖•⊰ ୧⍤⃝${categoryMeta.emoji} *${toBold(categoryTitle)}* ⊱•❖═╗\n║୧⍤⃝${categoryMeta.emoji} Commands in this branch\n╚═══════════════════╝\n${readmore}\n${body}\n╚═══════════════════╝`,
       footer: `> *${botFooter}*`,
@@ -285,14 +285,14 @@ gmd(
     react: "🎛️",
     category: "general",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { botPrefix, botFooter, react, mek } = conText;
     const rows = toggleHelpEntries.map((entry) => ({
       title: `🎛️ ${entry.title}`,
       description: entry.usage,
       rowId: `${botPrefix}toggleinfo ${entry.key}`,
     }));
-    await Gifted.sendMessage(from, {
+    await MeshTech.sendMessage(from, {
       text: `╔═❖•⊰ *${toBold("TOGGLE COMMANDS")}* ⊱•❖═╗\n║ Select a feature to view its usage.\n╚═══════════════════╝`,
       title: "🎛️ TOGGLE HELP",
       footerText: `> *${botFooter}*`,
@@ -312,11 +312,11 @@ gmd(
     react: "📖",
     category: "general",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { args, botPrefix, botFooter, react, reply } = conText;
     const entry = toggleHelpEntries.find((item) => item.key === String(args?.[0] || "").toLowerCase());
     if (!entry) return reply(`Use ${botPrefix}togglemenu to select a toggle.`);
-    await sendButtons(Gifted, from, {
+    await sendButtons(MeshTech, from, {
       title: `🎛️ ${entry.title}`,
       text: `╔═❖•⊰ *${toBold(entry.title.toUpperCase())}* ⊱•❖═╗\n\n${entry.detail}\n\n🛠️ *Usage:*\n${botPrefix}${entry.usage}\n╚═══════════════════╝`,
       footer: `> *${botFooter}*`,
@@ -337,7 +337,7 @@ gmd(
     react: "📜",
     category: "general",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       sender,
@@ -418,7 +418,7 @@ gmd(
           },
         },
       };
-      await Gifted.sendMessage(from, giftedMess, { quoted: mek });
+      await MeshTech.sendMessage(from, giftedMess, { quoted: mek });
       await react("✅");
     } catch (e) {
       console.error(e);
@@ -435,7 +435,7 @@ gmd(
     category: "general",
     description: "Fetch bot main menu",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       sender,
@@ -570,7 +570,7 @@ gmd(
 
       const menuLogoUrl = botPic || "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
       try {
-        await sendButtons(Gifted, from, {
+        await sendButtons(MeshTech, from, {
           image: { url: menuLogoUrl },
           title: "📂 COMMAND DROPDOWN",
           text: `${header}\n\n${readmore}\n\n╔═❖•⊰ *${toBold("𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗠𝗘𝗡𝗨")}* ⊱•❖═╗\n║୧⍤⃝💐 ${toBold("All loaded commands")}\n╚═══════════════════╝\n${fullCommandList}\n\n${readmore}\n\n╔═❖•⊰ *${toBold("𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗖𝗔𝗧𝗘𝗚𝗢𝗥𝗜𝗘𝗦")}* ⊱•❖═╗\n${categoryPreview}\n╚═══════════════════╝\n\n୧⍤⃝💐 Open the dropdown below to browse every command branch.`,
@@ -584,7 +584,7 @@ gmd(
                   ...s,
                   rows: s.rows.map(r => ({
                     ...r,
-                    id: r.rowId // Map rowId to id for gifted-btns compatibility
+                    id: r.rowId // Map rowId to id for mesh-btns compatibility
                   }))
                 }))
               })
@@ -594,7 +594,7 @@ gmd(
       } catch (error) {
         console.error("Menu interactive response failed:", error.message);
         // Fallback: Send a single image message with the full menu text as caption to avoid duplication
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           from,
           {
             image: { url: menuLogoUrl },
@@ -620,7 +620,7 @@ gmd(
     description:
       "Displays the full raw quoted message using Baileys structure.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       reply,
@@ -648,7 +648,7 @@ gmd(
       for (const chunk of chunks) {
         const formattedMessage = `\`\`\`\n${chunk}\n\`\`\``;
 
-        await sendButtons(Gifted, from, {
+        await sendButtons(MeshTech, from, {
           title: "",
           text: formattedMessage,
           footer: `> *${botFooter}*`,
@@ -670,7 +670,7 @@ gmd(
           ],
         });
 
-        /* await Gifted.sendMessage(
+        /* await MeshTech.sendMessage(
         from,
         {
           text: formattedMessage,
@@ -703,7 +703,7 @@ gmd(
     category: "general",
     description: "Show live bot status, uptime, activity, and resources.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, react, reply, botName, botMode, botVersion, ownerName, ownerNumber, timeZone, botPrefix } = conText;
     try {
       const now = new Date();
@@ -749,11 +749,11 @@ gmd(
 ━━━━━━━━━━━━━━━━━━━━━━━
 💀 *Ready for your next command...*
 ━━━━━━━━━━━━━━━━━━━━━━━`;
-      await Gifted.sendMessage(from, { text }, { quoted: mek });
+      await MeshTech.sendMessage(from, { text }, { quoted: mek });
 
       const audioPath = path.join(__dirname, "../assets/alive.m4a");
       if (fs.existsSync(audioPath)) {
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           from,
           {
             audio: fs.readFileSync(audioPath),
@@ -780,7 +780,7 @@ gmd(
     category: "general",
     description: "check bot uptime status.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       react,
@@ -798,7 +798,7 @@ gmd(
     const hours = Math.floor((uptimeMs / (1000 * 60 * 60)) % 24);
     const days = Math.floor(uptimeMs / (1000 * 60 * 60 * 24));
 
-    await sendButtons(Gifted, from, {
+    await sendButtons(MeshTech, from, {
       title: "",
       text: `⏱️ Uptime: ${days}d ${hours}h ${minutes}m ${seconds}s`,
       footer: `> *${botFooter}*`,
@@ -825,7 +825,7 @@ gmd(
     category: "general",
     description: "Fetch bot script.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       sender,
@@ -856,7 +856,7 @@ gmd(
     const messageText = `Hello *_${pushName}_,*\nThis is *${botName},* A Whatsapp Bot Built by *${ownerName},* Enhanced with Amazing Features to Make Your Whatsapp Communication and Interaction Experience Amazing\n\n*❲❒❳ ɴᴀᴍᴇ:* ${name}\n*❲❒❳ sᴛᴀʀs:* ${stargazers_count}\n*❲❒❳ ғᴏʀᴋs:* ${forks_count}\n*❲❒❳ ᴄʀᴇᴀᴛᴇᴅ ᴏɴ:* ${new Date(created_at).toLocaleDateString()}\n*❲❒❳ ʟᴀsᴛ ᴜᴘᴅᴀᴛᴇᴅ:* ${new Date(updated_at).toLocaleDateString()}`;
 
     const dateNow = Date.now();
-    await sendButtons(Gifted, from, {
+    await sendButtons(MeshTech, from, {
       title: "",
       text: messageText,
       footer: `> *${botFooter}*`,
@@ -899,7 +899,7 @@ gmd(
 
       try {
         const zipUrl = `https://github.com/${giftedRepo}/archive/refs/heads/main.zip`;
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           from,
           {
             document: { url: zipUrl },
@@ -910,15 +910,15 @@ gmd(
         );
         await react("✅");
       } catch (dlErr) {
-        await Gifted.sendMessage(from, { text: "Failed to download repo zip: " + dlErr.message }, { quoted: messageData });
+        await MeshTech.sendMessage(from, { text: "Failed to download repo zip: " + dlErr.message }, { quoted: messageData });
       }
 
-      Gifted.ev.off("messages.upsert", handleResponse);
+      MeshTech.ev.off("messages.upsert", handleResponse);
     };
 
-    Gifted.ev.on("messages.upsert", handleResponse);
+    MeshTech.ev.on("messages.upsert", handleResponse);
     setTimeout(
-      () => Gifted.ev.off("messages.upsert", handleResponse),
+      () => MeshTech.ev.off("messages.upsert", handleResponse),
       120000,
     );
 
@@ -935,7 +935,7 @@ gmd(
     description:
       "Save messages (supports images, videos, audio, stickers, and text).",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, reply, react, sender, isSuperUser, getMediaBuffer } = conText;
 
     if (!isSuperUser) {
@@ -1020,7 +1020,7 @@ gmd(
         return reply(`❌ Unsupported message type.`);
       }
 
-      await Gifted.sendMessage(sender, mediaData, { quoted: mek });
+      await MeshTech.sendMessage(sender, mediaData, { quoted: mek });
       await react("✅");
     } catch (error) {
       console.error("Save Error:", error);

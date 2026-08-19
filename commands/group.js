@@ -18,13 +18,13 @@ gmd(
     category: "group",
     description: "List the administrators and superadmins in this group.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, isGroup } = conText;
     if (!isGroup) return reply("❌ This command only works in groups!");
 
     try {
       // Force a fresh metadata fetch to pull in latest PNs from WhatsApp
-      const metadata = await Gifted.groupMetadata(from);
+      const metadata = await MeshTech.groupMetadata(from);
       
       // Update our internal LID mappings with this fresh data
       updateLidMappingsFromMetadata(metadata);
@@ -56,7 +56,7 @@ gmd(
 
           // If it's still an LID, try to resolve it using our helper
           if (jid.includes("@lid")) {
-            jid = await getJidFromParticipant(Gifted, jid, metadata);
+            jid = await getJidFromParticipant(MeshTech, jid, metadata);
           }
           
           // Last resort: if it's the bot itself, use its own JID
@@ -105,7 +105,7 @@ gmd(
     category: "group",
     description: "Enable or Disable Anti Sticker",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       isBotAdmin,
@@ -157,7 +157,7 @@ gmd(
     category: "group",
     description: "Open Group Chat.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, isAdmin, isSuperAdmin, isGroup, isBotAdmin, mek, sender } =
       conText;
 
@@ -180,7 +180,7 @@ gmd(
     }
 
     try {
-      await Gifted.groupSettingUpdate(from, "not_announcement");
+      await MeshTech.groupSettingUpdate(from, "not_announcement");
       const userNumber = sender.split("@")[0];
       return reply(`@${userNumber} Group successfully unmuted as you wished!`, {
         mentions: [`${userNumber}@s.whatsapp.net`],
@@ -200,7 +200,7 @@ gmd(
     category: "group",
     description: "Close Group Chat",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, isAdmin, isSuperAdmin, isGroup, isBotAdmin, mek, sender } =
       conText;
 
@@ -223,7 +223,7 @@ gmd(
     }
 
     try {
-      await Gifted.groupSettingUpdate(from, "announcement");
+      await MeshTech.groupSettingUpdate(from, "announcement");
       const userNumber = sender.split("@")[0];
       return reply(`@${userNumber} Group successfully muted as you wished!`, {
         mentions: [`${userNumber}@s.whatsapp.net`],
@@ -243,12 +243,12 @@ gmd(
     category: "group",
     description: "Check group metadata and information.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, mek, react, newsletterJid, botName, isGroup } = conText;
     if (!isGroup) return reply("❌ This command only works in groups!");
 
     try {
-      const gInfo = await getGroupMetadata(Gifted, from);
+      const gInfo = await getGroupMetadata(MeshTech, from);
       if (!gInfo) return reply("❌ Failed to fetch group metadata. Make sure the bot is an admin or has access to group info.");
 
       const superAdmins = [];
@@ -262,7 +262,7 @@ gmd(
                   p.id || p.jid;
         
         if (jid && jid.includes("@lid")) {
-          jid = await getJidFromParticipant(Gifted, jid, gInfo);
+          jid = await getJidFromParticipant(MeshTech, jid, gInfo);
         }
 
         const formattedJid = `@${jid.split("@")[0]}`;
@@ -290,13 +290,13 @@ gmd(
 
 🔹 *ID:* ${gInfo.id}
 🔹 *Subject:* ${gInfo.subject || "None"}
-🔹 *Subject Owner:* @${await getDisplayNumber(Gifted, gInfo.subjectOwnerPn || gInfo.subjectOwnerJid || gInfo.subjectOwner, gInfo)}
+🔹 *Subject Owner:* @${await getDisplayNumber(MeshTech, gInfo.subjectOwnerPn || gInfo.subjectOwnerJid || gInfo.subjectOwner, gInfo)}
 🔹 *Subject Changed:* ${new Date(gInfo.subjectTime * 1000).toLocaleString()}
-🔹 *Owner:* @${await getDisplayNumber(Gifted, gInfo.ownerPn || gInfo.ownerJid || gInfo.owner, gInfo)}
+🔹 *Owner:* @${await getDisplayNumber(MeshTech, gInfo.ownerPn || gInfo.ownerJid || gInfo.owner, gInfo)}
 🔹 *Creation Date:* ${new Date(gInfo.creation * 1000).toLocaleString()}
 🔹 *Size:* ${participants.length} participants
 🔹 *Description:* ${gInfo.desc || "None"}
-🔹 *Description Owner:* @${await getDisplayNumber(Gifted, gInfo.descOwnerPn || gInfo.descOwnerJid || gInfo.descOwner, gInfo)}
+🔹 *Description Owner:* @${await getDisplayNumber(MeshTech, gInfo.descOwnerPn || gInfo.descOwnerJid || gInfo.descOwner, gInfo)}
 🔹 *Description Changed:* ${new Date(gInfo.descTime * 1000).toLocaleString()}
 
 👑 *ADMINS (${superAdmins.length + admins.length})*
@@ -313,7 +313,7 @@ ${allParticipants}
 • Community: ${gInfo.isCommunity ? "✅" : "❌"}
     `.trim();
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           text: metadataText,
@@ -333,7 +333,7 @@ ${allParticipants}
     } catch (error) {
       console.error("Error in metadata command:", error);
       await react("❌");
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         { text: "Failed to fetch group metadata." },
         { quoted: mek },
@@ -349,7 +349,7 @@ gmd(
     category: "group",
     description: "Demote a user from being an admin.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -377,7 +377,7 @@ gmd(
       const cached = getLidMapping(lid);
       if (cached) return cached;
       try {
-        const result = await Gifted.getJidFromLid(lid);
+        const result = await MeshTech.getJidFromLid(lid);
         if (result) return result;
       } catch (e) {}
       return lid;
@@ -469,7 +469,7 @@ gmd(
     }
 
     try {
-      await Gifted.groupParticipantsUpdate(from, [targetJid], "demote");
+      await MeshTech.groupParticipantsUpdate(from, [targetJid], "demote");
       await react("✅");
       await reply(`👑 @${targetNum} is no longer an admin.`, {
         mentions: [targetJid],
@@ -502,7 +502,7 @@ gmd(
     category: "group",
     description: "Promote a user to admin.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -530,7 +530,7 @@ gmd(
       const cached = getLidMapping(lid);
       if (cached) return cached;
       try {
-        const result = await Gifted.getJidFromLid(lid);
+        const result = await MeshTech.getJidFromLid(lid);
         if (result) return result;
       } catch (e) {}
       return lid;
@@ -616,7 +616,7 @@ gmd(
     }
 
     try {
-      await Gifted.groupParticipantsUpdate(from, [targetJid], "promote");
+      await MeshTech.groupParticipantsUpdate(from, [targetJid], "promote");
       await react("✅");
       await reply(`👑 @${targetNum} is now an admin.`, {
         mentions: [targetJid],
@@ -649,7 +649,7 @@ gmd(
     category: "group",
     description: "Remove a user from the group.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -676,7 +676,7 @@ gmd(
       const cached = getLidMapping(lid);
       if (cached) return cached;
       try {
-        const result = await Gifted.getJidFromLid(lid);
+        const result = await MeshTech.getJidFromLid(lid);
         if (result) return result;
       } catch (e) {}
       return lid;
@@ -758,7 +758,7 @@ gmd(
     }
 
     try {
-      await Gifted.groupParticipantsUpdate(from, [targetJid], "remove");
+      await MeshTech.groupParticipantsUpdate(from, [targetJid], "remove");
       await react("✅");
       await reply(`🚫 @${targetNum} has been removed from the group.`, {
         mentions: [targetJid],
@@ -791,7 +791,7 @@ gmd(
     category: "group",
     description: "Add a user to the group.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -826,7 +826,7 @@ gmd(
     const targetJid = num + "@s.whatsapp.net";
 
     try {
-      const [result] = await Gifted.onWhatsApp(num);
+      const [result] = await MeshTech.onWhatsApp(num);
       if (!result || !result.exists) {
         await react("❌");
         return reply(`❌ The number ${num} is not registered on WhatsApp.`);
@@ -853,7 +853,7 @@ gmd(
     }
 
     try {
-      const result = await Gifted.groupParticipantsUpdate(
+      const result = await MeshTech.groupParticipantsUpdate(
         from,
         [targetJid],
         "add",
@@ -861,12 +861,12 @@ gmd(
       const status = result[0]?.status;
 
       if (status === "403") {
-        const meta = await Gifted.groupMetadata(from);
+        const meta = await MeshTech.groupMetadata(from);
         const groupName = meta.subject;
-        const inviteCode = await Gifted.groupInviteCode(from);
+        const inviteCode = await MeshTech.groupInviteCode(from);
         const inviteLink = `https://chat.whatsapp.com/${inviteCode}`;
 
-        await Gifted.sendMessage(targetJid, {
+        await MeshTech.sendMessage(targetJid, {
           text: `👋 Hello! You've been invited to join *${groupName}*\n\n🔗 *Invite Link:* ${inviteLink}\n\n_Click the link above to join the group._`,
         });
 
@@ -915,7 +915,7 @@ gmd(
     category: "group",
     description: "Get the group invite link.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -934,14 +934,14 @@ gmd(
       return reply("❌ You must be an admin to use this command!");
 
     try {
-      const meta = await Gifted.groupMetadata(from);
+      const meta = await MeshTech.groupMetadata(from);
       const groupName = meta.subject;
       const participantCount = meta.participants.length;
       const adminCount = meta.participants.filter(
         (p) => p.admin === "admin" || p.admin === "superadmin",
       ).length;
 
-      const inviteCode = await Gifted.groupInviteCode(from);
+      const inviteCode = await MeshTech.groupInviteCode(from);
       const inviteLink = `https://chat.whatsapp.com/${inviteCode}`;
 
       const linkText =
@@ -951,7 +951,7 @@ gmd(
         `*Admins:* ${adminCount}\n\n` +
         `*Link:* ${inviteLink}`;
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           text: linkText,
@@ -984,7 +984,7 @@ gmd(
     category: "group",
     description: "Create a new group with the bot as admin.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -1008,9 +1008,9 @@ gmd(
     const groupName = q.trim();
 
     try {
-      const group = await Gifted.groupCreate(groupName, [sender]);
+      const group = await MeshTech.groupCreate(groupName, [sender]);
 
-      const inviteCode = await Gifted.groupInviteCode(group.id);
+      const inviteCode = await MeshTech.groupInviteCode(group.id);
       const inviteLink = `https://chat.whatsapp.com/${inviteCode}`;
 
       const successText =
@@ -1019,7 +1019,7 @@ gmd(
         `*Group ID:* ${group.id}\n\n` +
         `*Invite Link:* ${inviteLink}`;
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           text: successText,
@@ -1052,7 +1052,7 @@ gmd(
     category: "group",
     description: "Terminate group - removes all members and bot leaves.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -1074,7 +1074,7 @@ gmd(
       return reply("❌ You must be an admin to use this command!");
 
     try {
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           text: `⚠️ *WARNING* ⚠️\n\n💀 *Group will be terminated now...*\n\n_All members will be removed._\n\n⚠️ _Using this command frequently might lead to WhatsApp bans._`,
@@ -1093,7 +1093,7 @@ gmd(
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const meta = await Gifted.groupMetadata(from);
+      const meta = await MeshTech.groupMetadata(from);
       const participants = meta.participants;
       const botJid = Gifted.user?.id?.split(":")[0] + "@s.whatsapp.net";
 
@@ -1102,10 +1102,10 @@ gmd(
         .map((p) => p.id);
 
       if (membersToRemove.length > 0) {
-        await Gifted.groupParticipantsUpdate(from, membersToRemove, "remove");
+        await MeshTech.groupParticipantsUpdate(from, membersToRemove, "remove");
       }
 
-      await Gifted.groupLeave(from);
+      await MeshTech.groupLeave(from);
     } catch (error) {
       await react("❌");
       await reply(`❌ Failed to terminate group: ${error.message}`);
@@ -1121,7 +1121,7 @@ gmd(
     category: "group",
     description: "Accept a pending join request. Usage: .accept 254746844168",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -1148,7 +1148,7 @@ gmd(
       const number = args[0].replace(/[^0-9]/g, "");
       const userJid = `${number}@s.whatsapp.net`;
 
-      await Gifted.groupRequestParticipantsUpdate(from, [userJid], "approve");
+      await MeshTech.groupRequestParticipantsUpdate(from, [userJid], "approve");
 
       await react("✅");
       return reply(`✅ Successfully approved @${number}'s join request!`, {
@@ -1175,7 +1175,7 @@ gmd(
     category: "group",
     description: "Reject a pending join request. Usage: .reject 254746844168",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -1202,7 +1202,7 @@ gmd(
       const number = args[0].replace(/[^0-9]/g, "");
       const userJid = `${number}@s.whatsapp.net`;
 
-      await Gifted.groupRequestParticipantsUpdate(from, [userJid], "reject");
+      await MeshTech.groupRequestParticipantsUpdate(from, [userJid], "reject");
 
       await react("✅");
       return reply(`✅ Successfully rejected @${number}'s join request!`, {
@@ -1229,7 +1229,7 @@ gmd(
     category: "group",
     description: "Accept all pending join requests in the group.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, sender, isGroup, isBotAdmin, isAdmin, isSuperAdmin } =
       conText;
 
@@ -1239,14 +1239,14 @@ gmd(
       return reply("❌ You must be an admin to use this command!");
 
     try {
-      const pendingRequests = await Gifted.groupRequestParticipantsList(from);
+      const pendingRequests = await MeshTech.groupRequestParticipantsList(from);
 
       if (!pendingRequests || pendingRequests.length === 0) {
         return reply("📭 No pending join requests in this group.");
       }
 
       const jids = pendingRequests.map((r) => r.jid);
-      await Gifted.groupRequestParticipantsUpdate(from, jids, "approve");
+      await MeshTech.groupRequestParticipantsUpdate(from, jids, "approve");
 
       await react("✅");
       return reply(
@@ -1267,7 +1267,7 @@ gmd(
     category: "group",
     description: "Reject all pending join requests in the group.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, sender, isGroup, isBotAdmin, isAdmin, isSuperAdmin } =
       conText;
 
@@ -1277,14 +1277,14 @@ gmd(
       return reply("❌ You must be an admin to use this command!");
 
     try {
-      const pendingRequests = await Gifted.groupRequestParticipantsList(from);
+      const pendingRequests = await MeshTech.groupRequestParticipantsList(from);
 
       if (!pendingRequests || pendingRequests.length === 0) {
         return reply("📭 No pending join requests in this group.");
       }
 
       const jids = pendingRequests.map((r) => r.jid);
-      await Gifted.groupRequestParticipantsUpdate(from, jids, "reject");
+      await MeshTech.groupRequestParticipantsUpdate(from, jids, "reject");
 
       await react("✅");
       return reply(
@@ -1305,7 +1305,7 @@ gmd(
     category: "group",
     description: "List members who are currently online in the group.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, sender, isGroup, mek, botName, newsletterJid } =
       conText;
 
@@ -1314,7 +1314,7 @@ gmd(
     try {
       await reply("🔍 Checking online members... Please wait...");
 
-      const groupMeta = await Gifted.groupMetadata(from);
+      const groupMeta = await MeshTech.groupMetadata(from);
       const participants = groupMeta.participants;
 
       const onlineMembers = [];
@@ -1331,7 +1331,7 @@ gmd(
         }
       };
 
-      Gifted.ev.on("presence.update", presenceHandler);
+      MeshTech.ev.on("presence.update", presenceHandler);
 
       try {
         const batchSize = 5;
@@ -1341,7 +1341,7 @@ gmd(
             batch.map(async (p) => {
               const jid = p.id || p.jid;
               try {
-                await Gifted.presenceSubscribe(jid);
+                await MeshTech.presenceSubscribe(jid);
               } catch (e) {}
             }),
           );
@@ -1382,7 +1382,7 @@ gmd(
           }
         }
       } finally {
-        Gifted.ev.off("presence.update", presenceHandler);
+        MeshTech.ev.off("presence.update", presenceHandler);
       }
 
       if (onlineMembers.length === 0) {
@@ -1404,7 +1404,7 @@ gmd(
         `_Note: Only shows members currently typing or recording._`;
 
       await react("✅");
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           text: message,
@@ -1442,7 +1442,7 @@ gmd(
     category: "group",
     description: "Reset the group invite link and get a new one.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -1461,12 +1461,12 @@ gmd(
       return reply("❌ You must be an admin to use this command!");
 
     try {
-      await Gifted.groupRevokeInvite(from);
+      await MeshTech.groupRevokeInvite(from);
 
-      const newInviteCode = await Gifted.groupInviteCode(from);
+      const newInviteCode = await MeshTech.groupInviteCode(from);
       const newLink = `https://chat.whatsapp.com/${newInviteCode}`;
 
-      const groupMeta = await Gifted.groupMetadata(from);
+      const groupMeta = await MeshTech.groupMetadata(from);
       const groupName = groupMeta.subject;
       const totalMembers = groupMeta.participants.length;
       const totalAdmins = groupMeta.participants.filter(
@@ -1482,7 +1482,7 @@ gmd(
         `_The old invite link has been revoked._`;
 
       await react("✅");
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           text: message,
@@ -1513,7 +1513,7 @@ gmd(
     category: "group",
     description: "Bot leaves the group. Owner only.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -1529,7 +1529,7 @@ gmd(
     if (!isSuperUser) return reply("❌ Owner Only Command!");
 
     try {
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           text: `👋 *Goodbye!*\n\n_${botName} is leaving this group..._`,
@@ -1547,7 +1547,7 @@ gmd(
       );
 
       await new Promise((r) => setTimeout(r, 1000));
-      await Gifted.groupLeave(from);
+      await MeshTech.groupLeave(from);
     } catch (error) {
       await react("❌");
       return reply(`❌ Failed to leave group: ${error.message}`);
@@ -1563,7 +1563,7 @@ gmd(
     category: "group",
     description: "List all pending join requests in the group.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -1583,7 +1583,7 @@ gmd(
       return reply("❌ You must be an admin to use this command!");
 
     try {
-      const pendingRequests = await Gifted.groupRequestParticipantsList(from);
+      const pendingRequests = await MeshTech.groupRequestParticipantsList(from);
 
       if (!pendingRequests || pendingRequests.length === 0) {
         await react("📭");
@@ -1599,7 +1599,7 @@ gmd(
               jid = cachedJid;
             } else if (Gifted.getJidFromLid) {
               try {
-                const resolved = await Gifted.getJidFromLid(jid);
+                const resolved = await MeshTech.getJidFromLid(jid);
                 if (resolved) jid = resolved;
               } catch {}
             }
@@ -1625,7 +1625,7 @@ gmd(
         `_Use .reject <number> or .rejectall to decline_`;
 
       await react("✅");
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           text: message,
@@ -1657,9 +1657,9 @@ gmd(
     category: "group",
     description: "Send text or quoted media to group status. Superuser only.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, isSuperUser, isGroup, q, quoted, quotedMsg, mek, formatAudio, formatVideo, botPrefix } = conText;
-    const { downloadMediaMessage } = require("gifted-baileys");
+    const { downloadMediaMessage } = require("mesh-baileys");
 
     if (!isGroup) return reply("❌ Group only command!");
     if (!isSuperUser) return reply("❌ Owner Only Command!");
@@ -1727,7 +1727,7 @@ gmd(
         statusPayload.text = q;
       }
 
-      await Gifted.giftedStatus.sendGroupStatus(from, statusPayload);
+      await MeshTech.giftedStatus.sendGroupStatus(from, statusPayload);
       await react("✅");
     } catch (error) {
       console.error("togroupstatus error:", error);
@@ -1751,7 +1751,7 @@ gmd(
     category: "group",
     description: "Change group name/subject. Usage: .groupname New Group Name",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -1775,7 +1775,7 @@ gmd(
       );
 
     try {
-      await Gifted.groupUpdateSubject(from, q);
+      await MeshTech.groupUpdateSubject(from, q);
       await react("✅");
       return reply(`✅ Group name changed to: *${q}*`);
     } catch (error) {
@@ -1799,7 +1799,7 @@ gmd(
     category: "group",
     description: "Change group description. Usage: .gcdesc New Description",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -1823,7 +1823,7 @@ gmd(
       );
 
     try {
-      await Gifted.groupUpdateDescription(from, q);
+      await MeshTech.groupUpdateDescription(from, q);
       await react("✅");
       return reply(`✅ Group description updated successfully!`);
     } catch (error) {
@@ -1841,7 +1841,7 @@ gmd(
     category: "group",
     description: "Tag everyone in the group with custom message",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       isAdmin,
@@ -1879,7 +1879,7 @@ gmd(
       .filter(Boolean);
 
     try {
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           text: `@${from}`,
@@ -1917,7 +1917,7 @@ gmd(
     category: "group",
     description: "Send a message that secretly tags everyone",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       isAdmin,
@@ -1972,7 +1972,7 @@ gmd(
       .filter(Boolean);
 
     try {
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           text: text,
@@ -2011,7 +2011,7 @@ gmd(
     description:
       "Toggle anti-group-mention protection. Modes: on/warn (default), kick, off",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -2087,7 +2087,7 @@ gmd(
     category: "group",
     description: "Set the warning limit for anti-group-mention before kicking",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, isGroup, isBotAdmin, isAdmin, isSuperAdmin, q, mek, botPrefix } =
       conText;
 
@@ -2137,7 +2137,7 @@ gmd(
     category: "group",
     description: "Tag all group members with optional message",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, isAdmin, isSuperAdmin, isGroup, isSuperUser, mek, sender, q, botName } = conText;
 
     if (!isGroup) {
@@ -2149,7 +2149,7 @@ gmd(
     }
 
     try {
-      const meta = await Gifted.groupMetadata(from);
+      const meta = await MeshTech.groupMetadata(from);
       const participants = meta.participants;
 
       const superAdmins = [];
@@ -2190,7 +2190,7 @@ gmd(
 
       mentions.push(sender);
 
-      await Gifted.sendMessage(from, {
+      await MeshTech.sendMessage(from, {
         text: text.trim(),
         mentions
       }, { quoted: mek });
@@ -2211,7 +2211,7 @@ gmd(
     category: "group",
     description: "Tag all group admins with optional message",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, isAdmin, isSuperAdmin, isGroup, isSuperUser, mek, sender, q, botName } = conText;
 
     if (!isGroup) {
@@ -2223,7 +2223,7 @@ gmd(
     }
 
     try {
-      const meta = await Gifted.groupMetadata(from);
+      const meta = await MeshTech.groupMetadata(from);
       const participants = meta.participants;
 
       const superAdmins = [];
@@ -2261,7 +2261,7 @@ gmd(
         text += `👮 @${id.split('@')[0]}\n`;
       }
 
-      await Gifted.sendMessage(from, {
+      await MeshTech.sendMessage(from, {
         text: text.trim(),
         mentions
       }, { quoted: mek });
@@ -2281,7 +2281,7 @@ gmd(
     category: "group",
     description: "Toggle anti-promote protection. Demotes both promoter and promoted user.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, isGroup, isBotAdmin, isAdmin, isSuperAdmin, args, botPrefix } = conText;
 
     if (!isGroup) return reply("❌ This command only works in groups!");
@@ -2314,7 +2314,7 @@ gmd(
     category: "group",
     description: "Toggle anti-demote protection. Demotes demoter and re-promotes demoted user.",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, isGroup, isBotAdmin, isAdmin, isSuperAdmin, args, botPrefix } = conText;
 
     if (!isGroup) return reply("❌ This command only works in groups!");

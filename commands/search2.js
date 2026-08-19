@@ -3,8 +3,8 @@ const { gmd } = require("../meshtech"),
   {
     generateWAMessageContent,
     generateWAMessageFromContent,
-  } = require("gifted-baileys"),
-  { sendButtons } = require("gifted-btns");
+  } = require("mesh-baileys"),
+  { sendButtons } = require("mesh-btns");
 
 function extractButtonId(msg) {
     if (!msg) return null;
@@ -33,8 +33,8 @@ gmd(
     react: "🖼️",
     description: "Search Google Images and send first 10 images",
   },
-  async (from, Gifted, conText) => {
-    const { q, mek, reply, react, botFooter, GiftedTechApi, GiftedApiKey } =
+  async (from, MeshTech, conText) => {
+    const { q, mek, reply, react, botFooter, MeshTechApi, MeshTechApiKey } =
       conText;
 
     if (!q) {
@@ -43,7 +43,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${GiftedTechApi}/api/search/googleimage?apikey=${GiftedApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/search/googleimage?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (
@@ -61,7 +61,7 @@ gmd(
 
       for (let i = 0; i < images.length; i++) {
         try {
-          await Gifted.sendMessage(
+          await MeshTech.sendMessage(
             from,
             {
               image: { url: images[i] },
@@ -92,8 +92,8 @@ gmd(
     react: "📷",
     description: "Search Unsplash and send first 10 photos",
   },
-  async (from, Gifted, conText) => {
-    const { q, mek, reply, react, botFooter, GiftedTechApi, GiftedApiKey } =
+  async (from, MeshTech, conText) => {
+    const { q, mek, reply, react, botFooter, MeshTechApi, MeshTechApiKey } =
       conText;
 
     if (!q) {
@@ -102,7 +102,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${GiftedTechApi}/api/search/unsplash?apikey=${GiftedApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/search/unsplash?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (
@@ -122,7 +122,7 @@ gmd(
 
       for (let i = 0; i < photos.length; i++) {
         try {
-          await Gifted.sendMessage(
+          await MeshTech.sendMessage(
             from,
             {
               image: { url: photos[i] },
@@ -160,8 +160,8 @@ gmd(
     react: "🖼️",
     description: "Search HD wallpapers by category",
   },
-  async (from, Gifted, conText) => {
-    const { q, mek, reply, react, botFooter, GiftedTechApi, GiftedApiKey } =
+  async (from, MeshTech, conText) => {
+    const { q, mek, reply, react, botFooter, MeshTechApi, MeshTechApiKey } =
       conText;
 
     if (!q) {
@@ -170,7 +170,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${GiftedTechApi}/api/search/wallpaper?apikey=${GiftedApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/search/wallpaper?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (
@@ -193,7 +193,7 @@ gmd(
           const wp = wallpapers[i];
           const imageUrl = Array.isArray(wp.image) ? wp.image[0] : wp.image;
 
-          await Gifted.sendMessage(
+          await MeshTech.sendMessage(
             from,
             {
               image: { url: imageUrl },
@@ -224,7 +224,7 @@ gmd(
     react: "🌤️",
     description: "Get weather information for a location",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       mek,
@@ -232,8 +232,8 @@ gmd(
       react,
       botName,
       botFooter,
-      GiftedTechApi,
-      GiftedApiKey,
+      MeshTechApi,
+      MeshTechApiKey,
     } = conText;
 
     if (!q) {
@@ -242,7 +242,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${GiftedTechApi}/api/search/weather?apikey=${GiftedApiKey}&location=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/search/weather?apikey=${MeshTechApiKey}&location=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (!res.data?.success || !res.data?.result) {
@@ -298,7 +298,7 @@ gmd(
     react: "📦",
     description: "Search NPM packages",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       mek,
@@ -306,8 +306,8 @@ gmd(
       react,
       botName,
       botFooter,
-      GiftedTechApi,
-      GiftedApiKey,
+      MeshTechApi,
+      MeshTechApiKey,
     } = conText;
 
     if (!q) {
@@ -316,7 +316,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${GiftedTechApi}/api/search/npmsearch?apikey=${GiftedApiKey}&packagename=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/search/npmsearch?apikey=${MeshTechApiKey}&packagename=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (!res.data?.success || !res.data?.result) {
@@ -340,7 +340,7 @@ gmd(
 
       if (pkg.downloadLink) {
         const dateNow = Date.now();
-        await sendButtons(Gifted, from, {
+        await sendButtons(MeshTech, from, {
           title: "",
           text: txt,
           footer: botFooter,
@@ -364,7 +364,7 @@ gmd(
           if (!isFromSameChat) return;
 
           try {
-            await Gifted.sendMessage(
+            await MeshTech.sendMessage(
               from,
               {
                 document: { url: pkg.downloadLink },
@@ -380,9 +380,9 @@ gmd(
 
         };
 
-        Gifted.ev.on("messages.upsert", handleResponse);
+        MeshTech.ev.on("messages.upsert", handleResponse);
         setTimeout(
-          () => Gifted.ev.off("messages.upsert", handleResponse),
+          () => MeshTech.ev.off("messages.upsert", handleResponse),
           300000,
         );
       } else {
@@ -406,8 +406,8 @@ gmd(
     react: "📚",
     description: "Search Wattpad stories",
   },
-  async (from, Gifted, conText) => {
-    const { q, mek, reply, react, botFooter, GiftedTechApi, GiftedApiKey } =
+  async (from, MeshTech, conText) => {
+    const { q, mek, reply, react, botFooter, MeshTechApi, MeshTechApiKey } =
       conText;
 
     if (!q) {
@@ -416,7 +416,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${GiftedTechApi}/api/search/wattpad?apikey=${GiftedApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/search/wattpad?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (
@@ -439,7 +439,7 @@ gmd(
               await generateWAMessageContent(
                 { image: { url: story.thumbnail } },
                 {
-                  upload: Gifted.waUploadToServer,
+                  upload: MeshTech.waUploadToServer,
                 },
               )
             ).imageMessage,
@@ -484,7 +484,7 @@ gmd(
         { quoted: mek },
       );
 
-      await Gifted.relayMessage(from, message.message, {
+      await MeshTech.relayMessage(from, message.message, {
         messageId: message.key.id,
       });
       await react("✅");
@@ -504,7 +504,7 @@ gmd(
     react: "🎵",
     description: "Search Spotify for tracks",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       mek,
@@ -513,8 +513,8 @@ gmd(
       botName,
       botFooter,
       botPrefix,
-      GiftedTechApi,
-      GiftedApiKey,
+      MeshTechApi,
+      MeshTechApiKey,
     } = conText;
 
     if (!q) {
@@ -523,7 +523,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${GiftedTechApi}/api/search/spotifysearch?apikey=${GiftedApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/search/spotifysearch?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (
@@ -556,7 +556,7 @@ gmd(
         text: `${i + 1}. ${track.title.substring(0, 30)}`,
       }));
 
-      await sendButtons(Gifted, from, {
+      await sendButtons(MeshTech, from, {
         title: "",
         text: txt,
         footer: botFooter,
@@ -578,7 +578,7 @@ gmd(
         const selectedTrack = tracks[trackIndex];
 
         if (selectedTrack) {
-          await Gifted.sendMessage(
+          await MeshTech.sendMessage(
             from,
             { text: `${botPrefix}spotify ${selectedTrack.url}` },
             { quoted: messageData },
@@ -586,9 +586,9 @@ gmd(
         }
       };
 
-      Gifted.ev.on("messages.upsert", handleResponse);
+      MeshTech.ev.on("messages.upsert", handleResponse);
       setTimeout(
-        () => Gifted.ev.off("messages.upsert", handleResponse),
+        () => MeshTech.ev.off("messages.upsert", handleResponse),
         300000,
       );
       await react("✅");

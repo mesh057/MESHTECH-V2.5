@@ -3,7 +3,7 @@ const axios = require("axios");
 const {
   generateWAMessageContent,
   generateWAMessageFromContent,
-} = require("gifted-baileys");
+} = require("mesh-baileys");
 const { getSetting } = require("../meshtech/database/settings");
 
 const SPORTS_API_BASE = "https://apiskeith.top";
@@ -68,7 +68,7 @@ gmd(
     category: "sports",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, reply, react, botName } = conText;
 
     try {
@@ -121,7 +121,7 @@ gmd(
 
       txt += `_⚠️ Bet responsibly. Past results don't guarantee future outcomes._`;
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           text: txt,
@@ -148,7 +148,7 @@ gmd(
     category: "sports",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, botName, timeZone } = conText;
 
     const caption = `╭━━━━━━━━━━━━━━━⬣
@@ -161,7 +161,7 @@ gmd(
 │ 3. ⏰ Upcoming
 ╰━━━━━━━━━━━━━━━⬣`;
 
-    const sent = await Gifted.sendMessage(
+    const sent = await MeshTech.sendMessage(
       from,
       {
         text: caption,
@@ -205,7 +205,7 @@ gmd(
       const selected = optionMap[choice];
 
       try {
-        await Gifted.sendMessage(chatId, {
+        await MeshTech.sendMessage(chatId, {
           react: { text: selected.emoji, key: msg.key },
         });
 
@@ -280,7 +280,7 @@ gmd(
 
         output += `_📊 Showing ${Math.min(filteredGames.length, 20)} of ${filteredGames.length} matches_`;
 
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           chatId,
           {
             text: output,
@@ -289,10 +289,10 @@ gmd(
           { quoted: msg },
         );
 
-        Gifted.ev.off("messages.upsert", handler);
+        MeshTech.ev.off("messages.upsert", handler);
       } catch (err) {
         console.error("livescore error:", err);
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           chatId,
           {
             text: `❌ Error fetching matches: ${err.message}`,
@@ -303,8 +303,8 @@ gmd(
       }
     };
 
-    Gifted.ev.on("messages.upsert", handler);
-    setTimeout(() => Gifted.ev.off("messages.upsert", handler), 120000);
+    MeshTech.ev.on("messages.upsert", handler);
+    setTimeout(() => MeshTech.ev.off("messages.upsert", handler), 120000);
   },
 );
 
@@ -317,7 +317,7 @@ gmd(
     description: "Get latest football news",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, react, reply, botName } = conText;
 
     try {
@@ -342,7 +342,7 @@ gmd(
               await generateWAMessageContent(
                 { image: { url: item.cover?.url } },
                 {
-                  upload: Gifted.waUploadToServer,
+                  upload: MeshTech.waUploadToServer,
                 },
               )
             ).imageMessage,
@@ -386,7 +386,7 @@ gmd(
         { quoted: mek },
       );
 
-      await Gifted.relayMessage(from, message.message, {
+      await MeshTech.relayMessage(from, message.message, {
         messageId: message.key.id,
       });
       await react("✅");
@@ -407,12 +407,12 @@ gmd(
     category: "sports",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, botName } = conText;
 
     const caption = formatLeagueMenu("TOP SCORERS", "⚽");
 
-    const sent = await Gifted.sendMessage(
+    const sent = await MeshTech.sendMessage(
       from,
       {
         text: caption,
@@ -450,7 +450,7 @@ gmd(
       }
 
       try {
-        await Gifted.sendMessage(chatId, {
+        await MeshTech.sendMessage(chatId, {
           react: { text: "⚽", key: msg.key },
         });
 
@@ -494,7 +494,7 @@ gmd(
           output += `\n`;
         });
 
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           chatId,
           {
             text: output,
@@ -503,10 +503,10 @@ gmd(
           { quoted: msg },
         );
 
-        Gifted.ev.off("messages.upsert", handler);
+        MeshTech.ev.off("messages.upsert", handler);
       } catch (err) {
         console.error("topscorers error:", err);
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           chatId,
           {
             text: `❌ Error: ${err.message}`,
@@ -517,8 +517,8 @@ gmd(
       }
     };
 
-    Gifted.ev.on("messages.upsert", handler);
-    setTimeout(() => Gifted.ev.off("messages.upsert", handler), 120000);
+    MeshTech.ev.on("messages.upsert", handler);
+    setTimeout(() => MeshTech.ev.off("messages.upsert", handler), 120000);
   },
 );
 
@@ -531,12 +531,12 @@ gmd(
     category: "sports",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, botName } = conText;
 
     const caption = formatLeagueMenu("LEAGUE STANDINGS", "📊");
 
-    const sent = await Gifted.sendMessage(
+    const sent = await MeshTech.sendMessage(
       from,
       {
         text: caption,
@@ -574,7 +574,7 @@ gmd(
       }
 
       try {
-        await Gifted.sendMessage(chatId, {
+        await MeshTech.sendMessage(chatId, {
           react: { text: "📊", key: msg.key },
         });
 
@@ -619,7 +619,7 @@ gmd(
 
         output += `_🏆UCL 🔵UEL 🔴Rel_`;
 
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           chatId,
           {
             text: output,
@@ -628,10 +628,10 @@ gmd(
           { quoted: msg },
         );
 
-        Gifted.ev.off("messages.upsert", handler);
+        MeshTech.ev.off("messages.upsert", handler);
       } catch (err) {
         console.error("standings error:", err);
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           chatId,
           {
             text: `❌ Error: ${err.message}`,
@@ -642,8 +642,8 @@ gmd(
       }
     };
 
-    Gifted.ev.on("messages.upsert", handler);
-    setTimeout(() => Gifted.ev.off("messages.upsert", handler), 120000);
+    MeshTech.ev.on("messages.upsert", handler);
+    setTimeout(() => MeshTech.ev.off("messages.upsert", handler), 120000);
   },
 );
 
@@ -656,12 +656,12 @@ gmd(
     category: "sports",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, botName } = conText;
 
     const caption = formatLeagueMenu("UPCOMING MATCHES", "📅");
 
-    const sent = await Gifted.sendMessage(
+    const sent = await MeshTech.sendMessage(
       from,
       {
         text: caption,
@@ -699,7 +699,7 @@ gmd(
       }
 
       try {
-        await Gifted.sendMessage(chatId, {
+        await MeshTech.sendMessage(chatId, {
           react: { text: "📅", key: msg.key },
         });
 
@@ -734,7 +734,7 @@ gmd(
           output += `┗━━━━━━━━━┛\n\n`;
         });
 
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           chatId,
           {
             text: output,
@@ -743,10 +743,10 @@ gmd(
           { quoted: msg },
         );
 
-        Gifted.ev.off("messages.upsert", handler);
+        MeshTech.ev.off("messages.upsert", handler);
       } catch (err) {
         console.error("upcomingmatches error:", err);
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           chatId,
           {
             text: `❌ Error: ${err.message}`,
@@ -757,8 +757,8 @@ gmd(
       }
     };
 
-    Gifted.ev.on("messages.upsert", handler);
-    setTimeout(() => Gifted.ev.off("messages.upsert", handler), 120000);
+    MeshTech.ev.on("messages.upsert", handler);
+    setTimeout(() => MeshTech.ev.off("messages.upsert", handler), 120000);
   },
 );
 
@@ -771,12 +771,12 @@ gmd(
     category: "sports",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, botName } = conText;
 
     const caption = formatLeagueMenu("MATCH HISTORY", "📋");
 
-    const sent = await Gifted.sendMessage(
+    const sent = await MeshTech.sendMessage(
       from,
       {
         text: caption,
@@ -814,7 +814,7 @@ gmd(
       }
 
       try {
-        await Gifted.sendMessage(chatId, {
+        await MeshTech.sendMessage(chatId, {
           react: { text: "📋", key: msg.key },
         });
 
@@ -852,7 +852,7 @@ gmd(
           output += `╰━━━━━━━━━━━━━━━⬣\n\n`;
         });
 
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           chatId,
           {
             text: output,
@@ -861,10 +861,10 @@ gmd(
           { quoted: msg },
         );
 
-        Gifted.ev.off("messages.upsert", handler);
+        MeshTech.ev.off("messages.upsert", handler);
       } catch (err) {
         console.error("gamehistory error:", err);
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           chatId,
           {
             text: `❌ Error: ${err.message}`,
@@ -875,8 +875,8 @@ gmd(
       }
     };
 
-    Gifted.ev.on("messages.upsert", handler);
-    setTimeout(() => Gifted.ev.off("messages.upsert", handler), 120000);
+    MeshTech.ev.on("messages.upsert", handler);
+    setTimeout(() => MeshTech.ev.off("messages.upsert", handler), 120000);
   },
 );
 

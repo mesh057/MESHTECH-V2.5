@@ -1,6 +1,6 @@
 const pino = require('pino');
 const NodeCache = require('node-cache');
-const { makeCacheableSignalKeyStore } = require('gifted-baileys');
+const { makeCacheableSignalKeyStore } = require('mesh-baileys');
 const { cachedGroupMetadata } = require('./groupCache');
 
 const _userDevicesCache = new NodeCache({ stdTTL: 1800, useClones: false });

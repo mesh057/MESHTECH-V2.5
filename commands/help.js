@@ -78,7 +78,7 @@ gmd(
     category: 'general',
     description: 'Explain what commands do and show how to use them. Use `.help command` for one command or `.help all` for the full guide.',
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { args, botPrefix, botFooter, react, reply, mek } = conText;
     const prefix = botPrefix || '.';
     const requested = String(args?.[0] || '').trim().toLowerCase().replace(/^[.!#/]/, '');
@@ -91,7 +91,7 @@ gmd(
       );
       if (!command) return reply(`❌ No explanation found for *${prefix}${requested}*. Use ${prefix}help all to browse every command.`);
       const body = `${helpHeader(1, 1)}\n\n${commandExplanation(command, prefix, 1)}\n\n📂 Use ${prefix}menu for the categorized command browser.`;
-      await Gifted.sendMessage(from, {
+      await MeshTech.sendMessage(from, {
         text: `${body}\n> *${botFooter || 'MESHTECH MD BOT'}*`,
       }, { quoted: mek });
       return react('📖');
@@ -114,7 +114,7 @@ gmd(
       const footer = index === 0
         ? `\n\n📌 Use ${prefix}help <command> for one command.\n📂 Use ${prefix}menu for the categorized menu.`
         : '';
-      await Gifted.sendMessage(from, {
+      await MeshTech.sendMessage(from, {
         text: `${helpHeader(index + 1, pages.length)}\n\n${pages[index]}${footer}${index === pages.length - 1 ? `\n> *${botFooter || 'MESHTECH MD BOT'}*` : ''}`,
       }, index === 0 ? { quoted: mek } : undefined);
     }

@@ -6,10 +6,10 @@ const {
         getMimeCategory,
         getMimeFromUrl,
     } = require("../meshtech"),
-    GIFTED_DLS = require("gifted-dls"),
+    GIFTED_DLS = require("mesh-dls"),
     giftedDls = new GIFTED_DLS(),
     axios = require("axios"),
-    { sendButtons } = require("gifted-btns");
+    { sendButtons } = require("mesh-btns");
 
 function extractButtonId(msg) {
     if (!msg) return null;
@@ -37,7 +37,7 @@ gmd(
         aliases: ["gitdl", "github", "git", "repodl", "clone"],
         description: "Download GitHub repository as zip file",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const { q, mek, reply, react, sender, botName, newsletterJid } =
             conText;
 
@@ -76,7 +76,7 @@ gmd(
             const defaultBranch = repoData.default_branch || "main";
             const filename = `${user}-${repo}-${defaultBranch}.zip`;
 
-            await Gifted.sendMessage(
+            await MeshTech.sendMessage(
                 from,
                 {
                     document: { url: zipUrl },
@@ -121,7 +121,7 @@ gmd(
         aliases: ["fbdl", "facebookdl", "facebook"],
         description: "Download Facebook videos",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const {
             q,
             mek,
@@ -133,8 +133,8 @@ gmd(
             gmdBuffer,
             toAudio,
             formatAudio,
-            GiftedTechApi,
-            GiftedApiKey,
+            MeshTechApi,
+            MeshTechApiKey,
         } = conText;
 
         if (!q) {
@@ -148,7 +148,7 @@ gmd(
         }
 
         try {
-            const apiUrl = `${GiftedTechApi}/api/download/facebook?apikey=${GiftedApiKey}&url=${encodeURIComponent(q)}`;
+            const apiUrl = `${MeshTechApi}/api/download/facebook?apikey=${MeshTechApiKey}&url=${encodeURIComponent(q)}`;
             const response = await axios.get(apiUrl, { timeout: 60000 });
 
             if (!response.data?.success || !response.data?.result) {
@@ -170,7 +170,7 @@ gmd(
                 buttons.push({ id: `fb_sd_${dateNow}`, text: "SD Quality" });
             buttons.push({ id: `fb_audio_${dateNow}`, text: "Audio Only" });
 
-            await sendButtons(Gifted, from, {
+            await sendButtons(MeshTech, from, {
                 title: `${botName} FACEBOOK DOWNLOADER`,
                 text: `*Title:* ${title || "Facebook Video"}\n*Duration:* ${duration || "Unknown"}\n\n*Select download type:*`,
                 footer: botFooter,
@@ -231,7 +231,7 @@ gmd(
                         const fileSize = audioBuffer.length;
 
                         if (fileSize > MAX_MEDIA_SIZE) {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     document: audioBuffer,
@@ -241,7 +241,7 @@ gmd(
                                 { quoted: messageData },
                             );
                         } else {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     audio: audioBuffer,
@@ -269,7 +269,7 @@ gmd(
                         const sendAsDoc = fileSize > MAX_MEDIA_SIZE;
 
                         if (sendAsDoc) {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     document: { url: selectedVideoUrl },
@@ -280,7 +280,7 @@ gmd(
                                 { quoted: messageData },
                             );
                         } else {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     video: { url: selectedVideoUrl },
@@ -303,9 +303,9 @@ gmd(
                 }
             };
 
-            Gifted.ev.on("messages.upsert", handleResponse);
+            MeshTech.ev.on("messages.upsert", handleResponse);
             setTimeout(
-                () => Gifted.ev.off("messages.upsert", handleResponse),
+                () => MeshTech.ev.off("messages.upsert", handleResponse),
                 300000,
             );
         } catch (error) {
@@ -324,7 +324,7 @@ gmd(
         aliases: ["tiktokdl", "ttdl", "tt"],
         description: "Download TikTok videos",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const {
             q,
             mek,
@@ -336,8 +336,8 @@ gmd(
             gmdBuffer,
             toAudio,
             formatAudio,
-            GiftedTechApi,
-            GiftedApiKey,
+            MeshTechApi,
+            MeshTechApiKey,
         } = conText;
 
         if (!q) {
@@ -361,7 +361,7 @@ gmd(
             const t0 = Date.now();
             let result = await Promise.any(
                 endpoints.map(endpoint => {
-                    const apiUrl = `${GiftedTechApi}/api/download/${endpoint}?apikey=${GiftedApiKey}&url=${encodeURIComponent(q)}`;
+                    const apiUrl = `${MeshTechApi}/api/download/${endpoint}?apikey=${MeshTechApiKey}&url=${encodeURIComponent(q)}`;
                     return axios.get(apiUrl, { timeout: 20000 }).then(res => {
                         if (res.data?.success && res.data?.result) {
                             return res.data.result;
@@ -407,7 +407,7 @@ gmd(
                 { id: `tt_audio_${dateNow}`, text: "Audio Only" },
             ];
 
-            await sendButtons(Gifted, from, {
+            await sendButtons(MeshTech, from, {
                 title: `${botName} TIKTOK DOWNLOADER`,
                 text: `*Title:* ${title || "TikTok Video"}\n*Author:* ${author?.name || "Unknown"}\n\n*Select download type:*`,
                 footer: botFooter,
@@ -434,7 +434,7 @@ gmd(
                         const sendAsDoc = fileSize > MAX_MEDIA_SIZE;
 
                         if (sendAsDoc) {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     document: { url: video },
@@ -445,7 +445,7 @@ gmd(
                                 { quoted: messageData },
                             );
                         } else {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     video: { url: video },
@@ -469,7 +469,7 @@ gmd(
                         const fileSize = audioBuffer.length;
 
                         if (fileSize > MAX_MEDIA_SIZE) {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     document: audioBuffer,
@@ -479,7 +479,7 @@ gmd(
                                 { quoted: messageData },
                             );
                         } else {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     audio: audioBuffer,
@@ -501,9 +501,9 @@ gmd(
                 }
             };
 
-            Gifted.ev.on("messages.upsert", handleResponse);
+            MeshTech.ev.on("messages.upsert", handleResponse);
             setTimeout(
-                () => Gifted.ev.off("messages.upsert", handleResponse),
+                () => MeshTech.ev.off("messages.upsert", handleResponse),
                 300000,
             );
         } catch (error) {
@@ -522,7 +522,7 @@ gmd(
         aliases: ["twitterdl", "xdl", "xdownloader", "twitterdownloader", "x"],
         description: "Download Twitter/X videos",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const {
             q,
             mek,
@@ -534,8 +534,8 @@ gmd(
             gmdBuffer,
             toAudio,
             formatAudio,
-            GiftedTechApi,
-            GiftedApiKey,
+            MeshTechApi,
+            MeshTechApiKey,
         } = conText;
 
         if (!q) {
@@ -549,7 +549,7 @@ gmd(
         }
 
         try {
-            const apiUrl = `${GiftedTechApi}/api/download/twitter?apikey=${GiftedApiKey}&url=${encodeURIComponent(q)}`;
+            const apiUrl = `${MeshTechApi}/api/download/twitter?apikey=${MeshTechApiKey}&url=${encodeURIComponent(q)}`;
             const response = await axios.get(apiUrl, { timeout: 60000 });
 
             if (!response.data?.success || !response.data?.result) {
@@ -573,7 +573,7 @@ gmd(
             }));
             buttons.push({ id: `tw_audio_${dateNow}`, text: "Audio Only" });
 
-            await sendButtons(Gifted, from, {
+            await sendButtons(MeshTech, from, {
                 title: `${botName} TWITTER DOWNLOADER`,
                 text: `*Available qualities:* ${videoUrls.map((v) => v.quality).join(", ")}\n\n*Select download type:*`,
                 footer: botFooter,
@@ -610,7 +610,7 @@ gmd(
                         const fileSize = audioBuffer.length;
 
                         if (fileSize > MAX_MEDIA_SIZE) {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     document: audioBuffer,
@@ -620,7 +620,7 @@ gmd(
                                 { quoted: messageData },
                             );
                         } else {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     audio: audioBuffer,
@@ -645,7 +645,7 @@ gmd(
                         const sendAsDoc = fileSize > MAX_MEDIA_SIZE;
 
                         if (sendAsDoc) {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     document: { url: videoUrl },
@@ -655,7 +655,7 @@ gmd(
                                 { quoted: messageData },
                             );
                         } else {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     video: { url: videoUrl },
@@ -677,9 +677,9 @@ gmd(
                 }
             };
 
-            Gifted.ev.on("messages.upsert", handleResponse);
+            MeshTech.ev.on("messages.upsert", handleResponse);
             setTimeout(
-                () => Gifted.ev.off("messages.upsert", handleResponse),
+                () => MeshTech.ev.off("messages.upsert", handleResponse),
                 300000,
             );
         } catch (error) {
@@ -698,7 +698,7 @@ gmd(
         aliases: ["insta", "instadl", "igdl", "instagram"],
         description: "Download Instagram reels/videos",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const {
             q,
             mek,
@@ -710,8 +710,8 @@ gmd(
             gmdBuffer,
             toAudio,
             formatAudio,
-            GiftedTechApi,
-            GiftedApiKey,
+            MeshTechApi,
+            MeshTechApiKey,
         } = conText;
 
         if (!q) {
@@ -725,7 +725,7 @@ gmd(
         }
 
         try {
-            const apiUrl = `${GiftedTechApi}/api/download/instadl?apikey=${GiftedApiKey}&url=${encodeURIComponent(q)}`;
+            const apiUrl = `${MeshTechApi}/api/download/instadl?apikey=${MeshTechApiKey}&url=${encodeURIComponent(q)}`;
             const response = await axios.get(apiUrl, { timeout: 60000 });
 
             if (!response.data?.success || !response.data?.result) {
@@ -744,7 +744,7 @@ gmd(
 
             const dateNow = Date.now();
 
-            await sendButtons(Gifted, from, {
+            await sendButtons(MeshTech, from, {
                 title: `${botName} INSTAGRAM DOWNLOADER`,
                 text: `*Select download type:*`,
                 footer: botFooter,
@@ -775,7 +775,7 @@ gmd(
                         const fileSize = audioBuffer.length;
 
                         if (fileSize > MAX_MEDIA_SIZE) {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     document: audioBuffer,
@@ -785,7 +785,7 @@ gmd(
                                 { quoted: messageData },
                             );
                         } else {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     audio: audioBuffer,
@@ -799,7 +799,7 @@ gmd(
                         const sendAsDoc = fileSize > MAX_MEDIA_SIZE;
 
                         if (sendAsDoc) {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     document: { url: download_url },
@@ -810,7 +810,7 @@ gmd(
                                 { quoted: messageData },
                             );
                         } else {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     video: { url: download_url },
@@ -833,9 +833,9 @@ gmd(
                 }
             };
 
-            Gifted.ev.on("messages.upsert", handleResponse);
+            MeshTech.ev.on("messages.upsert", handleResponse);
             setTimeout(
-                () => Gifted.ev.off("messages.upsert", handleResponse),
+                () => MeshTech.ev.off("messages.upsert", handleResponse),
                 300000,
             );
         } catch (error) {
@@ -854,7 +854,7 @@ gmd(
         aliases: ["snackdl", "snackvideo"],
         description: "Download Snack Video",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const {
             q,
             mek,
@@ -866,8 +866,8 @@ gmd(
             gmdBuffer,
             toAudio,
             formatAudio,
-            GiftedTechApi,
-            GiftedApiKey,
+            MeshTechApi,
+            MeshTechApiKey,
         } = conText;
 
         if (!q) {
@@ -881,7 +881,7 @@ gmd(
         }
 
         try {
-            const apiUrl = `${GiftedTechApi}/api/download/snackdl?apikey=${GiftedApiKey}&url=${encodeURIComponent(q)}`;
+            const apiUrl = `${MeshTechApi}/api/download/snackdl?apikey=${MeshTechApiKey}&url=${encodeURIComponent(q)}`;
             const response = await axios.get(apiUrl, { timeout: 60000 });
 
             if (!response.data?.success || !response.data?.result) {
@@ -901,7 +901,7 @@ gmd(
 
             const dateNow = Date.now();
 
-            await sendButtons(Gifted, from, {
+            await sendButtons(MeshTech, from, {
                 title: `${botName} SNACK VIDEO`,
                 text: `*Title:* ${title || "Snack Video"}\n*Author:* ${author || "Unknown"}\n*Likes:* ${like || "0"}\n\n*Select download type:*`,
                 footer: botFooter,
@@ -931,7 +931,7 @@ gmd(
                         const sendAsDoc = fileSize > MAX_MEDIA_SIZE;
 
                         if (sendAsDoc) {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     document: { url: media },
@@ -942,7 +942,7 @@ gmd(
                                 { quoted: messageData },
                             );
                         } else {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     video: { url: media },
@@ -958,7 +958,7 @@ gmd(
                         const fileSize = audioBuffer.length;
 
                         if (fileSize > MAX_MEDIA_SIZE) {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     document: audioBuffer,
@@ -968,7 +968,7 @@ gmd(
                                 { quoted: messageData },
                             );
                         } else {
-                            await Gifted.sendMessage(
+                            await MeshTech.sendMessage(
                                 from,
                                 {
                                     audio: audioBuffer,
@@ -990,9 +990,9 @@ gmd(
                 }
             };
 
-            Gifted.ev.on("messages.upsert", handleResponse);
+            MeshTech.ev.on("messages.upsert", handleResponse);
             setTimeout(
-                () => Gifted.ev.off("messages.upsert", handleResponse),
+                () => MeshTech.ev.off("messages.upsert", handleResponse),
                 300000,
             );
         } catch (error) {

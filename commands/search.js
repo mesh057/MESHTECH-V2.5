@@ -12,8 +12,8 @@ const { gmd, gmdSticker } = require("../meshtech"),
   {
     generateWAMessageContent,
     generateWAMessageFromContent,
-  } = require("gifted-baileys"),
-  { sendButtons } = require("gifted-btns"),
+  } = require("mesh-baileys"),
+  { sendButtons } = require("mesh-btns"),
   { StickerTypes } = require("wa-sticker-formatter");
 
 gmd(
@@ -24,7 +24,7 @@ gmd(
     react: "🔍",
     description: "perform youtube search",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, mek, reply, react, sender, botFooter, gmdBuffer } = conText;
 
     if (!q) {
@@ -49,7 +49,7 @@ gmd(
               await generateWAMessageContent(
                 { image: { url: vid.thumbnail } },
                 {
-                  upload: Gifted.waUploadToServer,
+                  upload: MeshTech.waUploadToServer,
                 },
               )
             ).imageMessage,
@@ -101,7 +101,7 @@ gmd(
         { quoted: mek },
       );
 
-      await Gifted.relayMessage(from, message.message, {
+      await MeshTech.relayMessage(from, message.message, {
         messageId: message.key.id,
       });
 
@@ -122,7 +122,7 @@ gmd(
     react: "🙄",
     description: "Identify music from audio or video messages",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       q,
@@ -136,8 +136,8 @@ gmd(
       botName,
       botFooter,
       newsletterJid,
-      GiftedTechApi,
-      GiftedApiKey,
+      MeshTechApi,
+      MeshTechApiKey,
       getMediaBuffer,
       uploadToCatbox,
     } = conText;
@@ -191,7 +191,7 @@ gmd(
         ({ url: fileUrl } = await uploadToCatbox(buffer, `audio.${ext}`));
       }
 
-      const apiUrl = `${GiftedTechApi}/api/search/shazam?apikey=${GiftedApiKey}&url=${encodeURIComponent(fileUrl)}`;
+      const apiUrl = `${MeshTechApi}/api/search/shazam?apikey=${MeshTechApiKey}&url=${encodeURIComponent(fileUrl)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (!res.data?.success || !res.data?.result) {
@@ -221,7 +221,7 @@ gmd(
       if (youtubeUrl)  txt += `🔴 *YouTube:* ${youtubeUrl}\n`;
       txt += `\n> *${botFooter}*`;
 
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           image: { url: coverart },
@@ -260,8 +260,8 @@ gmd(
     react: "🔍",
     description: "Search Google and display first 5 results",
   },
-  async (from, Gifted, conText) => {
-    const { q, mek, reply, react, botFooter, GiftedTechApi, GiftedApiKey } =
+  async (from, MeshTech, conText) => {
+    const { q, mek, reply, react, botFooter, MeshTechApi, MeshTechApiKey } =
       conText;
 
     if (!q) {
@@ -270,7 +270,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${GiftedTechApi}/api/search/google?apikey=${GiftedApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/search/google?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (
@@ -296,7 +296,7 @@ gmd(
             imageMessage: (
               await generateWAMessageContent(
                 { image: { url: defaultImg } },
-                { upload: Gifted.waUploadToServer },
+                { upload: MeshTech.waUploadToServer },
               )
             ).imageMessage,
           },
@@ -347,7 +347,7 @@ gmd(
         { quoted: mek },
       );
 
-      await Gifted.relayMessage(from, message.message, {
+      await MeshTech.relayMessage(from, message.message, {
         messageId: message.key.id,
       });
       await react("✅");
@@ -367,7 +367,7 @@ gmd(
     react: "🎵",
     description: "Get song lyrics with copy button",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       mek,
@@ -375,8 +375,8 @@ gmd(
       react,
       botName,
       botFooter,
-      GiftedTechApi,
-      GiftedApiKey,
+      MeshTechApi,
+      MeshTechApiKey,
     } = conText;
 
     if (!q) {
@@ -385,7 +385,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${GiftedTechApi}/api/search/lyricsv2?apikey=${GiftedApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/search/lyricsv2?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (!res.data?.success || !res.data?.result) {
@@ -400,7 +400,7 @@ gmd(
       txt += `🎵 *Title:* ${title || "Unknown"}\n\n`;
       txt += `${lyrics}\n\n`;
 
-      await sendButtons(Gifted, from, {
+      await sendButtons(MeshTech, from, {
         title: "",
         text: txt,
         footer: botFooter,
@@ -432,8 +432,8 @@ gmd(
     react: "📱",
     description: "Search HappyMod for modded APKs",
   },
-  async (from, Gifted, conText) => {
-    const { q, mek, reply, react, botFooter, GiftedTechApi, GiftedApiKey } =
+  async (from, MeshTech, conText) => {
+    const { q, mek, reply, react, botFooter, MeshTechApi, MeshTechApiKey } =
       conText;
 
     if (!q) {
@@ -442,7 +442,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${GiftedTechApi}/api/search/happymod?apikey=${GiftedApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/search/happymod?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (!res.data?.success || !res.data?.results?.data) {
@@ -461,7 +461,7 @@ gmd(
               await generateWAMessageContent(
                 { image: { url: app.icon } },
                 {
-                  upload: Gifted.waUploadToServer,
+                  upload: MeshTech.waUploadToServer,
                 },
               )
             ).imageMessage,
@@ -506,7 +506,7 @@ gmd(
         { quoted: mek },
       );
 
-      await Gifted.relayMessage(from, message.message, {
+      await MeshTech.relayMessage(from, message.message, {
         messageId: message.key.id,
       });
       await react("✅");
@@ -526,8 +526,8 @@ gmd(
     react: "📦",
     description: "Search APK Mirror for apps",
   },
-  async (from, Gifted, conText) => {
-    const { q, mek, reply, react, botFooter, GiftedTechApi, GiftedApiKey } =
+  async (from, MeshTech, conText) => {
+    const { q, mek, reply, react, botFooter, MeshTechApi, MeshTechApiKey } =
       conText;
 
     if (!q) {
@@ -536,7 +536,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${GiftedTechApi}/api/search/apkmirror?apikey=${GiftedApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/search/apkmirror?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (!res.data?.success || !res.data?.results?.data) {
@@ -555,7 +555,7 @@ gmd(
               await generateWAMessageContent(
                 { image: { url: app.icon } },
                 {
-                  upload: Gifted.waUploadToServer,
+                  upload: MeshTech.waUploadToServer,
                 },
               )
             ).imageMessage,
@@ -600,7 +600,7 @@ gmd(
         { quoted: mek },
       );
 
-      await Gifted.relayMessage(from, message.message, {
+      await MeshTech.relayMessage(from, message.message, {
         messageId: message.key.id,
       });
       await react("✅");
@@ -620,7 +620,7 @@ gmd(
     react: "🎨",
     description: "Search and send stickers",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       mek,
@@ -628,8 +628,8 @@ gmd(
       react,
       packName,
       packAuthor,
-      GiftedTechApi,
-      GiftedApiKey,
+      MeshTechApi,
+      MeshTechApiKey,
     } = conText;
 
     if (!q) {
@@ -638,7 +638,7 @@ gmd(
     }
 
     try {
-      const apiUrl = `${GiftedTechApi}/api/search/stickersearch?apikey=${GiftedApiKey}&query=${encodeURIComponent(q)}`;
+      const apiUrl = `${MeshTechApi}/api/search/stickersearch?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
       const res = await axios.get(apiUrl, { timeout: 60000 });
 
       if (
@@ -668,7 +668,7 @@ gmd(
             quality: 75,
           });
 
-          await Gifted.sendMessage(
+          await MeshTech.sendMessage(
             from,
             { sticker: processedSticker },
             { quoted: mek },

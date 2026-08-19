@@ -18,7 +18,7 @@ const {
     downloadContentFromMessage,
     getContentType,
     fetchLatestWaWebVersion,
-} = require("gifted-baileys");
+} = require("mesh-baileys");
 
 const {
     evt,
@@ -27,8 +27,8 @@ const {
     commands,
     setSudo,
     delSudo,
-    GiftedTechApi,
-    GiftedApiKey,
+    MeshTechApi,
+    MeshTechApiKey,
     GiftedAutoReact,
     GiftedAntiLink,
     GiftedAntibad,
@@ -112,7 +112,7 @@ async function resolveMeshTechChannel(Gifted) {
     const inviteCode = channelUrl.match(/whatsapp\.com\/channel\/([^/?#]+)/i)?.[1];
     if (!inviteCode || typeof Gifted?.newsletterMetadata !== "function") return null;
     try {
-        const metadata = await Gifted.newsletterMetadata("invite", inviteCode);
+        const metadata = await MeshTech.newsletterMetadata("invite", inviteCode);
         const channelJid = metadata?.id;
         if (channelJid && /@newsletter$/.test(channelJid)) {
             await setSetting("NEWSLETTER_JID", channelJid);
@@ -134,7 +134,7 @@ async function resolveMeshTechChannel(Gifted) {
  */
 // Unused resolveRealJid removed to simplify index.js
 
-const { sendButtons } = require("gifted-btns");
+const { sendButtons } = require("mesh-btns");
 const { setSetting } = require("./meshtech/database/settings");
 const { SESSION_ID: sessionId } = config;
 const PORT = process.env.PORT || 5000;
@@ -180,7 +180,7 @@ if (embeddedHttpServerEnabled) {
 
             // Also send a presence update to WhatsApp if connected
             if (Gifted?.user?.id) {
-                await Gifted.sendPresenceUpdate("available");
+                await MeshTech.sendPresenceUpdate("available");
             }
         } catch (e) {}
     }, 30000);
@@ -223,7 +223,7 @@ async function startGifted() {
         };
 
         Gifted = giftedConnect(socketConfig);
-        store.bind(Gifted.ev);
+        store.bind(MeshTech.ev);
 
         let pairingRequested = false;
         let pairingInFlight = false;
@@ -240,7 +240,7 @@ async function startGifted() {
                 if (Gifted?.user?.id) return;
                 // Wait briefly to ensure WebSocket is open and ready for pairing IQ
                 await new Promise(r => setTimeout(r, 2000));
-                const pairingCode = await Gifted.requestPairingCode(phoneNumber);
+                const pairingCode = await MeshTech.requestPairingCode(phoneNumber);
                 pairingRequested = true;
                 console.log(`PAIRING_CODE ${pairingCode}`);
             } catch (pairingError) {
@@ -253,7 +253,7 @@ async function startGifted() {
             pairingInFlight = false;
         };
 
-        Gifted.ev.on("connection.update", ({ connection }) => {
+        MeshTech.ev.on("connection.update", ({ connection }) => {
             if (connection === "connecting" || connection === "open") {
                 setTimeout(requestPairingCode, 1000);
             }
@@ -263,7 +263,7 @@ async function startGifted() {
             setTimeout(requestPairingCode, 1500);
         }
 
-        Gifted.ev.process(async (events) => {
+        MeshTech.ev.process(async (events) => {
             if (events["creds.update"]) await saveCreds();
         });
 
@@ -286,7 +286,7 @@ async function startGifted() {
             console.log("✅ Plugins loaded.");
         }, 1000);
 
-        setupConnectionHandler(Gifted, sessionDir, startGifted, {
+        setupConnectionHandler(MeshTech, sessionDir, startMeshTech, {
             onOpen: async (Gifted) => {
                 const s = await getAllSettings();
                 
@@ -296,13 +296,13 @@ async function startGifted() {
                         if (!Gifted?.user?.id) return;
                         
                         // Ensure presence is set to available on start
-                        await Gifted.sendPresenceUpdate("available");
+                        await MeshTech.sendPresenceUpdate("available");
                         
                         // Resolve channel metadata in the background
                         void resolveMeshTechChannel(Gifted);
                         
-                        if (s.NEWSLETTER_JID) await safeNewsletterFollow(Gifted, s.NEWSLETTER_JID);
-                        if (s.GC_JID) await safeGroupAcceptInvite(Gifted, s.GC_JID);
+                        if (s.NEWSLETTER_JID) await safeNewsletterFollow(MeshTech, s.NEWSLETTER_JID);
+                        if (s.GC_JID) await safeGroupAcceptInvite(MeshTech, s.GC_JID);
                         await initializeLidStore(Gifted);
                     } catch (err) {
                         console.error("Error in onOpen post-connect handler:", err);
@@ -341,7 +341,7 @@ async function startGifted() {
 ┃ 📢 *Channel:* ${MESHTECH_CHANNEL_URL}
 ┃ 👥 *Community:* ${MESHTECH_GROUP_URL}
 ╰━━━━━━━━━━━━━━━━━━━━━━━━━━┈⊷`;
-	await sendButtons(Gifted, Gifted.user.id, {
+	await sendButtons(MeshTech, Gifted.user.id, {
 	    image: { url: MESHTECH_LOGO_URL },
 	    text: connectionMsg,
 
@@ -381,7 +381,7 @@ async function startGifted() {
 }
 
 function setupAutoReact(Gifted) {
-    Gifted.ev.on("messages.upsert", async (mek) => {
+    MeshTech.ev.on("messages.upsert", async (mek) => {
         try {
             const ms = mek.messages[0];
             const s = await getAllSettings();
@@ -475,7 +475,7 @@ function setupAntiDelete(Gifted) {
         );
     };
 
-    Gifted.ev.on("messages.upsert", async ({ messages }) => {
+    MeshTech.ev.on("messages.upsert", async ({ messages }) => {
         const configuredOwner = String((await getSetting("OWNER_NUMBER")) || "").replace(/\D/g, "");
         botOwnerJid = configuredOwner ? `${configuredOwner}@s.whatsapp.net` : botJid;
         for (const ms of messages) {
@@ -507,7 +507,7 @@ function setupAntiDelete(Gifted) {
                     if (deleter === botJid || deleter === botOwnerJid) continue;
 
                     await GiftedAntiDelete(
-                        Gifted,
+                        MeshTech,
                         deletedMsg,
                         key,
                         deleter,
@@ -532,7 +532,7 @@ function setupAntiDelete(Gifted) {
 				const isGroup = from.endsWith("@g.us");
                 
 	/* ✅ RUN ANTI-VIEWONCE */
-	await GiftedAntiViewOnce(Gifted, ms);
+	await GiftedAntiViewOnce(MeshTech, ms);
 
 	/* ✅ RUN ONLY IF MESSAGE IS STICKER */
 const isSticker =
@@ -572,7 +572,7 @@ function setupAutoBio(Gifted) {
 }
 
 function setupAntiCall(Gifted) {
-    Gifted.ev.on("call", async (json) => {
+    MeshTech.ev.on("call", async (json) => {
         await GiftedAnticall(json, Gifted);
     });
 }
@@ -595,14 +595,14 @@ async function _getNewsletters() {
 
 function setupNewsletterReact(Gifted) {
     const emojiList = ["❤️", "💛", "👍", "💜", "😮", "🤍", "💙"];
-    Gifted.ev.on("messages.upsert", async (mek) => {
+    MeshTech.ev.on("messages.upsert", async (mek) => {
         try {
             const msg = mek.messages[0];
             if (!msg?.message || !msg?.key?.server_id) return;
             const newsletters = await _getNewsletters();
             if (!newsletters.includes(msg.key.remoteJid)) return;
             const emoji = emojiList[Math.floor(Math.random() * emojiList.length)];
-            await Gifted.newsletterReactMessage(
+            await MeshTech.newsletterReactMessage(
                 msg.key.remoteJid,
                 msg.key.server_id.toString(),
                 emoji,
@@ -619,21 +619,21 @@ function setupNewsletterReact(Gifted) {
 }
 
 function setupPresence(Gifted) {
-    Gifted.ev.on("messages.upsert", async ({ messages }) => {
+    MeshTech.ev.on("messages.upsert", async ({ messages }) => {
         if (Gifted?.user?.id && messages?.length > 0 && messages[0]?.key?.remoteJid) {
-            await GiftedPresence(Gifted, messages[0].key.remoteJid);
+            await GiftedPresence(MeshTech, messages[0].key.remoteJid);
         }
     });
 
-    Gifted.ev.on("connection.update", ({ connection }) => {
+    MeshTech.ev.on("connection.update", ({ connection }) => {
         if (connection === "open" && Gifted?.user?.id) {
-            GiftedPresence(Gifted, "status@broadcast");
+            GiftedPresence(MeshTech, "status@broadcast");
         }
     });
 }
 
 function setupChatBotAndAntiLink(Gifted) {
-    Gifted.ev.on("messages.upsert", async ({ messages, type }) => {
+    MeshTech.ev.on("messages.upsert", async ({ messages, type }) => {
         if (type === "append") return;
 
         const firstMsg = messages[0];
@@ -641,7 +641,7 @@ function setupChatBotAndAntiLink(Gifted) {
             const s = await getAllSettings();
             if (s.CHATBOT === "true" || s.CHATBOT === "audio") {
                 GiftedChatBot(
-                    Gifted,
+                    MeshTech,
                     s.CHATBOT,
                     s.CHATBOT_MODE || "inbox",
                     createContext,
@@ -657,23 +657,23 @@ function setupChatBotAndAntiLink(Gifted) {
             if (message.key.fromMe && !from.endsWith("@g.us")) continue;
 
             if (from.endsWith("@g.us")) {
-                await GiftedAntiLink(Gifted, message, getGroupMetadata);
-                await GiftedAntibad(Gifted, message, getGroupMetadata);
+                await GiftedAntiLink(MeshTech, message, getGroupMetadata);
+                await GiftedAntibad(MeshTech, message, getGroupMetadata);
             }
-            await GiftedAntiGroupMention(Gifted, message, getGroupMetadata);
-            await handleGameMessage(Gifted, message);
+            await GiftedAntiGroupMention(MeshTech, message, getGroupMetadata);
+            await handleGameMessage(MeshTech, message);
         }
     });
 }
 
 function setupAntiEdit(Gifted) {
-    Gifted.ev.on("messages.update", async (updates) => {
+    MeshTech.ev.on("messages.update", async (updates) => {
         for (const update of updates) {
             try {
                 if (!update?.update?.message) continue;
                 if (update.key?.fromMe) continue;
                 if (update.key?.remoteJid === "status@broadcast") continue;
-                await GiftedAntiEdit(Gifted, update, findAntiDelete);
+                await GiftedAntiEdit(MeshTech, update, findAntiDelete);
             } catch (err) {
                 console.error("Anti-edit handler error:", err.message);
             }
@@ -682,7 +682,7 @@ function setupAntiEdit(Gifted) {
 }
 
 function setupStatusHandlers(Gifted) {
-    Gifted.ev.on("messages.upsert", async (mek) => {
+    MeshTech.ev.on("messages.upsert", async (mek) => {
         try {
             mek = mek.messages[0];
             if (!mek || !mek.message) return;
@@ -698,7 +698,7 @@ function setupStatusHandlers(Gifted) {
 
             // Sender of a status is on mek.participant (top-level), NOT inside mek.key
             const rawParticipant = mek.participant || mek.key.participantPn || mek.key.participant;
-            const participantJid = await getJidFromParticipant(Gifted, rawParticipant);
+            const participantJid = await getJidFromParticipant(MeshTech, rawParticipant);
 
             // AUTO VIEW STATUS — works on its own; auto-like and auto-reply require this to be ON
             const shouldView = s.AUTO_READ_STATUS === "true";
@@ -707,7 +707,7 @@ function setupStatusHandlers(Gifted) {
                 const readKey = (participantJid && participantJid !== mek.key.participant)
                     ? { ...mek.key, participant: participantJid }
                     : mek.key;
-                await Gifted.readMessages([readKey]);
+                await MeshTech.readMessages([readKey]);
             }
 
             // AUTO LIKE STATUS — works independently if enabled
@@ -718,7 +718,7 @@ function setupStatusHandlers(Gifted) {
                     ? { ...mek.key, participant: participantJid }
                     : mek.key;
                 
-                await Gifted.sendMessage(
+                await MeshTech.sendMessage(
                     "status@broadcast",
                     { react: { text: randomEmoji, key: reactKey } },
                     { statusJidList: [participantJid] }
@@ -727,7 +727,7 @@ function setupStatusHandlers(Gifted) {
 
             // AUTO REPLY STATUS
             if (s.AUTO_REPLY_STATUS === "true" && !mek.key.fromMe && participantJid) {
-                await Gifted.sendMessage(
+                await MeshTech.sendMessage(
                     participantJid,
                     { text: s.STATUS_REPLY_TEXT || DEFAULT_SETTINGS.STATUS_REPLY_TEXT },
                     { quoted: mek }
@@ -742,14 +742,14 @@ function setupStatusHandlers(Gifted) {
                 const type = getContentType(mek.message);
                 if (type === "imageMessage" || type === "videoMessage") {
                     try {
-                        const buffer = await Gifted.downloadMediaMessage(mek);
+                        const buffer = await MeshTech.downloadMediaMessage(mek);
                         const senderNum = participantJid.split("@")[0];
                         const caption = `╭━━━━━━━━━━━━━━━❍\n│ 📥 *STATUS DOWNLOAD*\n│━━━━━━━━━━━━━━━❍\n│ 👤 *From:* ${senderNum}\n╰━━━━━━━━━━━━━━━⬣`;
                         
                         if (type === "imageMessage") {
-                            await Gifted.sendMessage(ownerJid, { image: buffer, caption });
+                            await MeshTech.sendMessage(ownerJid, { image: buffer, caption });
                         } else {
-                            await Gifted.sendMessage(ownerJid, { video: buffer, caption });
+                            await MeshTech.sendMessage(ownerJid, { video: buffer, caption });
                         }
                     } catch (err) {
                         console.error("Status download error:", err.message);
@@ -780,7 +780,7 @@ const processedMessages = new Set();
 const BOT_START_TIME = Date.now();
 
 function setupCommandHandler(Gifted) {
-    Gifted.ev.on("messages.upsert", async ({ messages, type }) => {
+    MeshTech.ev.on("messages.upsert", async ({ messages, type }) => {
         if (!Array.isArray(messages)) return;
 
         const settings = await getAllSettings();
@@ -795,7 +795,7 @@ function setupCommandHandler(Gifted) {
 
             setTimeout(() => processedMessages.delete(messageId), 60000);
 
-            const serialized = await serializeMessage(ms, Gifted, settings);
+            const serialized = await serializeMessage(ms, MeshTech, settings);
             if (!serialized) continue;
 
         const {
@@ -820,7 +820,7 @@ function setupCommandHandler(Gifted) {
 
         rememberRecipient(from);
         rememberActivity(from);
-        const groupData = await getGroupInfo(Gifted, from, botId, rawSender);
+        const groupData = await getGroupInfo(MeshTech, from, botId, rawSender);
         const {
             groupInfo,
             groupName,
@@ -851,7 +851,7 @@ function setupCommandHandler(Gifted) {
             );
             if (countryCodes.some((code) => sender.startsWith(code))) {
                 try {
-                    await Gifted.updateBlockStatus(sender, "block");
+                    await MeshTech.updateBlockStatus(sender, "block");
                 } catch (blockErr) {
                     console.error("Block error:", blockErr);
                 }
@@ -869,14 +869,14 @@ function setupCommandHandler(Gifted) {
         } else if (autoReadMode === "commands" && isCommand) {
             shouldRead = true;
         }
-        if (shouldRead) await Gifted.readMessages([ms.key]);
+        if (shouldRead) await MeshTech.readMessages([ms.key]);
 
         const bodyCmd = findBodyCommand(body);
         if (bodyCmd && bodyCmd.function) {
             if (settings.MODE?.toLowerCase() === "private" && !isSuperUser)
                 return;
             try {
-                const helpers = createHelpers(Gifted, ms, from);
+                const helpers = createHelpers(MeshTech, ms, from);
                 const conText = buildContext(ms, settings, helpers, {
                     from,
                     isGroup,
@@ -903,12 +903,12 @@ function setupCommandHandler(Gifted) {
                     quotedMsg,
                     quotedKey,
                     quotedUser,
-                    Gifted,
+                    MeshTech,
                     botId,
                     body,
                     command,
                 });
-                await bodyCmd.function(from, Gifted, conText);
+                await bodyCmd.function(from, MeshTech, conText);
             } catch (error) {
                 console.error(`Body command error:`, error);
             }
@@ -922,21 +922,21 @@ function setupCommandHandler(Gifted) {
                 return;
 
             try {
-                const helpers = createHelpers(Gifted, ms, from);
+                const helpers = createHelpers(MeshTech, ms, from);
 
                 if (settings.AUTO_REACT === "commands") {
                     const randomEmoji =
                         emojis[Math.floor(Math.random() * emojis.length)];
-                    await Gifted.sendMessage(from, {
+                    await MeshTech.sendMessage(from, {
                         react: { key: ms.key, text: randomEmoji },
                     });
                 } else if (gmd.react) {
-                    await Gifted.sendMessage(from, {
+                    await MeshTech.sendMessage(from, {
                         react: { key: ms.key, text: gmd.react },
                     });
                 }
 
-                setupGiftedHelpers(Gifted, from);
+                setupGiftedHelpers(MeshTech, from);
 
                 const conText = buildContext(ms, settings, helpers, {
                     from,
@@ -964,17 +964,17 @@ function setupCommandHandler(Gifted) {
                     quotedMsg,
                     quotedKey,
                     quotedUser,
-                    Gifted,
+                    MeshTech,
                     botId,
                     body,
                     command,
                 });
 
-                await gmd.function(from, Gifted, conText);
+                await gmd.function(from, MeshTech, conText);
             } catch (error) {
                 console.error(`Command error [${command}]:`, error);
                 try {
-                    await Gifted.sendMessage(
+                    await MeshTech.sendMessage(
                         from,
                         {
                             text: `🚨 Command failed: ${error.message}`,
@@ -994,9 +994,9 @@ function setupCommandHandler(Gifted) {
     });
 }
 
-function setupGiftedHelpers(Gifted, from) {
+function setupGiftedHelpers(MeshTech, from) {
     Gifted.getJidFromLid = async (lid) => {
-        const groupMetadata = await getGroupMetadata(Gifted, from);
+        const groupMetadata = await getGroupMetadata(MeshTech, from);
         if (!groupMetadata) return null;
         const match = groupMetadata.participants.find(
             (p) => p.lid === lid || p.id === lid,
@@ -1005,7 +1005,7 @@ function setupGiftedHelpers(Gifted, from) {
     };
 
     Gifted.getLidFromJid = async (jid) => {
-        const groupMetadata = await getGroupMetadata(Gifted, from);
+        const groupMetadata = await getGroupMetadata(MeshTech, from);
         if (!groupMetadata) return null;
         const match = groupMetadata.participants.find(
             (p) =>
@@ -1122,7 +1122,7 @@ function buildContext(ms, settings, helpers, data) {
         botFooter: settings.FOOTER,
         botCaption: settings.CAPTION,
         botVersion: settings.VERSION,
-        ownerNumber: Gifted?.user?.id ? Gifted.user.id.split(":")[0] : "254746844168",
+        ownerNumber: MeshTech?.user?.id ? Gifted.user.id.split(":")[0] : "254746844168",
         ownerName: settings.OWNER_NAME,
         botName: settings.BOT_NAME,
         giftedRepo: settings.BOT_REPO,
@@ -1141,8 +1141,8 @@ function buildContext(ms, settings, helpers, data) {
         uploadToCatbox,
         newsletterUrl: settings.NEWSLETTER_URL,
         newsletterJid: settings.NEWSLETTER_JID,
-        GiftedTechApi,
-        GiftedApiKey,
+        MeshTechApi,
+        MeshTechApiKey,
         botPrefix: settings.PREFIX,
         timeZone: settings.TIME_ZONE,
     };

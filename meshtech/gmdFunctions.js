@@ -472,7 +472,7 @@ async function loadSession() {
 
 async function useSQLiteAuthState(databasePath) {
     const Database = require('better-sqlite3');
-    const { proto, initAuthCreds, BufferJSON } = require('gifted-baileys');
+    const { proto, initAuthCreds, BufferJSON } = require('mesh-baileys');
 
     const dbPath = databasePath.endsWith('.db') ? databasePath : `${databasePath}/session.db`;
     const dbDir = path.dirname(dbPath);

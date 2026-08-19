@@ -54,7 +54,7 @@ async function formatGroupsWithNames(jids, Gifted) {
   const groupInfos = await Promise.all(
     jids.map(async (jid) => {
       try {
-        const metadata = await Gifted.groupMetadata(jid);
+        const metadata = await MeshTech.groupMetadata(jid);
         const name = metadata?.subject || "Unknown";
         return `• ${name}`;
       } catch (e) {
@@ -73,7 +73,7 @@ gmd(
     category: "owner",
     description: "View all bot settings",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { reply, react, isSuperUser } = conText;
     if (!isSuperUser) {
       await react("❌");
@@ -142,7 +142,7 @@ gmd(
     category: "owner",
     description: "Set bot prefix",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     if (!q) return reply("❌ Please provide a prefix!\nExample: .setprefix !");
@@ -168,7 +168,7 @@ gmd(
     category: "owner",
     description: "Set bot name",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     if (!q) return reply("❌ Please provide a bot name!");
@@ -194,7 +194,7 @@ gmd(
     category: "owner",
     description: "Set owner name",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     if (!q) return reply("❌ Please provide an owner name!");
@@ -220,7 +220,7 @@ gmd(
     category: "owner",
     description: "Set owner number",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     if (!q) return reply("❌ Please provide an owner number!");
@@ -247,7 +247,7 @@ gmd(
     category: "owner",
     description: "Set bot footer",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     if (!q) return reply("❌ Please provide a footer text!");
@@ -273,7 +273,7 @@ gmd(
     category: "owner",
     description: "Set bot caption",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     if (!q) return reply("❌ Please provide a caption!");
@@ -299,7 +299,7 @@ gmd(
     category: "owner",
     description: "Set bot picture URL",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     if (!q) return reply("❌ Please provide an image URL!");
@@ -325,7 +325,7 @@ gmd(
     category: "owner",
     description: "Set bot mode (public/private)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     const mode = q?.toLowerCase();
@@ -354,7 +354,7 @@ gmd(
     category: "owner",
     description: "Set bot timezone",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     if (!q)
@@ -383,7 +383,7 @@ gmd(
     category: "owner",
     description: "Set DM presence (online/offline/typing/recording)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     const valid = ["online", "offline", "typing", "recording"];
@@ -412,7 +412,7 @@ gmd(
     category: "owner",
     description: "Set group presence (online/offline/typing/recording)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     const valid = ["online", "offline", "typing", "recording"];
@@ -443,7 +443,7 @@ gmd(
     category: "owner",
     description: "Set chatbot (on/off/audio)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     const valid = ["true", "false", "audio"];
@@ -477,7 +477,7 @@ gmd(
     category: "owner",
     description: "Set chatbot mode (inbox/groups/allchats)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     const valid = ["inbox", "groups", "allchats"];
@@ -506,7 +506,7 @@ gmd(
     category: "owner",
     description: "Set starting message (on/off)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     const valid = ["true", "false"];
@@ -538,7 +538,7 @@ gmd(
     category: "owner",
     description: "Set antidelete (inchat/indm/all/off)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     const valid = ["inchat", "indm", "all", "false"];
@@ -570,7 +570,7 @@ gmd(
     category: "owner",
     description: "Set anti-edit (on/off/indm/inchat)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     const valid = ["on", "off", "indm", "inchat"];
@@ -607,7 +607,7 @@ gmd(
     category: "group",
     description: "Set welcome message for this group (on/off)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser, isGroup, isAdmin } = conText;
     if (!isGroup) return reply("❌ This command only works in groups!");
     if (!isSuperUser && !isAdmin) return reply("❌ Admin/Owner Only Command!");
@@ -642,7 +642,7 @@ gmd(
     category: "group",
     description: "Set goodbye message for this group (on/off)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser, isGroup, isAdmin } = conText;
     if (!isGroup) return reply("❌ This command only works in groups!");
     if (!isSuperUser && !isAdmin) return reply("❌ Admin/Owner Only Command!");
@@ -677,7 +677,7 @@ gmd(
     category: "group",
     description: "Set custom welcome message for this group",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser, isGroup, isAdmin } = conText;
     if (!isGroup) return reply("❌ This command only works in groups!");
     if (!isSuperUser && !isAdmin) return reply("❌ Admin/Owner Only Command!");
@@ -725,7 +725,7 @@ gmd(
     category: "group",
     description: "Set custom goodbye message for this group",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser, isGroup, isAdmin } = conText;
     if (!isGroup) return reply("❌ This command only works in groups!");
     if (!isSuperUser && !isAdmin) return reply("❌ Admin/Owner Only Command!");
@@ -773,7 +773,7 @@ gmd(
     category: "owner",
     description: "Set anticall (on/off/block/decline)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     const valid = ["true", "block", "false", "decline"];
@@ -815,7 +815,7 @@ gmd(
     category: "group",
     description: "Set antilink for this group (on/warn/delete/kick/off)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser, isGroup, isAdmin } = conText;
     if (!isGroup) return reply("❌ This command only works in groups!");
     if (!isSuperUser && !isAdmin) return reply("❌ Admin/Owner Only Command!");
@@ -870,7 +870,7 @@ gmd(
     category: "group",
     description: "Set antilink warning count before kick (default 3)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser, isGroup, isAdmin } = conText;
     if (!isGroup) return reply("❌ This command only works in groups!");
     if (!isSuperUser && !isAdmin) return reply("❌ Admin/Owner Only Command!");
@@ -912,7 +912,7 @@ gmd(
     category: "group",
     description: "Set anti-badwords for this group (on/warn/delete/kick/off)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser, isGroup, isAdmin } = conText;
     if (!isGroup) return reply("❌ This command only works in groups!");
     if (!isSuperUser && !isAdmin) return reply("❌ Admin/Owner Only Command!");
@@ -974,7 +974,7 @@ gmd(
     category: "group",
     description: "Set anti-badwords warning count before kick (default 5)",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser, isGroup, isAdmin } = conText;
     if (!isGroup) return reply("❌ This command only works in groups!");
     if (!isSuperUser && !isAdmin) return reply("❌ Admin/Owner Only Command!");
@@ -1017,7 +1017,7 @@ gmd(
     description:
       "Manage bad words list. Usage: .badwords add/remove/list/clear/default",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser, isGroup, isAdmin, args } = conText;
     if (!isGroup) return reply("❌ This command only works in groups!");
     if (!isSuperUser && !isAdmin) return reply("❌ Admin/Owner Only Command!");
@@ -1127,7 +1127,7 @@ ${
           msg += chunk
             .map((w, idx) => `${startIdx + idx + 1}. ${w}`)
             .join("\n");
-          await Gifted.sendMessage(from, { text: msg });
+          await MeshTech.sendMessage(from, { text: msg });
         }
         await react("✅");
       } else if (["clear", "reset"].includes(action)) {
@@ -1157,7 +1157,7 @@ gmd(
     category: "owner",
     description: "Set the group invite link used by the opt-in join command",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, reply, react, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     const link = String(q || "").trim();

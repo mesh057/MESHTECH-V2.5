@@ -37,7 +37,7 @@ gmd(
         category: "utility",
         description: "Check if a phone number is registered on WhatsApp",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const { sender, mek, reply, react, q, botPrefix } = conText;
 
         if (!q || q.trim() === "") {
@@ -63,7 +63,7 @@ Please provide a valid number with country code.
         await react("⏳");
 
         try {
-            const [result] = await Gifted.onWhatsApp(num);
+            const [result] = await MeshTech.onWhatsApp(num);
 
             if (result && result.exists) {
                 await react("✅");
@@ -101,13 +101,13 @@ gmd(
         description: "Export all group participants as VCF contact file",
         isGroup: true,
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const { sender, mek, reply, react } = conText;
 
         await react("⏳");
 
         try {
-            const groupMetadata = await getGroupMetadata(Gifted, from);
+            const groupMetadata = await getGroupMetadata(MeshTech, from);
             const participants = groupMetadata?.participants || [];
             const groupName = groupMetadata?.subject || "Group";
 
@@ -144,7 +144,7 @@ gmd(
 
             const fileName = `${groupName}.vcf`;
 
-            await Gifted.sendMessage(
+            await MeshTech.sendMessage(
                 from,
                 {
                     document: Buffer.from(vcfContent.trim(), "utf-8"),

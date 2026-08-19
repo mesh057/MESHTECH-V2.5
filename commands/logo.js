@@ -241,14 +241,14 @@ async function createLogoCommand(config) {
       react: "🎨",
       description: `Create ${config.description}`,
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
       const {
         q,
         mek,
         reply,
         react,
-        GiftedTechApi,
-        GiftedApiKey,
+        MeshTechApi,
+        MeshTechApiKey,
         pushname,
         botCaption,
       } = conText;
@@ -263,7 +263,7 @@ async function createLogoCommand(config) {
       try {
         await react("⏳");
 
-        const apiUrl = `${GiftedTechApi}/api/ephoto360/${config.endpoint}?apikey=${GiftedApiKey}&text=${encodeURIComponent(q)}`;
+        const apiUrl = `${MeshTechApi}/api/ephoto360/${config.endpoint}?apikey=${MeshTechApiKey}&text=${encodeURIComponent(q)}`;
         const res = await axios.get(apiUrl, { timeout: 60000 });
 
         if (!res.data || !res.data.success || !res.data.result?.image_url) {
@@ -279,7 +279,7 @@ async function createLogoCommand(config) {
           return reply("Failed to download the generated logo.");
         }
 
-        await Gifted.sendMessage(
+        await MeshTech.sendMessage(
           from,
           {
             image: imageBuffer,
@@ -308,7 +308,7 @@ gmd(
     react: "📜",
     description: "Show all available logo commands",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { mek, reply, react, botCaption, botName, botPrefix } = conText;
 
     const logoList = logoEndpoints

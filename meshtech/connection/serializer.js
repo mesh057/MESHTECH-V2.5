@@ -1,4 +1,4 @@
-const { getContentType } = require('gifted-baileys');
+const { getContentType } = require('mesh-baileys');
 const { getLidMapping, storeLidMapping } = require('./groupCache');
 
 const standardizeJid = (jid) => {
@@ -27,7 +27,7 @@ const convertLidToJid = (lid) => {
     return lid;
 };
 
-const serializeMessage = async (ms, Gifted, settings = {}) => {
+const serializeMessage = async (ms, MeshTech, settings = {}) => {
     if (!ms?.message || !ms?.key) return null;
 
     const botId = standardizeJid(Gifted.user?.id);

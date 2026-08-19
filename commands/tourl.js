@@ -1,7 +1,7 @@
 const { gmd } = require("../meshtech");
 const path = require("path");
 const fs = require('fs').promises;
-const { sendButtons } = require('gifted-btns');
+const { sendButtons } = require('mesh-btns');
 
 gmd({
     pattern: "giftedcdn",
@@ -9,8 +9,8 @@ gmd({
     react: "⬆️",
     category: "uploader",
     description: "Upload any file to GiftedCDN",
-}, async (from, Gifted, conText) => {
-    await handleUpload(from, Gifted, conText, 'giftedcdn');
+}, async (from, MeshTech, conText) => {
+    await handleUpload(from, MeshTech, conText, 'giftedcdn');
 });
 
 gmd({
@@ -19,8 +19,8 @@ gmd({
     react: "⬆️",
     category: "uploader",
     description: "Upload any file to Github Repo",
-}, async (from, Gifted, conText) => {
-    await handleUpload(from, Gifted, conText, 'githubcdn');
+}, async (from, MeshTech, conText) => {
+    await handleUpload(from, MeshTech, conText, 'githubcdn');
 });
 
 gmd({
@@ -29,8 +29,8 @@ gmd({
     react: "⬆️",
     category: "uploader",
     description: "Upload any file to Catbox",
-}, async (from, Gifted, conText) => {
-    await handleUpload(from, Gifted, conText, 'catbox');
+}, async (from, MeshTech, conText) => {
+    await handleUpload(from, MeshTech, conText, 'catbox');
 });
 
 gmd({
@@ -39,8 +39,8 @@ gmd({
     react: "🖼️",
     category: "uploader",
     description: "Upload images to Pixhost",
-}, async (from, Gifted, conText) => {
-    await handleUpload(from, Gifted, conText, 'pixhost');
+}, async (from, MeshTech, conText) => {
+    await handleUpload(from, MeshTech, conText, 'pixhost');
 });
 
 gmd({
@@ -49,11 +49,11 @@ gmd({
     react: "📷",
     category: "uploader",
     description: "Upload images to ImgBB",
-}, async (from, Gifted, conText) => {
-    await handleUpload(from, Gifted, conText, 'imgbb');
+}, async (from, MeshTech, conText) => {
+    await handleUpload(from, MeshTech, conText, 'imgbb');
 });
 
-async function handleUpload(from, Gifted, conText, service) {
+async function handleUpload(from, MeshTech, conText, service) {
     const { mek, reply, react, botFooter, botPrefix, quoted, getMediaBuffer, uploadToGiftedCdn, uploadToGithubCdn, uploadToPixhost, getFileContentType, uploadToImgBB, uploadToCatbox, pushName, newsletterUrl } = conText;
 
     if (!quoted) {
@@ -162,7 +162,7 @@ async function handleUpload(from, Gifted, conText, service) {
         const caption = `Hey *${pushName},*\nHere is Your *${service.toUpperCase()}* Upload Result:\n\n*File Type:* ${fileTypeName}\n*File Size:* ${fileSizeMB.toFixed(2)} MBs\n*File Url:* ${uploadResult.url}\n*File Expiration:* No Expiry\n`;
 
         // Send buttons
-        await sendButtons(Gifted, from, {
+        await sendButtons(MeshTech, from, {
             title: '',
             text: caption,
             footer: `> *${botFooter}*`,

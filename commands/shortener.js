@@ -1,6 +1,6 @@
 const { gmd } = require("../meshtech");
 const axios = require("axios");
-const { sendButtons } = require("gifted-btns");
+const { sendButtons } = require("mesh-btns");
 
 const shorteners = [
     {
@@ -56,7 +56,7 @@ for (const shortener of shorteners) {
             category: "tools",
             description: `Shorten a URL using ${shortener.name}`,
         },
-        async (from, Gifted, conText) => {
+        async (from, MeshTech, conText) => {
             const {
                 sender,
                 mek,
@@ -65,8 +65,8 @@ for (const shortener of shorteners) {
                 q,
                 botName,
                 botFooter,
-                GiftedTechApi,
-                GiftedApiKey,
+                MeshTechApi,
+                MeshTechApiKey,
             } = conText;
 
             if (!q || q.trim() === "") {
@@ -90,10 +90,10 @@ for (const shortener of shorteners) {
 
             try {
                 const res = await axios.get(
-                    `${GiftedTechApi}/api/tools/${shortener.endpoint}`,
+                    `${MeshTechApi}/api/tools/${shortener.endpoint}`,
                     {
                         params: {
-                            apikey: GiftedApiKey,
+                            apikey: MeshTechApiKey,
                             url: url,
                         },
                         timeout: 30000,
@@ -109,7 +109,7 @@ for (const shortener of shorteners) {
 
                 const shortUrl = res.data.result;
 
-                await sendButtons(Gifted, from, {
+                await sendButtons(MeshTech, from, {
                     text: `🔗 *${botName} URL SHORTENER*\n\n📎 *Original:* ${url}\n✂️ *Shortened:* ${shortUrl}`,
                     footer: botFooter,
                     buttons: [
@@ -140,7 +140,7 @@ gmd(
         category: "tools",
         description: "Show all available URL shorteners",
     },
-    async (from, Gifted, conText) => {
+    async (from, MeshTech, conText) => {
         const { reply } = conText;
 
         const helpText = `🔗 *URL SHORTENER COMMANDS*

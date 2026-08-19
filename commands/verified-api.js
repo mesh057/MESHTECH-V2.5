@@ -31,7 +31,7 @@ gmd({
   react: "🐾",
   category: "general",
   description: "Fetch a random cat or dog image.",
-}, async (from, Gifted, conText) => {
+}, async (from, MeshTech, conText) => {
   const { mek, reply } = conText;
   try {
     const [{ data: cats }, { data: dogs }] = await Promise.all([
@@ -53,7 +53,7 @@ gmd({
   react: "😂",
   category: "general",
   description: "Fetch a random meme.",
-}, async (from, Gifted, conText) => {
+}, async (from, MeshTech, conText) => {
   const { mek, reply } = conText;
   try {
     const { data } = await axios.get("https://meme-api.com/gimme", REQUEST);
@@ -71,7 +71,7 @@ gmd({
   react: "💬",
   category: "general",
   description: "Fetch a random inspirational quote.",
-}, async (from, Gifted, conText) => {
+}, async (from, MeshTech, conText) => {
   const { mek, reply } = conText;
   try {
     const { data } = await axios.get("https://zenquotes.io/api/random", REQUEST);
@@ -90,7 +90,7 @@ gmd({
   react: "🧠",
   category: "game",
   description: "Get a random trivia question.",
-}, async (from, Gifted, conText) => {
+}, async (from, MeshTech, conText) => {
   const { mek, reply } = conText;
   try {
     const { data } = await axios.get("https://opentdb.com/api.php?amount=1&type=multiple", REQUEST);
@@ -113,7 +113,7 @@ gmd({
   react: "🌐",
   category: "tools",
   description: "Translate replied text to English.",
-}, async (from, Gifted, conText) => {
+}, async (from, MeshTech, conText) => {
   const { mek, reply } = conText;
   const text = quotedText(mek);
   if (!text) return reply("Reply to a text message with .trt");
@@ -137,7 +137,7 @@ gmd({
   react: "🎲",
   category: "game",
   description: "Get a random truth or dare challenge.",
-}, async (from, Gifted, conText) => {
+}, async (from, MeshTech, conText) => {
   const { mek, reply } = conText;
   const type = Math.random() < 0.5 ? "truth" : "dare";
   try {
@@ -157,7 +157,7 @@ gmd({
   react: "🧩",
   category: "game",
   description: "Get a random riddle.",
-}, async (from, Gifted, conText) => {
+}, async (from, MeshTech, conText) => {
   const { mek, reply } = conText;
   try {
     const { data } = await axios.get("https://riddles-api.vercel.app/random", REQUEST);
@@ -175,7 +175,7 @@ gmd({
   react: "🎨",
   category: "ai",
   description: "Generate an AI image from a text prompt.",
-}, async (from, Gifted, conText) => {
+}, async (from, MeshTech, conText) => {
   const { mek, reply, q } = conText;
   const prompt = String(q || "").trim();
   if (!prompt) return reply("Use .dall followed by an image description.");

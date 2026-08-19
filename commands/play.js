@@ -23,8 +23,8 @@ const {
   downloadContentFromMessage,
   generateWAMessageFromContent,
   normalizeMessageContent,
-} = require("gifted-baileys");
-const { sendButtons } = require("gifted-btns");
+} = require("mesh-baileys");
+const { sendButtons } = require("mesh-btns");
 
 
 gmd(
@@ -35,7 +35,7 @@ gmd(
     react: "🎶",
     description: "Download Audio from url",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, mek, reply, react, sender, botFooter, gmdBuffer, formatAudio } =
       conText;
 
@@ -51,7 +51,7 @@ gmd(
         await react("❌");
         return reply("Failed to download the audio file.");
       }
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           audio: convertedBuffer,
@@ -77,7 +77,7 @@ gmd(
     react: "🎥",
     description: "Download Video from url",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const { q, mek, reply, react, sender, botFooter, gmdBuffer, formatVideo } =
       conText;
 
@@ -93,7 +93,7 @@ gmd(
         await react("❌");
         return reply("Failed to download the video file.");
       }
-      await Gifted.sendMessage(
+      await MeshTech.sendMessage(
         from,
         {
           document: buffer,
@@ -118,11 +118,11 @@ gmd(
 const isValidBuffer = (buf) => Buffer.isBuffer(buf) && buf.length > 10240;
 
 async function queryAPI(query, endpoints, conText, timeout = 20000) {
-  const { GiftedTechApi, GiftedApiKey } = conText;
+  const { MeshTechApi, MeshTechApiKey } = conText;
   const t0 = Date.now();
 
   const attempts = endpoints.map(endpoint => {
-    const apiUrl = `${GiftedTechApi}/api/download/${endpoint}?apikey=${GiftedApiKey}&url=${encodeURIComponent(query)}`;
+    const apiUrl = `${MeshTechApi}/api/download/${endpoint}?apikey=${MeshTechApiKey}&url=${encodeURIComponent(query)}`;
     return axios.get(apiUrl, { timeout })
       .then(res => {
         if (res.data?.success && res.data?.result?.download_url) {
@@ -165,7 +165,7 @@ gmd(
     react: "🎶",
     description: "Download Audio from Youtube",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       reply,
@@ -218,7 +218,7 @@ gmd(
       if (bufferRes.length > 60 * 1024 * 1024) {
         await react("📄");
         const convertedBuffer = await formatAudio(bufferRes);
-        await Gifted.sendMessage(from, {
+        await MeshTech.sendMessage(from, {
           document: convertedBuffer,
           mimetype: "audio/mpeg",
           fileName: `${firstVideo.title}.mp3`.replace(/[^\w\s.-]/gi, ""),
@@ -230,7 +230,7 @@ gmd(
       const dateNow = Date.now();
       const buttonId = `play_${firstVideo.id}_${dateNow}`;
       
-      await sendButtons(Gifted, from, {
+      await sendButtons(MeshTech, from, {
         title: `${botName} 𝐒𝐎𝐍𝐆 𝐃𝐎𝐖𝐍𝐋𝐎𝐀𝐃𝐄𝐑`,
         text: `⿻ *Title:* ${firstVideo.title}\n⿻ *Duration:* ${firstVideo.timestamp}\n\n*Select download format:*`,
         footer: botFooter,
@@ -268,7 +268,7 @@ gmd(
         try {
           if (selectedButtonId.startsWith('audio_')) {
             const convertedBuffer = await formatAudio(bufferRes);
-            await Gifted.sendMessage(
+            await MeshTech.sendMessage(
               from,
               {
                 audio: convertedBuffer,
@@ -279,7 +279,7 @@ gmd(
           } 
           else if (selectedButtonId.startsWith('doc_')) {
             const convertedBuffer = await formatAudio(bufferRes);
-            await Gifted.sendMessage(
+            await MeshTech.sendMessage(
               from,
               {
                 document: convertedBuffer,
@@ -298,14 +298,14 @@ gmd(
         } catch (error) {
           console.error("Error sending media:", error);
           await react("❌");
-          await Gifted.sendMessage(from, { text: "Failed to send media. Please try again." }, { quoted: messageData });
+          await MeshTech.sendMessage(from, { text: "Failed to send media. Please try again." }, { quoted: messageData });
         }
       };
 
-      Gifted.ev.on("messages.upsert", handleResponse);
+      MeshTech.ev.on("messages.upsert", handleResponse);
 
       setTimeout(() => {
-        Gifted.ev.off("messages.upsert", handleResponse);
+        MeshTech.ev.off("messages.upsert", handleResponse);
       }, 300000);
       
     } catch (error) {
@@ -324,7 +324,7 @@ gmd(
     react: "🎥",
     description: "Download Video from Youtube",
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       reply,
@@ -379,7 +379,7 @@ gmd(
       if (sizeMB > 100) {
         await react("📄");
         const convertedBuffer = await formatVideo(buffer);
-        await Gifted.sendMessage(from, {
+        await MeshTech.sendMessage(from, {
           document: convertedBuffer,
           mimetype: "video/mp4",
           fileName: `${firstVideo.title}.mp4`.replace(/[^\w\s.-]/gi, ""),
@@ -395,7 +395,7 @@ gmd(
       const dateNow = Date.now();
       const buttonId = `video_${firstVideo.id}_${dateNow}`;
       
-      await sendButtons(Gifted, from, {
+      await sendButtons(MeshTech, from, {
         title: `${botName} 𝐕𝐈𝐃𝐄𝐎 𝐃𝐎𝐖𝐍𝐋𝐎𝐀𝐃𝐄𝐑`,
         text: `⿻ *Title:* ${firstVideo.title}\n⿻ *Duration:* ${firstVideo.timestamp}\n\n*Select download format:*`,
         footer: botFooter,
@@ -428,7 +428,7 @@ gmd(
         try {
           if (selectedButtonId.startsWith('vid_')) {
             const formattedVideo = await formatVideo(buffer);
-            await Gifted.sendMessage(
+            await MeshTech.sendMessage(
               from,
               {
                 video: formattedVideo,
@@ -440,7 +440,7 @@ gmd(
             );
           } 
           else if (selectedButtonId.startsWith('doc_')) {
-            await Gifted.sendMessage(
+            await MeshTech.sendMessage(
               from,
               {
                 document: buffer,
@@ -459,14 +459,14 @@ gmd(
         } catch (error) {
           console.error("Error sending media:", error);
           await react("❌");
-          await Gifted.sendMessage(from, { text: "Failed to send media. Please try again." }, { quoted: messageData });
+          await MeshTech.sendMessage(from, { text: "Failed to send media. Please try again." }, { quoted: messageData });
         }
       };
 
-      Gifted.ev.on("messages.upsert", handleResponse);
+      MeshTech.ev.on("messages.upsert", handleResponse);
 
       setTimeout(() => {
-        Gifted.ev.off("messages.upsert", handleResponse);
+        MeshTech.ev.off("messages.upsert", handleResponse);
       }, 300000);
       
     } catch (error) {

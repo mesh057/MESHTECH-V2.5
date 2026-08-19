@@ -13,14 +13,14 @@ async function queryLinkedGpt(query) {
 }
 
 async function queryAI(endpoint, query, conText) {
-  const { reply, GiftedTechApi, GiftedApiKey } = conText;
+  const { reply, MeshTechApi, MeshTechApiKey } = conText;
 
   if (!query) {
     return reply("Please provide a question or prompt.");
   }
 
   try {
-    const apiUrl = `${GiftedTechApi}/api/ai/${endpoint}?apikey=${GiftedApiKey}&q=${encodeURIComponent(query)}`;
+    const apiUrl = `${MeshTechApi}/api/ai/${endpoint}?apikey=${MeshTechApiKey}&q=${encodeURIComponent(query)}`;
     const res = await axios.get(apiUrl, { timeout: 100000 });
 
     if (!res.data?.success || !res.data?.result) {
@@ -50,7 +50,7 @@ gmd(
     category: "Ai",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     await queryAI("ai", conText.q || "say hello to mesh tech", conText);
   },
 );
@@ -62,7 +62,7 @@ gmd(
     category: "Ai",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     await queryAI("chat", conText.q, conText);
   },
 );
@@ -75,7 +75,7 @@ gmd(
     category: "Ai",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     await queryAI("gpt", conText.q, conText);
   },
 );
@@ -88,7 +88,7 @@ gmd(
     category: "Ai",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     await queryAI("gpt4", conText.q, conText);
   },
 );
@@ -101,7 +101,7 @@ gmd(
     category: "Ai",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     await queryAI("gpt4o", conText.q, conText);
   },
 );
@@ -114,7 +114,7 @@ gmd(
     category: "Ai",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     await queryAI("gpt4o-mini", conText.q, conText);
   },
 );
@@ -126,7 +126,7 @@ gmd(
     category: "Ai",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     await queryAI("openai", conText.q, conText);
   },
 );
@@ -138,7 +138,7 @@ gmd(
     category: "Ai",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     await queryAI("geminiai", conText.q, conText);
   },
 );
@@ -152,7 +152,7 @@ gmd(
     category: "Ai",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     await queryAI("mistral", conText.q, conText);
   },
 );
@@ -164,7 +164,7 @@ gmd(
     category: "Ai",
     filename: __filename,
   },
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     await queryAI("letmegpt", conText.q, conText);
   },
 );

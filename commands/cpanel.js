@@ -7,7 +7,7 @@ const {
   monospace,
 } = require("../meshtech");
 
-const { sendButtons } = require("gifted-btns");
+const { sendButtons } = require("mesh-btns");
 
 /* ============================================================
  * 🖥️ MESHTECH MD BOT v2.5 — PTERODACTYL CPANEL SYSTEM
@@ -1038,7 +1038,7 @@ gmd(
       "Set or view CPanel payment prices.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       reply,
@@ -1134,7 +1134,7 @@ gmd(
       "Display complete CPanel management menu.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       mek,
       react,
@@ -1201,7 +1201,7 @@ gmd(
     const mainId =
       `cpanel_main_${Date.now()}`;
 
-    await sendButtons(Gifted, from, {
+    await sendButtons(MeshTech, from, {
       title:
         `🖥️ ${botName || "MESHTECH MD BOT v2.5"} CPanel`,
 
@@ -1371,7 +1371,7 @@ gmd(
 `.trim();
 
             await sendButtons(
-              Gifted,
+              MeshTech,
               from,
               {
                 title:
@@ -1411,7 +1411,7 @@ gmd(
            */
 
           if (id === mainId) {
-            await Gifted.sendMessage(
+            await MeshTech.sendMessage(
               from,
               {
                 text:
@@ -1435,14 +1435,14 @@ gmd(
       };
 
 
-    Gifted.ev.on(
+    MeshTech.ev.on(
       "messages.upsert",
       handler
     );
 
 
     setTimeout(() => {
-      Gifted.ev.off(
+      MeshTech.ev.off(
         "messages.upsert",
         handler
       );
@@ -1469,7 +1469,7 @@ gmd(
       "Create Pterodactyl user account.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       reply,
@@ -1543,7 +1543,7 @@ gmd(
       });
 
       await sendButtons(
-        Gifted,
+        MeshTech,
         from,
         {
           title:
@@ -1585,7 +1585,7 @@ gmd(
     description: "List admin Pterodactyl users.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -1665,7 +1665,7 @@ gmd(
       "List Pterodactyl users.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -1739,7 +1739,7 @@ gmd(
       "Show total Pterodactyl users.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -1791,7 +1791,7 @@ gmd(
       "Make Pterodactyl user administrator.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       reply,
@@ -1881,7 +1881,7 @@ gmd(
       "Remove admin privileges from user.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       reply,
@@ -1937,7 +1937,7 @@ gmd(
       "Delete all Pterodactyl users.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -2005,7 +2005,7 @@ gmd(
       "Delete all Pterodactyl servers.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -2058,7 +2058,7 @@ gmd(
       "Delete Pterodactyl user.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       reply,
@@ -2111,7 +2111,7 @@ gmd(
       "List Pterodactyl servers.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -2175,7 +2175,7 @@ gmd(
       "Show total Pterodactyl servers.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -2227,7 +2227,7 @@ gmd(
       "Create limited Pterodactyl server.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       reply,
@@ -2332,7 +2332,7 @@ gmd(
       "Create unlimited Pterodactyl server.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       reply,
@@ -2416,7 +2416,7 @@ gmd(
       "Delete a Pterodactyl server.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       reply,
@@ -2466,7 +2466,7 @@ gmd(
       "Configure Pterodactyl Nest, Egg, Node and resources.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       reply,
@@ -2787,7 +2787,7 @@ gmd(
       "Show how to set Pterodactyl panel URL.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       reply,
@@ -2864,7 +2864,7 @@ gmd(
       "Show how to set Pterodactyl Application API key.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       reply,
@@ -2948,7 +2948,7 @@ gmd(
       "View saved Pterodactyl API key.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -3010,7 +3010,7 @@ gmd(
       "Check Paystack secret key configuration.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       reply,
       react,
@@ -3060,7 +3060,7 @@ gmd(
       "Initialize CPanel Paystack payment.",
   },
 
-  async (from, Gifted, conText) => {
+  async (from, MeshTech, conText) => {
     const {
       q,
       reply,
@@ -3133,7 +3133,7 @@ Plans:
         });
 
       await sendButtons(
-        Gifted,
+        MeshTech,
         from,
         {
           title:
