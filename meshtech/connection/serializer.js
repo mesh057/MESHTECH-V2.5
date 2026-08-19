@@ -77,20 +77,34 @@ const serializeMessage = async (ms, MeshTech, settings = {}) => {
     let isButtonResponse = false;
     let buttonId = null;
     
-    if (actualMessage?.interactiveResponseMessage) {
+    // Field-first universal body extraction (proven method from chatbot)
+    body = 
+        actualMessage.conversation ||
+        actualMessage.extendedTextMessage?.text ||
+        actualMessage.extendedTextMessage?.conversation ||
+        actualMessage.imageMessage?.caption ||
+        actualMessage.videoMessage?.caption ||
+        actualMessage.documentMessage?.caption ||
+        actualMessage.templateMessage?.hydratedTemplate?.hydratedContentText ||
+        actualMessage.templateMessage?.contentText ||
+        actualMessage.buttonsResponseMessage?.selectedButtonId ||
+        actualMessage.listResponseMessage?.singleSelectReply?.selectedRowId ||
+        actualMessage.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson ||
+        actualMessage.interactiveResponseMessage?.buttonId ||
+        actualMessage.interactiveResponseMessage?.body?.text ||
+        actualMessage.text ||
+        actualMessage.caption ||
+        '';
+
+    if (actualMessage?.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson) {
         isButtonResponse = true;
         try {
-            const paramsJson = actualMessage.interactiveResponseMessage.nativeFlowResponseMessage?.paramsJson;
-            if (paramsJson) {
-                buttonId = JSON.parse(paramsJson)?.id || null;
+            const params = JSON.parse(actualMessage.interactiveResponseMessage.nativeFlowResponseMessage.paramsJson);
+            if (params.id) {
+                buttonId = params.id;
+                body = params.id;
             }
-        } catch (e) {
-            buttonId = null;
-        }
-        if (!buttonId) {
-            buttonId = actualMessage.interactiveResponseMessage.buttonId || null;
-        }
-        body = buttonId || actualMessage.interactiveResponseMessage?.body?.text || '';
+        } catch {}
     } else if (actualMessage?.buttonsResponseMessage?.selectedButtonId) {
         isButtonResponse = true;
         buttonId = actualMessage.buttonsResponseMessage.selectedButtonId;
@@ -103,35 +117,6 @@ const serializeMessage = async (ms, MeshTech, settings = {}) => {
         isButtonResponse = true;
         buttonId = actualMessage.templateButtonReplyMessage.selectedId;
         body = buttonId;
-    } else if (type === 'conversation') {
-        body = actualMessage.conversation;
-    } else if (type === 'extendedTextMessage') {
-        body = actualMessage.extendedTextMessage?.text || actualMessage.extendedTextMessage?.conversation || '';
-    } else if (type === 'imageMessage') {
-        body = actualMessage.imageMessage?.caption || '';
-    } else if (type === 'videoMessage') {
-        body = actualMessage.videoMessage?.caption || '';
-    } else if (type === 'documentMessage') {
-        body = actualMessage.documentMessage?.caption || '';
-    } else if (type === 'templateMessage') {
-        body = actualMessage.templateMessage?.hydratedTemplate?.hydratedContentText || actualMessage.templateMessage?.contentText || '';
-    } else if (type === 'hydratedContentText') {
-        body = actualMessage.hydratedContentText || '';
-    } else if (type === 'protocolMessage' && actualMessage.protocolMessage?.editedMessage) {
-        const edited = unwrapMessage(actualMessage.protocolMessage.editedMessage);
-        const editedType = getContentType(edited);
-        body = edited?.conversation || edited?.extendedTextMessage?.text || edited?.imageMessage?.caption || edited?.videoMessage?.caption || '';
-    } else {
-        // Super aggressive fallback: check all common text fields
-        body = actualMessage?.conversation || 
-               actualMessage?.extendedTextMessage?.text || 
-               actualMessage?.imageMessage?.caption || 
-               actualMessage?.videoMessage?.caption || 
-               actualMessage?.documentMessage?.caption || 
-               actualMessage?.templateMessage?.hydratedTemplate?.hydratedContentText ||
-               actualMessage?.text || 
-               actualMessage?.caption || 
-               '';
     }
 
     const botPrefix = settings.PREFIX || '.';
