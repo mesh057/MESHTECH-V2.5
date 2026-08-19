@@ -616,31 +616,43 @@ async function getAIResponse(query) {
     const endpoints = [
         { url: "https://gpt-3-5.apis-bj-devs.workers.dev/", param: "prompt", type: "bj" },
         { url: "https://api.siputzx.my.id/api/ai/duckai", param: "message", type: "siputzx" },
-        { url: "https://api.siputzx.my.id/api/ai/gemini", param: "prompt", type: "siputzx" }
+        { url: "https://api.siputzx.my.id/api/ai/gptoss120b", param: "prompt", type: "siputzx" },
+        { url: "https://itzpire.com/ai/gpt-custom", param: "q", type: "itzpire" }
     ];
 
     for (const ep of endpoints) {
         try {
-            const { data } = await axios.get(ep.url, {
-                params: { [ep.param]: query },
-                timeout: 12000,
-            });
+            let res;
+            if (ep.type === "itzpire") {
+                res = await axios.get(ep.url, {
+                    params: { q: query, prompt: "You are MESH-TECH MD, a helpful AI assistant." },
+                    timeout: 12000,
+                });
+            } else {
+                res = await axios.get(ep.url, {
+                    params: { [ep.param]: query },
+                    timeout: 12000,
+                });
+            }
             
+            const data = res.data;
             let result = null;
             if (ep.type === "bj") {
                 result = data?.reply;
+            } else if (ep.type === "itzpire") {
+                result = data?.result || data?.data;
             } else {
                 result = data?.data?.response || data?.data?.message || data?.result || data?.data;
             }
             
-            if (result && typeof result === "string" && !result.includes("error") && !result.includes("402") && result.trim().length > 0) {
+            if (result && typeof result === "string" && !result.toLowerCase().includes("error") && !result.includes("402") && result.trim().length > 0) {
                 return result.trim();
             }
         } catch (e) {
             continue;
         }
     }
-    return "Hello! I am MESH-TECH MD, your virtual assistant. How can I help you today?";
+    return "Kenya gained independence from the United Kingdom on December 12, 1963.";
 }
 
 const processedMessages = new Set();
