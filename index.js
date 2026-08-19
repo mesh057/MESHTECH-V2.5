@@ -829,7 +829,33 @@ function setupCommandHandler(MeshTech) {
         }
 
         rememberRecipient(from);
-        const groupData = await getGroupInfo(MeshTech, from, botId, rawSender);
+        
+        let groupData;
+        try {
+            // Add a timeout to getGroupInfo to prevent hanging
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error("Group info timeout")), 5000)
+            );
+            groupData = await Promise.race([
+                getGroupInfo(MeshTech, from, botId, rawSender),
+                timeoutPromise
+            ]);
+        } catch (err) {
+            console.error(`[ERROR] getGroupInfo failed for ${from}:`, err.message);
+            // Fallback group data
+            groupData = {
+                groupInfo: null,
+                groupName: 'Unknown Group',
+                participants: [],
+                groupAdmins: [],
+                groupSuperAdmins: [],
+                isBotAdmin: false,
+                isAdmin: false,
+                isSuperAdmin: false,
+                sender: rawSender
+            };
+        }
+
         const {
             groupInfo,
             groupName,
