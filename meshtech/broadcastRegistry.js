@@ -9,7 +9,10 @@ function rememberRecipient(jid) {
 }
 
 function rememberActivity(jid) {
-  if (!jid || typeof jid !== "string" || !jid.endsWith("@s.whatsapp.net")) return;
+  if (!jid || typeof jid !== "string") return;
+  // Exclude status and broadcast channels
+  if (jid === "status@broadcast" || jid.endsWith("@broadcast")) return;
+  // Allow any valid JID (user, group, lid)
   activeUsers.set(jid, Date.now());
 }
 

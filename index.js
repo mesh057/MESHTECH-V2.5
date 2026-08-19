@@ -819,7 +819,7 @@ function setupCommandHandler(MeshTech) {
         } = serialized;
 
         rememberRecipient(from);
-        rememberActivity(from);
+        rememberActivity(sender || rawSender || from);
         const groupData = await getGroupInfo(MeshTech, from, botId, rawSender);
         const {
             groupInfo,
