@@ -80,7 +80,7 @@ const createContext = async (userJid, options = {}) => {
         const botName = (await getSetting("BOT_NAME")) || "MESH TECH MD";
         const botPic =
             (await getSetting("BOT_PIC")) ||
-            "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
+            "https://files.manuscdn.com/user_upload_by_module/session_file/310519663642644316/tHzBXIgcHbXktzTX.png";
         const newsletterUrl =
             (await getSetting("NEWSLETTER_URL")) ||
             "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R";
@@ -109,7 +109,7 @@ const createContext2 = async (userJid, options = {}) => {
     const botName = (await getSetting("BOT_NAME")) || "MESH TECH MD";
     const botPic =
         (await getSetting("BOT_PIC")) ||
-        "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
+        "https://files.manuscdn.com/user_upload_by_module/session_file/310519663642644316/tHzBXIgcHbXktzTX.png";
     const newsletterJid = await getSetting("NEWSLETTER_JID");
 
     return {
