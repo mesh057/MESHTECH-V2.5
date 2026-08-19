@@ -85,19 +85,22 @@ class MultiUserSessionManager {
 
   async restoreSavedSessions() {
     const restored = [];
-    for (const number of this.listRestorableSessions()) {
-      let restoredThisSession = false;
-      for (let attempt = 1; attempt <= 3 && !restoredThisSession; attempt += 1) {
-        try {
-          await this.start(number, false, true);
-          restored.push(number);
-          restoredThisSession = true;
-        } catch (error) {
-          console.error(`[mesh-multi-user] Could not restore ${number} (attempt ${attempt}/3):`, error.message);
-          if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 3000));
+    // Restore sessions asynchronously in the background so server.listen() is never blocked or killed by Railway startup timeout
+    (async () => {
+      for (const number of this.listRestorableSessions()) {
+        let restoredThisSession = false;
+        for (let attempt = 1; attempt <= 2 && !restoredThisSession; attempt += 1) {
+          try {
+            await this.start(number, false, true);
+            restored.push(number);
+            restoredThisSession = true;
+          } catch (error) {
+            console.error(`[mesh-multi-user] Could not restore ${number} (attempt ${attempt}/2):`, error.message);
+            if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 3000));
+          }
         }
       }
-    }
+    })().catch(err => console.error('[mesh-multi-user] Background restore error:', err));
     return restored;
   }
 
