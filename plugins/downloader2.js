@@ -67,7 +67,7 @@ gmd(
             const t0 = Date.now();
             const result = await Promise.any(
                 endpoints.map(endpoint => {
-                    const apiUrl = `${MeshTechApi}/api/download/${endpoint}?apikey=${MeshTechApiKey}&url=${encodeURIComponent(trackUrl)}`;
+                    const apiUrl = `${MeshTechApi}/api/d/spotify?url=${encodeURIComponent(trackUrl)}`;
                     return axios.get(apiUrl, { timeout: 20000 }).then(res => {
                         if (res.data?.success && res.data?.result?.download_url) {
                             return res.data.result;
@@ -121,7 +121,7 @@ gmd(
                 return;
             }
 
-            const searchUrl = `${MeshTechApi}/api/search/spotifysearch?apikey=${MeshTechApiKey}&query=${encodeURIComponent(q)}`;
+            const searchUrl = `${MeshTechApi}/api/s/spotifysearch?query=${encodeURIComponent(q)}`;
             const searchResponse = await axios.get(searchUrl, {
                 timeout: 30000,
             });
@@ -279,7 +279,7 @@ gmd(
         }
 
         try {
-            const apiUrl = `${MeshTechApi}/api/download/gdrivedl?apikey=${MeshTechApiKey}&url=${encodeURIComponent(q)}`;
+            const apiUrl = `${MeshTechApi}/api/d/gdrivedl?url=${encodeURIComponent(q)}`;
             const response = await axios.get(apiUrl, { timeout: 60000 });
 
             if (!response.data?.success || !response.data?.result) {

@@ -1,6 +1,48 @@
 const { gmd, gmdBuffer } = require("../meshtech");
 const axios = require("axios");
 
+// Mapping of legacy endpoint names to real Ephoto360 URLs
+const ephotoMapping = {
+  glossysilver: "https://en.ephoto360.com/glossy-silver-text-effect-online-802.html",
+  angelWing: "https://en.ephoto360.com/create-angel-wing-text-effect-online-free-633.html",
+  facebookTypo: "https://en.ephoto360.com/facebook-typography-text-effect-online-632.html",
+  hollywoodStar: "https://en.ephoto360.com/hollywood-star-text-effect-online-631.html",
+  blueNeonLogo: "https://en.ephoto360.com/blue-neon-text-effect-online-630.html",
+  fireworks: "https://en.ephoto360.com/fireworks-text-effect-online-629.html",
+  fpsGamingLogo: "https://en.ephoto360.com/fps-gaming-logo-text-effect-online-628.html",
+  assassinLogo: "https://en.ephoto360.com/assassin-logo-text-effect-online-627.html",
+  footballLogo: "https://en.ephoto360.com/football-logo-text-effect-online-626.html",
+  neonDevilWings: "https://en.ephoto360.com/neon-devil-wings-text-effect-online-625.html",
+  mascotShield: "https://en.ephoto360.com/mascot-shield-logo-text-effect-online-624.html",
+  writetext: "https://en.ephoto360.com/write-text-effect-online-802.html",
+  blackpinklogo: "https://en.ephoto360.com/create-blackpink-logo-online-free-617.html",
+  glitchtext: "https://en.ephoto360.com/create-glitch-text-effect-style-tik-tok-online-free-616.html",
+  advancedglow: "https://en.ephoto360.com/advanced-glow-text-effect-810.html",
+  typographytext: "https://en.ephoto360.com/create-typography-text-effect-on-pc-632.html",
+  pixelglitch: "https://en.ephoto360.com/create-pixel-glitch-text-effect-online-free-592.html",
+  neonglitch: "https://en.ephoto360.com/create-neon-glitch-text-effect-online-free-591.html",
+  nigerianflag: "https://en.ephoto360.com/nigeria-flag-text-effect-online-free-586.html",
+  americanflag: "https://en.ephoto360.com/usa-flag-text-effect-online-free-585.html",
+  deletingtext: "https://en.ephoto360.com/create-deleting-text-effect-online-free-584.html",
+  blackpinkstyle: "https://en.ephoto360.com/blackpink-text-effect-online-free-583.html",
+  glowingtext: "https://en.ephoto360.com/create-glowing-text-effect-online-free-582.html",
+  underwater: "https://en.ephoto360.com/create-underwater-text-effect-online-free-581.html",
+  logomaker: "https://en.ephoto360.com/create-blackpink-logo-online-free-617.html",
+  cartoonstyle: "https://en.ephoto360.com/create-cartoon-style-text-effect-online-578.html",
+  papercut: "https://en.ephoto360.com/create-paper-cut-text-effect-online-577.html",
+  effectclouds: "https://en.ephoto360.com/create-effect-clouds-text-effect-online-576.html",
+  gradienttext: "https://en.ephoto360.com/create-gradient-text-effect-online-575.html",
+  summerbeach: "https://en.ephoto360.com/create-summer-beach-text-effect-online-574.html",
+  sandsummer: "https://en.ephoto360.com/create-sand-summer-beach-text-effect-online-573.html",
+  luxurygold: "https://en.ephoto360.com/create-luxury-gold-text-effect-online-572.html",
+  galaxy: "https://en.ephoto360.com/create-galaxy-text-effect-online-571.html",
+  "1917": "https://en.ephoto360.com/create-1917-text-effect-online-570.html",
+  makingneon: "https://en.ephoto360.com/create-making-neon-text-effect-online-569.html",
+  texteffect: "https://en.ephoto360.com/create-text-effect-online-568.html",
+  galaxystyle: "https://en.ephoto360.com/create-galaxy-style-text-effect-online-567.html",
+  lighteffect: "https://en.ephoto360.com/create-light-effect-online-566.html",
+};
+
 const logoEndpoints = [
   {
     pattern: "glossysilver",
@@ -8,61 +50,61 @@ const logoEndpoints = [
     description: "Glossy Silver logo",
     endpoint: "glossysilver",
   },
-    {
+  {
     pattern: "angelWing",
     aliases: ["angelWing", "meshtech6"],
     description: "angelWing Silver logo",
     endpoint: "angelWing",
   },
-    {
+  {
     pattern: "facebookTypo",
     aliases: ["facebookTypo", "meshtech5"],
     description: "facebookTypo Silver logo",
     endpoint: "facebookTypo",
   },
-    {
+  {
     pattern: "hollywoodStar",
     aliases: ["hollywoodStar", "meshtech4"],
     description: "hollywoodStar Silver logo",
     endpoint: "hollywoodStar",
   },
-    {
+  {
     pattern: "blueNeonLogo",
     aliases: ["blueNeonLogo", "blueneon"],
     description: "blueNeonLogo Silver logo",
     endpoint: "blueNeonLogo",
   },
-    {
+  {
     pattern: "fireworks",
     aliases: ["fireworks", "meshtech3"],
     description: "fireworks Silver logo",
     endpoint: "fireworks",
   },
-    {
+  {
     pattern: "fpsGamingLogo",
     aliases: ["fpsGamingLogo", "meshtech2"],
     description: "fpsGamingLogo Silver logo",
     endpoint: "fpsGamingLogo",
   },
-          {
+  {
     pattern: "assassinLogo",
     aliases: ["assassinLogo", "meshtech1"],
     description: "assassinLogo Style logo",
     endpoint: "assassinLogo",
   },
-        {
+  {
     pattern: "footballLogo",
     aliases: ["footballLogo", "ball"],
     description: "footballLogo Style logo",
     endpoint: "footballLogo",
   },
-      {
+  {
     pattern: "neonDevilWings",
     aliases: ["neonDevilWings", "neon"],
     description: "neonDevilWings Style logo",
     endpoint: "neonDevilWings",
   },
-    {
+  {
     pattern: "mascotShield",
     aliases: ["mascotShield", "mascot"],
     description: "mascotShield Style logo",
@@ -248,7 +290,6 @@ async function createLogoCommand(config) {
         reply,
         react,
         MeshTechApi,
-        MeshTechApiKey,
         pushname,
         botCaption,
       } = conText;
@@ -260,24 +301,29 @@ async function createLogoCommand(config) {
         );
       }
 
+      const ephotoUrl = ephotoMapping[config.endpoint];
+      if (!ephotoUrl) {
+        await react("❌");
+        return reply("This logo effect is currently unavailable.");
+      }
+
       try {
         await react("⏳");
 
-        const apiUrl = `${MeshTechApi}/api/ephoto360/${config.endpoint}?apikey=${MeshTechApiKey}&text=${encodeURIComponent(q)}`;
-        const res = await axios.get(apiUrl, { timeout: 60000 });
+        // Use the new siputzx API which returns the image buffer directly
+        const apiUrl = `${MeshTechApi}/api/m/ephoto360?url=${encodeURIComponent(ephotoUrl)}&text1=${encodeURIComponent(q)}`;
+        
+        const res = await axios.get(apiUrl, { 
+          responseType: 'arraybuffer',
+          timeout: 60000 
+        });
 
-        if (!res.data || !res.data.success || !res.data.result?.image_url) {
+        if (!res.data || res.data.length < 100) {
           await react("❌");
-          return reply("Failed to generate logo. Please try again.");
+          return reply("Failed to generate logo. The API returned an invalid response.");
         }
 
-        const imageUrl = res.data.result.image_url;
-        const imageBuffer = await gmdBuffer(imageUrl);
-
-        if (!imageBuffer || !Buffer.isBuffer(imageBuffer)) {
-          await react("❌");
-          return reply("Failed to download the generated logo.");
-        }
+        const imageBuffer = Buffer.from(res.data, 'binary');
 
         await MeshTech.sendMessage(
           from,

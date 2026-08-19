@@ -13,32 +13,38 @@ async function queryLinkedGpt(query) {
 }
 
 async function queryAI(endpoint, query, conText) {
-  const { reply, MeshTechApi, MeshTechApiKey } = conText;
+  const { reply, MeshTechApi } = conText;
 
   if (!query) {
     return reply("Please provide a question or prompt.");
   }
 
+  // Mapping old endpoints to siputzx endpoints
+  let siputzxEndpoint = "duckai";
+  if (endpoint.includes("gemini")) siputzxEndpoint = "gemini";
+  if (endpoint.includes("deepseek") || endpoint === "mistral") siputzxEndpoint = "deepseekr1";
+  if (endpoint.includes("meta")) siputzxEndpoint = "metaai";
+
   try {
-    const apiUrl = `${MeshTechApi}/api/ai/${endpoint}?apikey=${MeshTechApiKey}&q=${encodeURIComponent(query)}`;
+    const apiUrl = `${MeshTechApi}/api/ai/${siputzxEndpoint}?prompt=${encodeURIComponent(query)}`;
     const res = await axios.get(apiUrl, { timeout: 100000 });
 
-    if (!res.data?.success || !res.data?.result) {
+    if (!res.data || !res.data.status || !res.data.result) {
       throw new Error("Primary AI endpoint returned no result");
     }
 
     return reply(res.data.result);
   } catch (err) {
     console.error(`AI ${endpoint} primary endpoint error:`, err.message);
-    if (endpoint === "gpt") {
-      try {
-        const fallback = await queryLinkedGpt(query);
-        return reply(fallback);
-      } catch (fallbackError) {
-        console.error("Linked GPT fallback error:", fallbackError.message);
-      }
+    
+    // Fallback to linked GPT for general queries
+    try {
+      const fallback = await queryLinkedGpt(query);
+      return reply(fallback);
+    } catch (fallbackError) {
+      console.error("Linked GPT fallback error:", fallbackError.message);
+      return reply("Error: " + err.message);
     }
-    return reply("Error: " + err.message);
   }
 }
 

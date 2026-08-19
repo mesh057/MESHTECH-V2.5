@@ -148,7 +148,7 @@ gmd(
         }
 
         try {
-            const apiUrl = `${MeshTechApi}/api/download/facebook?apikey=${MeshTechApiKey}&url=${encodeURIComponent(q)}`;
+            const apiUrl = `${MeshTechApi}/api/d/facebook?url=${encodeURIComponent(q)}`;
             const response = await axios.get(apiUrl, { timeout: 60000 });
 
             if (!response.data?.success || !response.data?.result) {
@@ -361,7 +361,7 @@ gmd(
             const t0 = Date.now();
             let result = await Promise.any(
                 endpoints.map(endpoint => {
-                    const apiUrl = `${MeshTechApi}/api/download/${endpoint}?apikey=${MeshTechApiKey}&url=${encodeURIComponent(q)}`;
+                    const apiUrl = `${MeshTechApi}/api/d/${endpoint === 'tiktok' ? 'tiktok' : endpoint}?url=${encodeURIComponent(q)}`;
                     return axios.get(apiUrl, { timeout: 20000 }).then(res => {
                         if (res.data?.success && res.data?.result) {
                             return res.data.result;
@@ -549,7 +549,7 @@ gmd(
         }
 
         try {
-            const apiUrl = `${MeshTechApi}/api/download/twitter?apikey=${MeshTechApiKey}&url=${encodeURIComponent(q)}`;
+            const apiUrl = `${MeshTechApi}/api/d/twitter?url=${encodeURIComponent(q)}`;
             const response = await axios.get(apiUrl, { timeout: 60000 });
 
             if (!response.data?.success || !response.data?.result) {
@@ -725,7 +725,7 @@ gmd(
         }
 
         try {
-            const apiUrl = `${MeshTechApi}/api/download/instadl?apikey=${MeshTechApiKey}&url=${encodeURIComponent(q)}`;
+            const apiUrl = `${MeshTechApi}/api/d/igram?url=${encodeURIComponent(q)}`;
             const response = await axios.get(apiUrl, { timeout: 60000 });
 
             if (!response.data?.success || !response.data?.result) {
@@ -881,7 +881,7 @@ gmd(
         }
 
         try {
-            const apiUrl = `${MeshTechApi}/api/download/snackdl?apikey=${MeshTechApiKey}&url=${encodeURIComponent(q)}`;
+            const apiUrl = `${MeshTechApi}/api/d/snackvideo?url=${encodeURIComponent(q)}`;
             const response = await axios.get(apiUrl, { timeout: 60000 });
 
             if (!response.data?.success || !response.data?.result) {
