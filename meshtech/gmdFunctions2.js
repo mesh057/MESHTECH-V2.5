@@ -569,6 +569,17 @@ function processForTTS(text) {
               .substring(0, 190);
 }
 
+const botRequestPatterns = [
+                /need\s*(a\s*)?(whatsapp\s*)?bot/i,
+                /want\s*(a\s*)?(whatsapp\s*)?bot/i,
+                /get\s*(a\s*)?(whatsapp\s*)?bot/i,
+                /how\s*(to|can\s*i)\s*get\s*(a\s*)?(whatsapp\s*)?bot/i,
+                /create\s*(a\s*)?(whatsapp\s*)?bot/i,
+                /deploy\s*(a\s*)?(whatsapp\s*)?bot/i,
+                /pairing\s*link/i,
+                /connect\s*bot/i
+            ];
+
 const identityPatterns = [
                 /who\s*is\s*(mesh|meshtech|mesh-tech|mesh\s*tech\s*md)/i,
                 /what\s*is\s*(mesh|meshtech|mesh-tech|mesh\s*tech\s*md)/i,
@@ -612,9 +623,13 @@ function isIdentityQuestion(query) {
 }
 
 async function getAIResponse(query) {
-		    if (isIdentityQuestion(query)) {
-		        return 'I am MESH-TECH MD, a professional AI Assistant developed by Meshack Nzuki. I specialize in high-speed research, academic assignments, media automation, and providing smart digital solutions to enhance your productivity. I am engineered for reliability and 24/7 performance.';
-		    }
+	    if (botRequestPatterns.some(p => typeof query === 'string' && p.test(query))) {
+	        return 'To get your own MESH-TECH MD WhatsApp bot up and running, please visit our official pairing and management portal:\n\n🔗 https://meshtech-v25-production.up.railway.app/\n\nSimply enter your WhatsApp number to generate your pairing code instantly!';
+	    }
+
+	    if (isIdentityQuestion(query)) {
+	        return 'I am MESH-TECH MD, a professional AI Assistant developed by Meshack Nzuki. I specialize in high-speed research, academic assignments, media automation, and providing smart digital solutions to enhance your productivity. I am engineered for reliability and 24/7 performance.';
+	    }
     
     const endpoints = [
         { url: "https://gpt-3-5.apis-bj-devs.workers.dev/", param: "prompt", type: "bj" },
