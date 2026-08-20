@@ -18,6 +18,10 @@ const _pluginExts = new Set(['.js', '.gmd', '.kasongo', '.amd', '.atassa', '.ke'
 
 const loadPlugins = (pluginsPath) => {
     try {
+        if (!fs.existsSync(pluginsPath)) {
+            console.warn(`Plugins directory not found: ${pluginsPath}`);
+            return;
+        }
         fs.readdirSync(pluginsPath).forEach((fileName) => {
             const ext = path.extname(fileName).toLowerCase();
             if (_pluginExts.has(ext)) {
