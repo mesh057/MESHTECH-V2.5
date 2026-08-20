@@ -100,7 +100,7 @@ function setCustomerCookie(res, number) {
 const { createMeshTechSessionId } = require('../meshtech/sessionId');
 
 const manager = new MultiUserSessionManager();
-const port = Number(process.env.MULTI_USER_PORT || process.env.PORT || 5000);
+const port = Number(process.env.MULTI_USER_PORT || process.env.PORT || 8080);
 const rate = new Map();
 
 function json(res, status, payload) {

@@ -139,7 +139,7 @@ async function resolveMeshTechChannel(MeshTech) {
 const { sendButtons } = require("mesh-btns");
 const { setSetting } = require("./meshtech/database/settings");
 const { SESSION_ID: sessionId } = config;
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 const embeddedHttpServerEnabled = process.env.MESH_DISABLE_HTTP_SERVER !== "true";
 const app = express();
 let MeshTech;
