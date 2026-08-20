@@ -474,11 +474,26 @@ setInterval(() => {
   }
 }, 15 * 60_000).unref();
 
+// Cloud Persistence: Periodically backup active sessions to the database
+setInterval(async () => {
+  if (shuttingDown) return;
+  const active = manager.list();
+  for (const session of active) {
+    if (session.status === 'running') {
+      await manager.backupSession(session.number);
+    }
+  }
+}, 10 * 60_000).unref(); // Every 10 minutes
+
 async function shutdown(signal) {
   if (shuttingDown) return;
   shuttingDown = true;
-  console.log(`[mesh-multi-user] ${signal} received; stopping child sessions safely.`);
-  await Promise.all(manager.list().map((session) => manager.stopAndWait(session.number)));
+  console.log(`[mesh-multi-user] ${signal} received; backing up and stopping child sessions safely.`);
+  const active = manager.list();
+  await Promise.all(active.map(async (session) => {
+    if (session.status === 'running') await manager.backupSession(session.number);
+    await manager.stopAndWait(session.number);
+  }));
   await new Promise((resolve) => server.close(() => resolve()));
   process.exit(0);
 }

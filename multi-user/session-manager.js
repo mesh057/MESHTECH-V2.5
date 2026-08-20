@@ -157,6 +157,11 @@ class MultiUserSessionManager {
       await this.clear(normalized);
     }
 
+    // Try to restore from database if local files are missing (Cloud Persistence)
+    if (!force) {
+      await this.restoreSession(normalized);
+    }
+
     const existing = this.sessions.get(normalized);
     const existingAlive = existing && existing.child && existing.child.exitCode === null && !existing.child.killed;
     if (existingAlive && !force) return this.publicSession(existing);
@@ -334,6 +339,65 @@ class MultiUserSessionManager {
       try { if (child.exitCode === null && !child.killed) child.kill('SIGTERM'); } catch (_) { finish(); }
     });
     return true;
+  }
+
+  async backupSession(number) {
+    const normalized = this.normalizePhoneNumber(number);
+    const authDir = this.sessionDir(normalized);
+    const authInfoDir = path.join(authDir, 'auth_info');
+    
+    // Check if there is anything to backup
+    const hasCreds = fs.existsSync(path.join(authInfoDir, 'creds.json'));
+    const hasDb = fs.existsSync(path.join(authInfoDir, 'session.db'));
+    if (!hasCreds && !hasDb) return;
+
+    try {
+      const AdmZip = require('adm-zip');
+      const zip = new AdmZip();
+      
+      // Add auth_info files
+      if (fs.existsSync(authInfoDir)) {
+        zip.addLocalFolder(authInfoDir);
+      }
+      
+      const buffer = zip.toBuffer();
+      const { SessionBackupDB } = require('../meshtech/database/sessionBackup');
+      
+      await SessionBackupDB.upsert({
+        number: normalized,
+        zipData: buffer
+      });
+      // console.log(`[mesh-multi-user] Cloud backup successful for ${normalized}`);
+    } catch (error) {
+      console.error(`[mesh-multi-user] Cloud backup failed for ${normalized}:`, error.message);
+    }
+  }
+
+  async restoreSession(number) {
+    const normalized = this.normalizePhoneNumber(number);
+    const authDir = this.sessionDir(normalized);
+    const authInfoDir = path.join(authDir, 'auth_info');
+    
+    // Only restore if local files are missing
+    const hasCreds = fs.existsSync(path.join(authInfoDir, 'creds.json'));
+    const hasDb = fs.existsSync(path.join(authInfoDir, 'session.db'));
+    if (hasCreds || hasDb) return true;
+
+    try {
+      const { SessionBackupDB } = require('../meshtech/database/sessionBackup');
+      const backup = await SessionBackupDB.findOne({ where: { number: normalized } });
+      if (!backup || !backup.zipData) return false;
+
+      fs.mkdirSync(authInfoDir, { recursive: true });
+      const AdmZip = require('adm-zip');
+      const zip = new AdmZip(backup.zipData);
+      zip.extractAllTo(authInfoDir, true);
+      console.log(`[mesh-multi-user] Restored session for ${normalized} from cloud database`);
+      return true;
+    } catch (error) {
+      console.error(`[mesh-multi-user] Cloud restore failed for ${normalized}:`, error.message);
+      return false;
+    }
   }
 
   publicSession(record) {

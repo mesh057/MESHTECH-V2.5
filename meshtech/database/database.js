@@ -62,6 +62,9 @@ const DATABASE = DatabaseManager.getInstance();
 
 async function syncDatabase() {
     try {
+        // Ensure all models are registered before sync
+        require("./subscription");
+        require("./sessionBackup");
         await DATABASE.sync();
         console.log("✅ Database Synchronized.");
     } catch (error) {
