@@ -146,10 +146,18 @@ let MeshTech;
 let store;
 
 logger.level = "silent";
-app.use(express.static("meshtech"));
-app.use(express.static(path.join(__dirname, "multi-user")));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Priority Routes for Pairing Dashboard
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "multi-user", "pairing.html")));
+app.get("/dashboard", (req, res) => res.sendFile(path.join(__dirname, "multi-user", "dashboard.html")));
+app.get("/dashboard.html", (req, res) => res.sendFile(path.join(__dirname, "multi-user", "dashboard.html")));
+app.get("/pairing.html", (req, res) => res.sendFile(path.join(__dirname, "multi-user", "pairing.html")));
+
+// Static Files
+app.use(express.static("meshtech"));
+app.use(express.static(path.join(__dirname, "multi-user")));
 
 // Multi-user & Pairing backend integration
 const crypto = require('crypto');
@@ -305,11 +313,6 @@ function writeRawCredentials(authDir, rawJson) {
     fs.writeFileSync(path.join(authDir, 'creds.json'), rawJson);
   }
 }
-
-app.get("/", (req, res) => res.sendFile(path.join(__dirname, "multi-user", "pairing.html")));
-app.get("/dashboard", (req, res) => res.sendFile(path.join(__dirname, "multi-user", "dashboard.html")));
-app.get("/dashboard.html", (req, res) => res.sendFile(path.join(__dirname, "multi-user", "dashboard.html")));
-app.get("/pairing.html", (req, res) => res.sendFile(path.join(__dirname, "multi-user", "pairing.html")));
 
 app.get("/health", (req, res) => {
     const active = manager.list();
