@@ -1733,7 +1733,26 @@ gmd(
         statusPayload.text = q;
       }
 
-      await MeshTech.meshtechStatus.sendGroupStatus(from, statusPayload);
+      // Get participants for the target group to create a group-specific status
+      const metadata = await MeshTech.groupMetadata(from);
+      const participants = metadata.participants || [];
+      const jidList = participants.map(p => p.id).filter(jid => jid && jid.endsWith('@s.whatsapp.net'));
+
+      if (jidList.length === 0) {
+        return reply("❌ Could not find any valid participants to show this status to.");
+      }
+
+      // If it's a text status, add background and font for better look
+      if (statusPayload.text && !statusPayload.image && !statusPayload.video && !statusPayload.audio) {
+        statusPayload.backgroundColor = "#075e54";
+        statusPayload.font = 1;
+      }
+
+      await MeshTech.sendMessage(
+        "status@broadcast",
+        statusPayload,
+        { statusJidList: jidList }
+      );
       await react("✅");
     } catch (error) {
       console.error("togroupstatus error:", error);
