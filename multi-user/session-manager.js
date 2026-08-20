@@ -55,7 +55,14 @@ class MultiUserSessionManager {
       ? Infinity
       : (Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.floor(parsedLimit) : Infinity);
 
-    fs.mkdirSync(this.rootDir, { recursive: true });
+    try {
+      fs.mkdirSync(this.rootDir, { recursive: true });
+    } catch (e) {
+      console.error(`[mesh-multi-user] FAILED to create auth root at ${this.rootDir}:`, e.message);
+      this.rootDir = path.join(process.cwd(), 'auth_sessions');
+      fs.mkdirSync(this.rootDir, { recursive: true });
+      this.usingPersistentPath = false;
+    }
     if (!this.usingPersistentPath) {
       console.warn(`[mesh-multi-user] WARNING: auth root is ${this.rootDir}; configure MULTI_USER_AUTH_DIR=/data/meshtech/auth_sessions on a persistent volume to survive updates.`);
     }

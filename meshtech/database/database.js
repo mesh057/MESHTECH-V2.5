@@ -47,7 +47,7 @@ class DatabaseManager {
                     ssl: true,
                     protocol: "postgres",
                     dialectOptions: {
-                        native: true,
+                        // native: true, // Removed to avoid dependency on pg-native
                         ssl: { require: true, rejectUnauthorized: false },
                     },
                     logging: false,

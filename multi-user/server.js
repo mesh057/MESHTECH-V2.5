@@ -191,7 +191,12 @@ function writeRawCredentials(authDir, sessionText) {
 
 const server = http.createServer(async (req, res) => {
   try {
-    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    let url;
+    try {
+      url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    } catch (e) {
+      return json(res, 400, { success: false, error: 'Invalid URL' });
+    }
     const ip = req.socket.remoteAddress || 'unknown';
 
     if (req.method === 'GET' && url.pathname === '/') return page(res, 'pairing.html');
@@ -405,13 +410,16 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'POST' && url.pathname === '/api/payments/courtneytech') {
-      const signature = req.headers['x-courtney-signature'] || req.headers['x-signature'] || '';
+      const signature = req.headers['x-courtney-sig'] || req.headers['x-courtney-signature'] || req.headers['x-signature'] || '';
       const secret = process.env.COURTNEY_SECRET_KEY || '';
       
-      const rawBody = await new Promise((resolve) => {
+      const rawBody = await new Promise((resolve, reject) => {
         let body = '';
         req.on('data', chunk => body += chunk);
         req.on('end', () => resolve(body));
+        req.on('error', reject);
+        // Safety timeout for body reading
+        setTimeout(() => resolve(body), 5000);
       });
       
       let data;
