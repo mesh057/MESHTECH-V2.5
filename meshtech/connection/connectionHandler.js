@@ -1,5 +1,5 @@
-const { Boom } = require("@hapi/boom");
 const { DisconnectReason } = require("mesh-baileys");
+const { Boom } = require("@hapi/boom");
 const fs = require("fs-extra");
 const path = require("path");
 const { setupGroupCacheListeners } = require("./groupCache");
@@ -29,25 +29,10 @@ const safeGroupAcceptInvite = async (MeshTech, groupJid) => {
     if (!groupJid) return false;
     try {
         await MeshTech.groupAcceptInvite(groupJid);
-        // console.log(`✅ Joined group: ${groupJid}`);
+        // console.log(`✅ Joined Group: ${groupJid}`);
         return true;
     } catch (error) {
-        switch (error.data) {
-            case 409:
-                console.log(`ℹ️ Already in group: ${groupJid}`);
-                break;
-            case 400:
-                console.log(`⚠️ Invalid invite code for group: ${groupJid}`);
-                break;
-            case 403:
-                console.log(`⚠️ No permission to join group: ${groupJid}`);
-                break;
-            default:
-                console.error(
-                    `❌ Group join failed for ${groupJid}:`,
-                    error.message,
-                );
-        }
+        console.error(`❌ Group join failed for ${groupJid}:`, error.message);
         return false;
     }
 };
@@ -58,25 +43,15 @@ const setupConnectionHandler = (
     startMeshTech,
     callbacks = {},
 ) => {
-    setupGroupCacheListeners(MeshTech);
-    setupGroupEventsListeners(MeshTech);
-
     MeshTech.ev.on("connection.update", async (update) => {
         const { connection, lastDisconnect } = update;
 
         if (connection === "connecting") {
-            console.log("🕗 Connecting Bot...");
-            reconnectAttempts = 0;
+            console.log("🕗 Connecting to Whatsapp...");
         }
 
         if (connection === "open") {
-            if (!MeshTech?.user?.id) {
-                console.warn("⚠️ Connection opened before WhatsApp authentication; waiting for an authenticated socket.");
-                return;
-            }
-            console.log("✅ MESH-TECH MD: Connection Instance is Online & Fully Synchronized!");
             reconnectAttempts = 0;
-
             if (callbacks.onOpen) {
                 await callbacks.onOpen(MeshTech);
             }
@@ -159,12 +134,13 @@ const setupConnectionHandler = (
             }
         }
     });
+
+    setupGroupCacheListeners(MeshTech);
+    setupGroupEventsListeners(MeshTech);
 };
 
 module.exports = {
+    setupConnectionHandler,
     safeNewsletterFollow,
     safeGroupAcceptInvite,
-    setupConnectionHandler,
-    RECONNECT_DELAY,
-    MAX_RECONNECT_ATTEMPTS,
 };
