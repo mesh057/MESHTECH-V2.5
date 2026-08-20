@@ -649,20 +649,25 @@ async function startMeshTech() {
         const sessionDbPath = path.resolve(process.env.SESSION_DB_FILE || config.SESSION_DB_FILE || path.join(sessionDir, "session.db"));
         const authInfoDir = path.join(sessionDir, 'auth_info');
         
-        // Restore main session from cloud if local is missing
-        if (!fs.existsSync(sessionDbPath) && !fs.existsSync(path.join(authInfoDir, 'creds.json'))) {
+        // Restore main session from cloud if local session.db is missing
+        if (!fs.existsSync(sessionDbPath)) {
             try {
-                const ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID || '').replace(/\D/g, '');
+                const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
+                let ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID || '').replace(/\D/g, '');
+                let backup = null;
                 if (ownerNumber) {
-                    const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
-                    const backup = await SessionBackupDB.findOne({ where: { number: ownerNumber } });
-                    if (backup && backup.zipData) {
-                        console.log(`🔄 Restoring main owner session (${ownerNumber}) from cloud...`);
-                        const AdmZip = require('adm-zip');
-                        const zip = new AdmZip(backup.zipData);
-                        fs.mkdirSync(authInfoDir, { recursive: true });
-                        zip.extractAllTo(authInfoDir, true);
-                    }
+                    backup = await SessionBackupDB.findOne({ where: { number: ownerNumber } });
+                }
+                if (!backup) {
+                    // Fallback to latest available backup in database if specific number wasn't found or specified
+                    backup = await SessionBackupDB.findOne({ order: [['updatedAt', 'DESC']] });
+                }
+                if (backup && backup.zipData) {
+                    console.log(`🔄 Restoring main owner session (${backup.number}) from cloud database...`);
+                    const AdmZip = require('adm-zip');
+                    const zip = new AdmZip(backup.zipData);
+                    fs.mkdirSync(sessionDir, { recursive: true });
+                    zip.extractAllTo(sessionDir, true);
                 }
             } catch (e) {
                 console.error("[mesh-main] Cloud restore failed:", e.message);
@@ -739,9 +744,8 @@ async function startMeshTech() {
                     try {
                         const AdmZip = require('adm-zip');
                         const zip = new AdmZip();
-                        const authInfoDir = path.join(sessionDir, 'auth_info');
-                        if (fs.existsSync(authInfoDir)) {
-                            zip.addLocalFolder(authInfoDir);
+                        if (fs.existsSync(sessionDir)) {
+                            zip.addLocalFolder(sessionDir);
                             const buffer = zip.toBuffer();
                             const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
                             await SessionBackupDB.upsert({
@@ -774,9 +778,8 @@ async function startMeshTech() {
                 try {
                     const AdmZip = require('adm-zip');
                     const zip = new AdmZip();
-                    const authInfoDir = path.join(sessionDir, 'auth_info');
-                    if (fs.existsSync(authInfoDir)) {
-                        zip.addLocalFolder(authInfoDir);
+                    if (fs.existsSync(sessionDir)) {
+                        zip.addLocalFolder(sessionDir);
                         const buffer = zip.toBuffer();
                         const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
                         await SessionBackupDB.upsert({ number: ownerNumber, zipData: buffer });
