@@ -662,10 +662,10 @@ async function startMeshTech() {
             }
         }
 
-        // Add a timeout to version fetching to prevent pairing delays
+        // Add a timeout to version fetching to prevent pairing delays (updated fallback version)
         const { version } = await Promise.race([
             fetchLatestWaWebVersion(),
-            new Promise(resolve => setTimeout(() => resolve({ version: [2, 3000, 1015901307] }), 4000))
+            new Promise(resolve => setTimeout(() => resolve({ version: [2, 3000, 1017046456] }), 4000))
         ]);
         
         const { state, saveCreds } = await useSQLiteAuthState(sessionDbPath);

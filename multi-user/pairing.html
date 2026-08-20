@@ -847,6 +847,9 @@
                                         <i class="fas fa-key"></i> GENERATE CODE
                                     </span>
                                 </button>
+                                <button type="button" id="clearBtn" style="border-color: var(--error); color: var(--error); background: rgba(255, 51, 102, 0.1);">
+                                    <i class="fas fa-trash-alt"></i> CLEAR SESSION
+                                </button>
                             </div>
                         </form>
 
@@ -1237,6 +1240,41 @@
                 btnText.innerHTML = '<i class="fas fa-key"></i> GENERATE CODE';
             }
         });
+
+        const clearBtn = document.getElementById('clearBtn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', async () => {
+                const phoneNumber = phoneInput.value.trim();
+                if (!phoneNumber) {
+                    showError('PLEASE ENTER YOUR PHONE NUMBER TO CLEAR');
+                    return;
+                }
+                if (!confirm(`Are you sure you want to clear the session for ${phoneNumber}? This will wipe existing local & cloud auth so you can link fresh.`)) {
+                    return;
+                }
+                clearBtn.disabled = true;
+                const originalText = clearBtn.innerHTML;
+                clearBtn.innerHTML = '<span class="loading-spinner"></span>WIPING...';
+                try {
+                    const res = await fetch('/api/clear-session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phoneNumber })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        showSuccess('SESSION CLEARED SUCCESSFULLY. YOU CAN NOW PAIR FRESH.');
+                    } else {
+                        showError(data.error || 'FAILED TO CLEAR SESSION');
+                    }
+                } catch (err) {
+                    showError('NETWORK ERROR: ' + err.message);
+                } finally {
+                    clearBtn.disabled = false;
+                    clearBtn.innerHTML = originalText;
+                }
+            });
+        }
 
         function pollForCode() {
             let attempts = 0;
