@@ -707,9 +707,21 @@ async function startMeshTech() {
             pairingInFlight = false;
         };
 
-        MeshTech.ev.on("connection.update", ({ connection }) => {
+        MeshTech.ev.on("connection.update", (update) => {
+            const { connection, lastDisconnect } = update;
             if (connection === "connecting" || connection === "open") {
                 setTimeout(requestPairingCode, 1000);
+            }
+            if (connection === "close") {
+                const shouldReconnect = (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut;
+                console.log(`⚠️ Connection closed due to ${lastDisconnect?.error}, reconnecting: ${shouldReconnect}`);
+                if (shouldReconnect) {
+                    setTimeout(() => startMeshTech(), 3000);
+                } else {
+                    console.log("❌ Connection logged out. Please repair pairing.");
+                }
+            } else if (connection === "open") {
+                console.log("🟢 MESH-TECH MD connection is fully active and stable.");
             }
         });
 
