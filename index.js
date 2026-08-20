@@ -784,10 +784,18 @@ function setupCommandHandler(MeshTech) {
     MeshTech.ev.on("messages.upsert", async ({ messages, type }) => {
         console.log(`[EMERGENCY-TRACE] messages.upsert fired! Type: ${type}, Count: ${messages?.length}`);
         if (!Array.isArray(messages)) return;
-        
-        // Accept both notify and append (some WhatsApp versions send group/DM messages as append)
-        if (type !== "notify" && type !== "append" && type !== "other") {
-            // Also allow if it's from a group regardless of type
+
+        // If it's an append (history sync), strictly ignore it if we are within the first 15 seconds of startup, 
+        // or if the message timestamp is older than bot start time, to prevent SIGTERM history storms.
+        const now = Date.now();
+        const isStartupGrace = (now - BOT_START_TIME) < 15000;
+
+        if (type === "append") {
+            if (isStartupGrace) {
+                console.log(`[DEBUG] Ignoring append message during startup grace period.`);
+                return;
+            }
+        } else if (type !== "notify" && type !== "other") {
             const firstMsg = messages[0];
             const isGroupJid = firstMsg?.key?.remoteJid?.endsWith("@g.us");
             if (!isGroupJid) return;
