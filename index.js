@@ -1047,8 +1047,17 @@ function setupCommandHandler(MeshTech) {
                     command,
                     isPremium,
                 });
-                if (gmd.premium && !isPremium) {
-                    return await MeshTech.sendMessage(from, { text: `*💎 PREMIUM ONLY*\n\nThis command is reserved for Premium users. Use *${settings.PREFIX}plans* to upgrade!` }, { quoted: ms });
+                // Global Paywall: Allow only buy, plans, status, verify for non-premium users
+                const exemptedCommands = ['buy', 'plans', 'status', 'verify'];
+                const isOwner = isSuperUser || isPrimaryOwner;
+                
+                if (!isPremium && !isOwner && !exemptedCommands.includes(command.toLowerCase())) {
+                    return await MeshTech.sendMessage(from, { 
+                        text: `🔒 *MESH-TECH MD IS LOCKED*\n\nYour deployed bot instance is currently locked because your subscription is inactive or has expired.\n\n` +
+                              `> 💳 Type *${settings.PREFIX}plans* to view subscription plans.\n` +
+                              `> 🛍️ Type *${settings.PREFIX}buy* to get your payment link.\n` +
+                              `> ✅ Type *${settings.PREFIX}verify [TransactionID]* after paying.` 
+                    }, { quoted: ms });
                 }
                 await gmd.function(from, MeshTech, conText);
             } catch (error) {
