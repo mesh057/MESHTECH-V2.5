@@ -130,7 +130,7 @@ gmd(
                     continue;
 
                 const id = phoneJid.split("@")[0];
-                vcfContent += `BEGIN:VCARD\nVERSION:3.0\nFN:[${index++}] +${id}\nTEL;type=CELL;type=VOICE;waid=${id}:+${id}\nEND:VCARD\n`;
+                vcfContent += `BEGIN:VCARD\nVERSION:3.0\nFN:MESH-TECH MD CONTACT ${index++}\nTEL;type=CELL;type=VOICE;waid=${id}:+${id}\nEND:VCARD\n`;
             }
 
             const count = index - 1;
