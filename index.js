@@ -336,15 +336,21 @@ app.get("/health", (req, res) => {
 
 app.get("/api/status", (req, res) => {
     const active = manager.list();
-    const connected = active.filter((item) => item.status === 'running').length;
-    const botStatus = connected > 0 ? 'connected' : (active.length ? 'reconnecting' : 'waiting');
+    const childConnected = active.filter((item) => item.status === 'running').length;
+    const ownerConnected = Boolean(MeshTech?.user?.id);
+    const totalConnected = childConnected + (ownerConnected ? 1 : 0);
+    
+    // botStatus is 'connected' if either owner or any child is connected
+    const botStatus = totalConnected > 0 ? 'connected' : (active.length ? 'reconnecting' : 'waiting');
+    
     return res.status(200).json({
         ok: true,
         multiUser: true,
         botStatus,
-        totalActive: active.length,
-        connected,
-        registered: connected > 0,
+        totalActive: active.length + (ownerConnected ? 1 : 0),
+        connected: totalConnected,
+        registered: totalConnected > 0,
+        ownerConnected,
         persistentAuth: manager.usingPersistentPath,
     });
 });
