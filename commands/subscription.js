@@ -73,6 +73,40 @@ gmd({
 });
 
 gmd({
+    pattern: "verify",
+    desc: "Verify payment transaction ID and upgrade account",
+    category: "subscription",
+    filename: __filename
+}, async (MeshTech, chat, data) => {
+    const { reply, args } = data;
+    const txId = args[0];
+    
+    if (!txId) {
+        return reply(`❌ Please provide your transaction ID.\n\nExample: *${data.prefix}verify CTX123456789*`);
+    }
+
+    try {
+        const { verifyTransactionApi } = require("../meshtech/payments/courtney");
+        const res = await verifyTransactionApi(txId);
+        
+        if (res && (res.status === 'success' || res.status === 'completed')) {
+            const amount = res.amount || 200;
+            let days = 30;
+            if (amount >= 2500) days = 36500;
+            else if (amount >= 600) days = 30;
+            else if (amount >= 200) days = 7;
+            
+            await upgradeUser(chat.sender, days);
+            return reply(`✅ *Payment Verified Successfully!*\n\nYour account has been upgraded to *PREMIUM* for ${days} days. Enjoy all high-speed AI and research features!`);
+        } else {
+            return reply(`❌ Transaction *${txId}* could not be verified or is still pending payment.`);
+        }
+    } catch (error) {
+        return reply(`❌ Verification Error: ${error.message}\n\nPlease ensure your API keys are correctly configured or contact the owner.`);
+    }
+});
+
+gmd({
     pattern: "status",
     desc: "Check your subscription status",
     category: "subscription",

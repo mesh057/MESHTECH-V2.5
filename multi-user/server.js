@@ -405,11 +405,32 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'POST' && url.pathname === '/api/payments/courtneytech') {
-      const data = await readBody(req);
-      console.log('[PAYMENT] Webhook received:', data);
+      const signature = req.headers['x-courtney-signature'] || req.headers['x-signature'] || '';
+      const secret = process.env.COURTNEY_SECRET_KEY || '';
       
-      // Verification logic for Courtney Tech
-      // Expected fields: phone, amount, status, transaction_id
+      const rawBody = await new Promise((resolve) => {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => resolve(body));
+      });
+      
+      let data;
+      try {
+        data = JSON.parse(rawBody);
+      } catch (e) {
+        return json(res, 400, { success: false, error: 'Invalid JSON payload.' });
+      }
+
+      // If secret is set, verify HMAC signature if provided by Courtney Tech
+      if (secret && signature) {
+        const hash = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+        if (hash !== signature) {
+          console.warn('[PAYMENT] Invalid webhook signature received.');
+          return json(res, 403, { success: false, error: 'Invalid signature.' });
+        }
+      }
+
+      console.log('[PAYMENT] Webhook received & verified:', data);
       const { phone, amount, status, transaction_id } = data;
       
       if (status === 'success' || status === 'completed') {
