@@ -92,40 +92,38 @@ class MultiUserSessionManager {
 
   async restoreSavedSessions() {
     const restored = [];
-    // Restore sessions asynchronously in the background so server.listen() is never blocked or killed by Railway startup timeout
-    (async () => {
-      // 1. First, try to restore from cloud database (for container updates)
-      try {
-        const { SessionBackupDB } = require('../meshtech/database/sessionBackup');
-        const backups = await SessionBackupDB.findAll({ attributes: ['number'] });
-        for (const backup of backups) {
-          try {
-            await this.start(backup.number, false, true);
-            restored.push(backup.number);
-          } catch (e) {
-            console.error(`[mesh-multi-user] Cloud restore failed for ${backup.number}:`, e.message);
-          }
+    console.log('[mesh-multi-user] Starting session restoration...');
+    
+    // 1. First, try to restore from cloud database (for container updates)
+    try {
+      const { SessionBackupDB } = require('../meshtech/database/sessionBackup');
+      const backups = await SessionBackupDB.findAll({ attributes: ['number'] });
+      for (const backup of backups) {
+        try {
+          // Await each start briefly to ensure we don't spam the database/network
+          await this.start(backup.number, false, true);
+          restored.push(backup.number);
+        } catch (e) {
+          console.error(`[mesh-multi-user] Cloud restore failed for ${backup.number}:`, e.message);
         }
-      } catch (e) {
-        console.error('[mesh-multi-user] Could not query cloud backups:', e.message);
       }
+    } catch (e) {
+      console.error('[mesh-multi-user] Could not query cloud backups:', e.message);
+    }
 
-      // 2. Then, check local filesystem for anything missed
-      for (const number of this.listRestorableSessions()) {
-        if (restored.includes(number)) continue;
-        let restoredThisSession = false;
-        for (let attempt = 1; attempt <= 2 && !restoredThisSession; attempt += 1) {
-          try {
-            await this.start(number, false, true);
-            restored.push(number);
-            restoredThisSession = true;
-          } catch (error) {
-            console.error(`[mesh-multi-user] Could not restore ${number} (attempt ${attempt}/2):`, error.message);
-            if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 3000));
-          }
-        }
+    // 2. Then, check local filesystem for anything missed
+    const localSessions = this.listRestorableSessions();
+    for (const number of localSessions) {
+      if (restored.includes(number)) continue;
+      try {
+        await this.start(number, false, true);
+        restored.push(number);
+      } catch (error) {
+        console.error(`[mesh-multi-user] Local restore failed for ${number}:`, error.message);
       }
-    })().catch(err => console.error('[mesh-multi-user] Background restore error:', err));
+    }
+    
+    console.log(`[mesh-multi-user] Restoration complete. Restored ${restored.length} sessions.`);
     return restored;
   }
 

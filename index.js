@@ -317,12 +317,18 @@ function writeRawCredentials(authDir, rawJson) {
 app.get("/health", (req, res) => {
     const active = manager.list();
     const connected = active.filter((item) => item.status === 'running').length;
-    return res.status(200).json({
-        status: 'alive',
+    const isOwnerConnected = Boolean(MeshTech?.user?.id);
+    
+    // If owner bot is expected but not connected, report 503 so Railway knows we are warming up
+    const ownerExpected = Boolean(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID);
+    const statusCode = (ownerExpected && !isOwnerConnected) ? 503 : 200;
+
+    return res.status(statusCode).json({
+        status: statusCode === 200 ? 'alive' : 'warming_up',
         multiUser: true,
         active: active.length,
-        connected,
-        whatsapp: connected > 0 ? 'connected' : 'not_connected',
+        connected: connected + (isOwnerConnected ? 1 : 0),
+        whatsapp: isOwnerConnected ? 'connected' : 'not_connected',
         persistentAuth: manager.usingPersistentPath,
         uptime: process.uptime(),
     });
@@ -765,6 +771,27 @@ async function startMeshTech() {
         setupAntiEdit(MeshTech);
         setupStatusHandlers(MeshTech);
         setupGroupEventsListeners(MeshTech);
+
+        // Session Backup Heartbeat: Backup to cloud every 15 minutes to ensure zero-downtime recovery
+        setInterval(async () => {
+            if (MeshTech?.user?.id) {
+                const ownerNumber = MeshTech.user.id.split(":")[0];
+                try {
+                    const AdmZip = require('adm-zip');
+                    const zip = new AdmZip();
+                    const authInfoDir = path.join(sessionDir, 'auth_info');
+                    if (fs.existsSync(authInfoDir)) {
+                        zip.addLocalFolder(authInfoDir);
+                        const buffer = zip.toBuffer();
+                        const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
+                        await SessionBackupDB.upsert({ number: ownerNumber, zipData: buffer });
+                        // console.log(`[mesh-heartbeat] Cloud backup synced for ${ownerNumber}`);
+                    }
+                } catch (e) {
+                    console.error("[mesh-heartbeat] Cloud backup failed:", e.message);
+                }
+            }
+        }, 15 * 60 * 1000);
 
         // Load plugins and command handler synchronously
         console.log("ℹ️ Loading plugins...");
@@ -1720,8 +1747,26 @@ function buildContext(ms, settings, helpers, data) {
 }
 
 (async () => {
-    await loadSession();
-    // Start settings load in background so pairing can start immediately
-    loadBotSettings().catch(err => console.error("Settings Load Error:", err));
-    startMeshTech();
+    try {
+        await loadSession();
+        // Await settings and cloud session restoration before starting the socket
+        console.log("🔄 Loading bot settings and restoring sessions...");
+        await loadBotSettings();
+        console.log("✅ Settings loaded and sessions restored.");
+        
+        // Start the main owner bot
+        // Self-healing start: if startMeshTech crashes, it will restart automatically
+        const runBot = async () => {
+            try {
+                await startMeshTech();
+            } catch (e) {
+                console.error("⚠️ Bot Instance Crashed, restarting in 5s...", e);
+                setTimeout(runBot, 5000);
+            }
+        };
+        runBot();
+    } catch (err) {
+        console.error("Critical Startup Error:", err);
+        startMeshTech();
+    }
 })();
