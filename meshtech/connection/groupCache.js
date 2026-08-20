@@ -134,7 +134,15 @@ module.exports = {
     deleteGroupCache,
     clearGroupCache,
     setupGroupCacheListeners,
-    cachedGroupMetadata: groupCache,
+    cachedGroupMetadata: Object.assign(
+        (jid) => groupCache.get(jid),
+        {
+            get: (jid) => groupCache.get(jid),
+            set: (jid, val) => groupCache.set(jid, val),
+            del: (jid) => groupCache.del(jid),
+            flushAll: () => groupCache.flushAll()
+        }
+    ),
     initializeLidStore,
     getLidMapping,
     updateLidMappingsFromMetadata,

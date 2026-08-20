@@ -3,7 +3,7 @@ const { serializeMessage } = require('./meshtech/connection/serializer');
 async function runSimulation() {
     console.log("🧪 Starting MESH-TECH MD Group Command Simulation (Private Mode Bypass Check)...");
 
-    const mockGifted = {
+    const mockMesh = {
         user: { id: '254746844168:0@s.whatsapp.net' }
     };
 
@@ -28,7 +28,7 @@ async function runSimulation() {
         MODE: 'private'
     };
 
-    const serialized = await serializeMessage(mockMessage, mockGifted, settings);
+    const serialized = await serializeMessage(mockMessage, mockMesh, settings);
     
     console.log("📊 Serialization Output:");
     console.log("-----------------------------------------");
