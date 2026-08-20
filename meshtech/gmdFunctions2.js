@@ -710,7 +710,7 @@ function MeshTechChatBot(MeshTech, createContext, createContext2, googleTTS) {
             userCooldown.set(sender, now);
 
             const jid = msg.key.remoteJid;
-            if (!jid) return;
+            if (!jid || jid === 'status@broadcast') return;
 
             const isGroup = jid.endsWith('@g.us');
 
