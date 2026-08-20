@@ -1736,10 +1736,29 @@ gmd(
       // Get participants for the target group to create a group-specific status
       const metadata = await MeshTech.groupMetadata(from);
       const participants = metadata.participants || [];
-      const jidList = participants.map(p => p.id).filter(jid => jid && jid.endsWith('@s.whatsapp.net'));
+      const jidList = [];
 
-      if (jidList.length === 0) {
-        return reply("❌ Could not find any valid participants to show this status to.");
+      for (const p of participants) {
+        // Try id, pn, phoneNumber, or jid
+        const candidate = p.id || p.pn || p.phoneNumber || p.jid;
+        if (candidate) {
+          if (candidate.endsWith('@s.whatsapp.net')) {
+            jidList.push(candidate);
+          } else if (candidate.includes('@')) {
+            // Convert any other JID type if possible
+            const cleaned = candidate.split('@')[0] + '@s.whatsapp.net';
+            jidList.push(cleaned);
+          } else {
+            jidList.push(candidate + '@s.whatsapp.net');
+          }
+        }
+      }
+
+      // Fallback: If metadata participants yielded nothing, use the sender as target or general group broadcast
+      let finalJids = [...new Set(jidList)];
+      if (finalJids.length === 0) {
+        // Fallback to sending to the group sender or owner
+        finalJids = [conText.sender || from.replace('@g.us', '@s.whatsapp.net')];
       }
 
       // If it's a text status, add background and font for better look
@@ -1751,7 +1770,7 @@ gmd(
       await MeshTech.sendMessage(
         "status@broadcast",
         statusPayload,
-        { statusJidList: jidList }
+        { statusJidList: finalJids }
       );
       await react("✅");
     } catch (error) {
