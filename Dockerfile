@@ -16,6 +16,6 @@ RUN npm install --omit=dev
 
 COPY . .
 
-EXPOSE 5000
+EXPOSE 8080
 
-CMD ["npm", "run", "start:multi-user"]
+CMD ["npm", "start"]

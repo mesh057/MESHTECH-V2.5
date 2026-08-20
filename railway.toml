@@ -4,7 +4,7 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 # Region is managed by Railway service settings; do not use the legacy `sfo` value.
-startCommand = "npm run start:multi-user"
+startCommand = "npm start"
 numReplicas = 1
 healthcheckPath = "/health"
 healthcheckTimeout = 100
