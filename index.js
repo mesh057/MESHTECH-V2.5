@@ -619,6 +619,13 @@ async function loadBotSettings() {
         await SettingsDB.upsert({ key: 'MODE', value: envMode });
     }
     botSettings = await getAllSettings();
+    
+    // Auto-restore all multi-user sessions from cloud/local storage on startup
+    if (embeddedHttpServerEnabled) {
+        console.log("🔄 Initializing multi-user session restoration...");
+        manager.restoreSavedSessions();
+    }
+    
     return botSettings;
 }
 
@@ -626,12 +633,35 @@ startCleanup();
 
 async function startMeshTech() {
     try {
+        const sessionDbPath = path.resolve(process.env.SESSION_DB_FILE || config.SESSION_DB_FILE || path.join(sessionDir, "session.db"));
+        const authInfoDir = path.join(sessionDir, 'auth_info');
+        
+        // Restore main session from cloud if local is missing
+        if (!fs.existsSync(sessionDbPath) && !fs.existsSync(path.join(authInfoDir, 'creds.json'))) {
+            try {
+                const ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID || '').replace(/\D/g, '');
+                if (ownerNumber) {
+                    const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
+                    const backup = await SessionBackupDB.findOne({ where: { number: ownerNumber } });
+                    if (backup && backup.zipData) {
+                        console.log(`🔄 Restoring main owner session (${ownerNumber}) from cloud...`);
+                        const AdmZip = require('adm-zip');
+                        const zip = new AdmZip(backup.zipData);
+                        fs.mkdirSync(authInfoDir, { recursive: true });
+                        zip.extractAllTo(authInfoDir, true);
+                    }
+                }
+            } catch (e) {
+                console.error("[mesh-main] Cloud restore failed:", e.message);
+            }
+        }
+
         // Add a timeout to version fetching to prevent pairing delays
         const { version } = await Promise.race([
             fetchLatestWaWebVersion(),
             new Promise(resolve => setTimeout(() => resolve({ version: [2, 3000, 1015901307] }), 4000))
         ]);
-        const sessionDbPath = path.resolve(process.env.SESSION_DB_FILE || config.SESSION_DB_FILE || path.join(sessionDir, "session.db"));
+        
         const { state, saveCreds } = await useSQLiteAuthState(sessionDbPath);
 
         if (store) store.destroy();
@@ -688,7 +718,29 @@ async function startMeshTech() {
         }
 
         MeshTech.ev.process(async (events) => {
-            if (events["creds.update"]) await saveCreds();
+            if (events["creds.update"]) {
+                await saveCreds();
+                // Backup main owner session to cloud database
+                if (MeshTech?.user?.id) {
+                    const ownerNumber = MeshTech.user.id.split(":")[0];
+                    try {
+                        const AdmZip = require('adm-zip');
+                        const zip = new AdmZip();
+                        const authInfoDir = path.join(sessionDir, 'auth_info');
+                        if (fs.existsSync(authInfoDir)) {
+                            zip.addLocalFolder(authInfoDir);
+                            const buffer = zip.toBuffer();
+                            const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
+                            await SessionBackupDB.upsert({
+                                number: ownerNumber,
+                                zipData: buffer
+                            });
+                        }
+                    } catch (e) {
+                        console.error("[mesh-main] Cloud backup failed:", e.message);
+                    }
+                }
+            }
         });
 
         setupAutoReact(MeshTech);
