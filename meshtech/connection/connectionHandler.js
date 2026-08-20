@@ -114,14 +114,16 @@ const setupConnectionHandler = (
                     } catch (e) {
                         console.error("Failed to remove session:", e);
                     }
-                    process.exit(1);
+                    // Instead of exiting, we wait and retry to allow the dashboard to stay alive
+                    setTimeout(() => startMeshTech(), 5000);
                     break;
 
                 case DisconnectReason.connectionReplaced:
                     console.log(
                         "Connection replaced, another new session opened",
                     );
-                    process.exit(1);
+                    // Connection replaced shouldn't kill the whole server
+                    setTimeout(() => startMeshTech(), 5000);
                     break;
 
                 case DisconnectReason.loggedOut:
@@ -133,7 +135,8 @@ const setupConnectionHandler = (
                     } catch (e) {
                         console.error("❌ Failed to remove session:", e);
                     }
-                    process.exit(1);
+                    // Log out shouldn't kill the dashboard
+                    setTimeout(() => startMeshTech(), 5000);
                     break;
 
                 case DisconnectReason.connectionClosed:

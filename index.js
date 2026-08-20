@@ -317,18 +317,15 @@ function writeRawCredentials(authDir, rawJson) {
 
 app.get("/health", (req, res) => {
     const active = manager.list();
-    const connected = active.filter((item) => item.status === 'running').length;
+    const childConnected = active.filter((item) => item.status === 'running').length;
     const isOwnerConnected = Boolean(MeshTech?.user?.id);
     
-    // If owner bot is expected but not connected, report 503 so Railway knows we are warming up
-    const ownerExpected = Boolean(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID);
-    const statusCode = (ownerExpected && !isOwnerConnected) ? 503 : 200;
-
-    return res.status(statusCode).json({
-        status: statusCode === 200 ? 'alive' : 'warming_up',
+    // Always return 200 for health checks to prevent Railway from killing the process during initialization
+    return res.status(200).json({
+        status: 'alive',
         multiUser: true,
-        active: active.length,
-        connected: connected + (isOwnerConnected ? 1 : 0),
+        active: active.length + (isOwnerConnected ? 1 : 0),
+        connected: childConnected + (isOwnerConnected ? 1 : 0),
         whatsapp: isOwnerConnected ? 'connected' : 'not_connected',
         persistentAuth: manager.usingPersistentPath,
         uptime: process.uptime(),
@@ -620,6 +617,9 @@ if (embeddedHttpServerEnabled) {
 
 const sessionDir = path.resolve(process.env.AUTH_DIR || config.AUTH_DIR || path.join(__dirname, "meshtech", "session"));
 const pluginsPath = path.join(__dirname, "commands");
+console.log("ℹ️ Pre-loading plugins...");
+loadPlugins(pluginsPath);
+console.log("✅ Plugins pre-loaded.");
 
 let botSettings = {};
 async function loadBotSettings() {
@@ -720,27 +720,15 @@ async function startMeshTech() {
             pairingInFlight = false;
         };
 
+        // Connection monitoring for pairing request
         MeshTech.ev.on("connection.update", (update) => {
-            const { connection, lastDisconnect } = update;
+            const { connection } = update;
             if (connection === "connecting" || connection === "open") {
-                setTimeout(requestPairingCode, 1000);
-            }
-            if (connection === "close") {
-                const shouldReconnect = (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut;
-                console.log(`⚠️ Connection closed due to ${lastDisconnect?.error}, reconnecting: ${shouldReconnect}`);
-                if (shouldReconnect) {
-                    setTimeout(() => startMeshTech(), 3000);
-                } else {
-                    console.log("❌ Connection logged out. Please repair pairing.");
+                if (!state.creds.registered && process.env.MESH_PAIRING_PHONE_NUMBER && process.env.MESH_PAIRING_MODE !== "qr") {
+                    setTimeout(requestPairingCode, 2000);
                 }
-            } else if (connection === "open") {
-                console.log("🟢 MESH-TECH MD connection is fully active and stable.");
             }
         });
-
-        if (!state.creds.registered && process.env.MESH_PAIRING_PHONE_NUMBER && process.env.MESH_PAIRING_MODE !== "qr") {
-            setTimeout(requestPairingCode, 1500);
-        }
 
         MeshTech.ev.process(async (events) => {
             if (events["creds.update"]) {
@@ -800,15 +788,14 @@ async function startMeshTech() {
             }
         }, 15 * 60 * 1000);
 
-        // Load plugins and command handler synchronously
-        console.log("ℹ️ Loading plugins...");
-        loadPlugins(pluginsPath);
+        // Setup command handler for the new socket
         setupCommandHandler(MeshTech);
-        console.log("✅ Plugins loaded.");
 
+        // Use the centralized connection handler for lifecycle management (reconnects, exits on logout, etc.)
         setupConnectionHandler(MeshTech, sessionDir, startMeshTech, {
             onOpen: async (MeshTech) => {
                 const s = await getAllSettings();
+                console.log("🟢 MESH-TECH MD connection is fully active and stable.");
                 
                 // Background task to avoid blocking connection
                 (async () => {
@@ -892,13 +879,14 @@ async function startMeshTech() {
             },
         });
 
-        process.on("SIGINT", () => store?.destroy());
-        process.on("SIGTERM", () => store?.destroy());
     } catch (error) {
         console.error("Socket initialization error:", error);
         setTimeout(() => startMeshTech(), 5000);
     }
 }
+
+process.on("SIGINT", () => store?.destroy());
+process.on("SIGTERM", () => store?.destroy());
 
 function setupAutoReact(MeshTech) {
     MeshTech.ev.on("messages.upsert", async (mek) => {
