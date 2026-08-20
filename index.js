@@ -520,32 +520,49 @@ app.post("/api/stop", async (req, res) => {
 });
 
 app.post("/api/payments/courtneytech", async (req, res) => {
-    const signature = req.headers['x-courtney-sig'] || req.headers['x-courtney-signature'] || req.headers['x-signature'] || '';
-    const secret = process.env.COURTNEY_SECRET_KEY || '';
-    
-    const data = req.body || {};
-    if (secret && signature) {
-        // We can verify raw body or parsed data if needed
-    }
+    try {
+        const signature = req.headers['x-courtney-sig'] || req.headers['x-courtney-signature'] || req.headers['x-signature'] || '';
+        const secret = process.env.COURTNEY_SECRET_KEY || '';
+        const data = req.body || {};
 
-    const { phone, amount, status } = data;
-    if (status === 'success' || status === 'completed') {
-        const jid = phone.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
-        const numAmount = Number(amount) || 70;
-        let days = 35;
-        if (numAmount >= 800) days = 365;
-        else if (numAmount >= 400) days = 180;
-        else if (numAmount >= 300) days = 150;
-        else if (numAmount >= 200) days = 90;
-        else if (numAmount >= 130) days = 60;
-        else days = 35;
+        // HMAC verification using parsed body (best effort for now)
+        if (secret && signature) {
+            const hmac = crypto.createHmac('sha256', secret);
+            hmac.update(JSON.stringify(req.body));
+            const hash = hmac.digest('hex');
+            if (hash !== signature) {
+                console.warn('[PAYMENT] Webhook signature mismatch.');
+                // return res.status(403).json({ success: false, error: 'Invalid signature.' });
+            }
+        }
+
+        console.log('[PAYMENT] Webhook received:', data);
+        const phone = data.phone || data.phoneNumber || data.number;
+        const amount = data.amount || data.value;
+        const status = data.status || data.state;
+
+        if (status === 'success' || status === 'completed' || status === 'paid') {
+            if (!phone) return res.status(400).json({ success: false, error: 'Phone number missing.' });
+            const jid = String(phone).replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+            const numAmount = Number(amount) || 0;
+            
+            let days = 35;
+            if (numAmount >= 840) days = 365;
+            else if (numAmount >= 420) days = 180;
+            else if (numAmount >= 210) days = 90;
+            else if (numAmount >= 140) days = 60;
+            else if (numAmount >= 70) days = 35;
+            
+            await upgradeUser(jid, days);
+            console.log(`[PAYMENT] Automated Upgrade: ${jid} for ${days} days (Amount: ${numAmount})`);
+            return res.status(200).json({ success: true, message: `User ${jid} upgraded for ${days} days.` });
+        }
         
-        await upgradeUser(jid, days);
-        console.log(`[PAYMENT] Upgraded ${jid} for ${days} days.`);
-        return res.status(200).json({ success: true, message: 'Payment processed and user upgraded.' });
+        return res.status(200).json({ success: true, message: 'Webhook received but no action taken (status not success).' });
+    } catch (err) {
+        console.error('[PAYMENT] Webhook Error:', err.message);
+        return res.status(500).json({ success: false, error: 'Internal server error.' });
     }
-    
-    return res.status(400).json({ success: false, error: 'Invalid payment status.' });
 });
 
 if (embeddedHttpServerEnabled) {
