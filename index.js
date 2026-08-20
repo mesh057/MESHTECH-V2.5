@@ -147,12 +147,409 @@ let store;
 
 logger.level = "silent";
 app.use(express.static("meshtech"));
-app.get("/", (req, res) => res.sendFile(__dirname + "/meshtech/meshtech.html"));
-app.get("/health", (req, res) =>
-    res.status(200).json({ status: "alive", uptime: process.uptime() }),
-);
+app.use(express.static(path.join(__dirname, "multi-user")));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Multi-user & Pairing backend integration
+const crypto = require('crypto');
+const { MultiUserSessionManager } = require('./multi-user/session-manager');
+const { createMeshTechSessionId } = require('./meshtech/sessionId');
+const { upgradeUser } = require('./meshtech');
+
+const ADMIN_PASSWORD = process.env.MESHTECH_ADMIN_PASSWORD || 'MESHTECH_ADMIN';
+const CUSTOMER_TOKEN_SECRET = process.env.MESHTECH_CUSTOMER_SECRET || process.env.MESHTECH_ADMIN_PASSWORD || 'MESHTECH_ADMIN';
+const ADMIN_SESSION_TTL = 8 * 60 * 60 * 1000;
+const CUSTOMER_COOKIE_TTL = 30 * 24 * 60 * 60 * 1000;
+const adminSessions = new Map();
+const adminLoginRate = new Map();
+const rate = new Map();
+const manager = new MultiUserSessionManager();
+
+function safeEqualText(a, b) {
+  const left = Buffer.from(String(a || ''));
+  const right = Buffer.from(String(b || ''));
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
+}
+
+function parseCookies(req) {
+  const cookies = {};
+  for (const part of String(req.headers.cookie || '').split(';')) {
+    const separator = part.indexOf('=');
+    if (separator < 0) continue;
+    const key = part.slice(0, separator).trim();
+    const value = part.slice(separator + 1).trim();
+    if (key) cookies[key] = decodeURIComponent(value);
+  }
+  return cookies;
+}
+
+function adminToken(req) {
+  const token = parseCookies(req).meshtech_admin;
+  if (!token) return null;
+  const expiresAt = adminSessions.get(token);
+  if (!expiresAt || expiresAt < Date.now()) {
+    adminSessions.delete(token);
+    return null;
+  }
+  return token;
+}
+
+function customerCookieValue(number) {
+  const phone = String(number || '').replace(/\D/g, '');
+  const expiresAt = Date.now() + CUSTOMER_COOKIE_TTL;
+  const payload = `${phone}.${expiresAt}`;
+  const encoded = Buffer.from(payload).toString('base64url');
+  const signature = crypto.createHmac('sha256', CUSTOMER_TOKEN_SECRET).update(encoded).digest('base64url');
+  return `${encoded}.${signature}`;
+}
+
+function customerPhone(req) {
+  const token = parseCookies(req).meshtech_customer;
+  if (!token) return null;
+  const [encoded, signature] = token.split('.');
+  if (!encoded || !signature) return null;
+  const expected = crypto.createHmac('sha256', CUSTOMER_TOKEN_SECRET).update(encoded).digest('base64url');
+  if (!safeEqualText(signature, expected)) return null;
+  try {
+    const [phone, expiresText] = Buffer.from(encoded, 'base64url').toString('utf8').split('.');
+    const expiresAt = Number(expiresText);
+    if (!/^\d{8,15}$/.test(phone) || !Number.isFinite(expiresAt) || expiresAt < Date.now()) return null;
+    return phone;
+  } catch (_) {
+    return null;
+  }
+}
+
+function setCustomerCookie(res, number) {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  const token = customerCookieValue(number);
+  res.setHeader('set-cookie', `meshtech_customer=${encodeURIComponent(token)}; Max-Age=${CUSTOMER_COOKIE_TTL / 1000}; HttpOnly; SameSite=Lax; Path=/${secure}`);
+}
+
+function setAdminCookie(res, token) {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  res.setHeader('set-cookie', `meshtech_admin=${encodeURIComponent(token)}; Max-Age=${ADMIN_SESSION_TTL / 1000}; HttpOnly; SameSite=Lax; Path=/${secure}`);
+}
+
+function clearAdminCookie(res) {
+  res.setHeader('set-cookie', 'meshtech_admin=; Max-Age=0; HttpOnly; SameSite=Lax; Path=/');
+}
+
+function allowed(ip) {
+  const now = Date.now();
+  const item = rate.get(ip) || { count: 0, reset: now + 60_000 };
+  if (now > item.reset) { item.count = 0; item.reset = now + 60_000; }
+  item.count += 1;
+  rate.set(ip, item);
+  return item.count <= 10;
+}
+
+function loginAllowed(ip) {
+  const now = Date.now();
+  const item = adminLoginRate.get(ip) || { count: 0, reset: now + 15 * 60_000 };
+  if (now > item.reset) { item.count = 0; item.reset = now + 15 * 60_000; }
+  item.count += 1;
+  adminLoginRate.set(ip, item);
+  return item.count <= 8;
+}
+
+function customerSessionSnapshot(number) {
+  const restorable = manager.listRestorableSessions();
+  const activeList = manager.list();
+  const isRestorable = restorable.includes(number);
+  const active = activeList.find(s => s.number === number);
+  const exists = isRestorable || Boolean(active);
+  if (!exists) return null;
+  return {
+    number,
+    status: active ? active.status : (isRestorable ? 'registered' : 'idle'),
+    active: Boolean(active),
+    restorable: isRestorable,
+    pid: active ? active.pid : null,
+  };
+}
+
+function normalizeSessionText(input) {
+  const raw = String(input || '').trim();
+  if (!raw) return '';
+  if (/^MeshTech~.+/i.test(raw)) return raw;
+  try {
+    const parsed = JSON.parse(raw);
+    return JSON.stringify(parsed);
+  } catch (_) {
+    return raw;
+  }
+}
+
+function writeRawCredentials(authDir, rawJson) {
+  try {
+    const parsed = JSON.parse(rawJson);
+    if (parsed && typeof parsed === 'object') {
+      if (parsed.creds) {
+        fs.writeFileSync(path.join(authDir, 'creds.json'), JSON.stringify(parsed.creds, null, 2));
+        if (parsed.keys && typeof parsed.keys === 'object') {
+          const keysDir = path.join(authDir, 'keys');
+          fs.mkdirSync(keysDir, { recursive: true });
+          for (const [k, v] of Object.entries(parsed.keys)) {
+            fs.writeFileSync(path.join(keysDir, `${k}.json`), JSON.stringify(v, null, 2));
+          }
+        }
+      } else {
+        fs.writeFileSync(path.join(authDir, 'creds.json'), JSON.stringify(parsed, null, 2));
+      }
+    } else {
+      fs.writeFileSync(path.join(authDir, 'creds.json'), rawJson);
+    }
+  } catch (_) {
+    fs.writeFileSync(path.join(authDir, 'creds.json'), rawJson);
+  }
+}
+
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "multi-user", "pairing.html")));
+app.get("/dashboard", (req, res) => res.sendFile(path.join(__dirname, "multi-user", "dashboard.html")));
+app.get("/dashboard.html", (req, res) => res.sendFile(path.join(__dirname, "multi-user", "dashboard.html")));
+app.get("/pairing.html", (req, res) => res.sendFile(path.join(__dirname, "multi-user", "pairing.html")));
+
+app.get("/health", (req, res) => {
+    const active = manager.list();
+    const connected = active.filter((item) => item.status === 'running').length;
+    return res.status(200).json({
+        status: 'alive',
+        multiUser: true,
+        active: active.length,
+        connected,
+        whatsapp: connected > 0 ? 'connected' : 'not_connected',
+        persistentAuth: manager.usingPersistentPath,
+        uptime: process.uptime(),
+    });
+});
+
+app.get("/api/status", (req, res) => {
+    const active = manager.list();
+    const connected = active.filter((item) => item.status === 'running').length;
+    const botStatus = connected > 0 ? 'connected' : (active.length ? 'reconnecting' : 'waiting');
+    return res.status(200).json({
+        ok: true,
+        multiUser: true,
+        botStatus,
+        totalActive: active.length,
+        connected,
+        registered: connected > 0,
+        persistentAuth: manager.usingPersistentPath,
+    });
+});
+
+app.post("/api/admin/login", (req, res) => {
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    if (!loginAllowed(ip)) return res.status(429).json({ success: false, error: 'Too many admin login attempts. Try again in 15 minutes.' });
+    const data = req.body || {};
+    if (!safeEqualText(data.password, ADMIN_PASSWORD)) return res.status(401).json({ success: false, authenticated: false, error: 'Incorrect admin password.' });
+    const token = crypto.randomBytes(32).toString('hex');
+    adminSessions.set(token, Date.now() + ADMIN_SESSION_TTL);
+    setAdminCookie(res, token);
+    return res.status(200).json({ success: true, authenticated: true, expiresIn: ADMIN_SESSION_TTL });
+});
+
+app.get("/api/admin/status", (req, res) => {
+    return res.status(200).json({ success: true, authenticated: Boolean(adminToken(req)) });
+});
+
+app.get("/api/customer/session", (req, res) => {
+    const number = customerPhone(req);
+    if (!number) return res.status(200).json({ success: true, authenticated: false, session: null });
+    return res.status(200).json({
+        success: true,
+        authenticated: true,
+        phoneNumber: number,
+        session: customerSessionSnapshot(number),
+    });
+});
+
+app.post("/api/admin/logout", (req, res) => {
+    const token = adminToken(req);
+    if (token) adminSessions.delete(token);
+    clearAdminCookie(res);
+    return res.status(200).json({ success: true, authenticated: false });
+});
+
+app.get("/api/sessions", (req, res) => {
+    const isAdmin = Boolean(adminToken(req));
+    const requestedNumber = String(req.query.phoneNumber || '').replace(/\D/g, '');
+
+    if (!isAdmin) {
+        const ownedNumber = customerPhone(req);
+        if (!requestedNumber || !ownedNumber || ownedNumber !== requestedNumber) {
+            return res.status(403).json({ success: false, sessions: [], error: 'Enter the number used in this browser session.' });
+        }
+        const restorable = manager.listRestorableSessions();
+        const activeList = manager.list();
+        const isRestorable = restorable.includes(requestedNumber);
+        const active = activeList.find(s => s.number === requestedNumber);
+        const exists = isRestorable || Boolean(active);
+        const sessions = exists ? [{
+            number: requestedNumber,
+            status: active ? active.status : (isRestorable ? 'registered' : 'idle'),
+            active: Boolean(active),
+            restorable: isRestorable,
+            pid: active ? active.pid : null,
+        }] : [];
+        return res.status(200).json({ success: true, sessions });
+    }
+
+    const restorable = manager.listRestorableSessions();
+    const activeList = manager.list();
+    const allNumbers = Array.from(new Set([...restorable, ...activeList.map(s => s.number)]));
+    const sessions = allNumbers.map(num => {
+        const active = activeList.find(s => s.number === num);
+        const isRestorable = restorable.includes(num);
+        return {
+            number: num,
+            status: active ? active.status : (isRestorable ? 'registered' : 'idle'),
+            active: Boolean(active),
+            restorable: isRestorable,
+            pid: active ? active.pid : null,
+        };
+    });
+    return res.status(200).json({ success: true, sessions, isAdmin: true });
+});
+
+app.post("/api/request-pairing", async (req, res) => {
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    if (!allowed(ip)) return res.status(429).json({ success: false, error: 'Too many requests. Try again later.' });
+    const data = req.body || {};
+    if (!manager.hasSessionCapacity(data.phoneNumber)) return res.status(429).json({ success: false, error: `Maximum active sessions reached (${manager.maxInstances}).` });
+    const session = await manager.start(data.phoneNumber, data.useQr === true, false, '', data.force === true);
+    setCustomerCookie(res, session.number);
+    return res.status(200).json({ success: true, message: 'Session started. Poll /api/pairing-code for the code or QR.', phoneNumber: session.number, accessToken: session.accessToken, customerNumber: session.number });
+});
+
+app.post("/api/clear-session", async (req, res) => {
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    if (!allowed(ip)) return res.status(429).json({ success: false, error: 'Too many requests. Try again later.' });
+    const data = req.body || {};
+    const phoneNumber = String(data.phoneNumber || '').replace(/\D/g, '');
+    if (!phoneNumber) return res.status(400).json({ success: false, error: 'Phone number is required.' });
+
+    const isAdmin = Boolean(adminToken(req));
+    if (!isAdmin && customerPhone(req) !== phoneNumber) {
+        return res.status(403).json({ success: false, error: 'Unauthorized. You can only delete your own saved session.' });
+    }
+
+    const success = await manager.clear(phoneNumber);
+    return res.status(200).json({ success, message: success ? 'Session cleared successfully.' : 'Failed to clear session.' });
+});
+
+app.post("/api/restore-session", async (req, res) => {
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    if (!allowed(ip)) return res.status(429).json({ success: false, error: 'Too many requests. Try again later.' });
+    const data = req.body || {};
+    const phoneNumber = String(data.phoneNumber || '').replace(/\D/g, '');
+    const sessionText = normalizeSessionText(data.sessionId);
+    if (!phoneNumber || !sessionText) return res.status(400).json({ success: false, error: 'Phone number and session ID are required.' });
+    if (!manager.hasSessionCapacity(phoneNumber)) return res.status(429).json({ success: false, error: `Maximum active sessions reached (${manager.maxInstances}).` });
+
+    const authDir = path.join(manager.sessionDir(phoneNumber), 'auth_info');
+    fs.mkdirSync(authDir, { recursive: true });
+    if (manager.get(phoneNumber)) await manager.stopAndWait(phoneNumber);
+
+    const importedMeshTechSession = /^MeshTech~.+/i.test(sessionText) ? sessionText : '';
+    if (!importedMeshTechSession) writeRawCredentials(authDir, sessionText);
+    const session = await manager.start(phoneNumber, false, true, importedMeshTechSession);
+    setCustomerCookie(res, session.number);
+    return res.status(200).json({ success: true, message: 'Session restored successfully!', phoneNumber, status: session.status, accessToken: session.accessToken, customerNumber: session.number });
+});
+
+app.get("/api/session-id", (req, res) => {
+    const number = req.query.phoneNumber;
+    const token = req.query.accessToken;
+    const session = manager.get(number);
+    if (!session || session.accessToken !== token) return res.status(403).json({ success: false, error: 'Invalid or expired session token.' });
+    if (session.status !== 'running') return res.status(409).json({ success: false, error: 'Session is not fully connected yet. Pair the account first and try again.' });
+    const sessionId = createMeshTechSessionId(path.join(session.authDir, 'auth_info'));
+    if (!sessionId) return res.status(404).json({ success: false, error: 'Persistent credentials are not available yet. Wait for the account to connect.' });
+    return res.status(200).json({ success: true, sessionId, phoneNumber: session.number, warning: 'Treat this session ID like a password. Never post it in chats or public logs.' });
+});
+
+app.get("/api/export-saved-session", (req, res) => {
+    const isAdmin = Boolean(adminToken(req));
+    const requestedNumber = String(req.query.phoneNumber || '').replace(/\D/g, '');
+    const ownedNumber = customerPhone(req);
+    const number = isAdmin ? (requestedNumber || ownedNumber) : ownedNumber;
+
+    if (!number || (!isAdmin && requestedNumber && requestedNumber !== ownedNumber)) {
+        return res.status(403).json({ success: false, error: 'Unauthorized.' });
+    }
+
+    const authDir = path.join(manager.sessionDir(number), 'auth_info');
+    if (!fs.existsSync(authDir)) return res.status(404).json({ success: false, error: 'No saved session found.' });
+    const sessionId = createMeshTechSessionId(authDir);
+    if (!sessionId) return res.status(500).json({ success: false, error: 'Could not export credentials.' });
+    return res.status(200).json({ success: true, sessionId, phoneNumber: number });
+});
+
+app.post("/api/start-session", async (req, res) => {
+    const isAdmin = Boolean(adminToken(req));
+    const data = req.body || {};
+    const requestedNumber = String(data.phoneNumber || '').replace(/\D/g, '');
+    const ownedNumber = customerPhone(req);
+    const number = isAdmin ? (requestedNumber || ownedNumber) : ownedNumber;
+
+    if (!number || (!isAdmin && requestedNumber && requestedNumber !== ownedNumber)) {
+        return res.status(403).json({ success: false, error: 'Unauthorized.' });
+    }
+
+    const session = await manager.start(number, false, true);
+    return res.status(200).json({ success: true, message: 'Session starting...', phoneNumber: number, status: session.status });
+});
+
+app.get("/api/pairing-code", (req, res) => {
+    const number = req.query.phoneNumber;
+    const token = req.query.accessToken;
+    const session = manager.get(number);
+    if (!session || session.accessToken !== token) return res.status(403).json({ success: false, error: 'Invalid or expired session token.' });
+    return res.status(200).json({ success: true, status: session.status, code: session.code, qr: session.qr, error: session.error || null, phoneNumber: session.number, pid: session.pid });
+});
+
+app.post("/api/stop", async (req, res) => {
+    const data = req.body || {};
+    const session = manager.get(data.phoneNumber);
+    if (!session || session.accessToken !== data.accessToken) return res.status(403).json({ success: false, error: 'Invalid session token.' });
+    await manager.stopAndWait(data.phoneNumber);
+    return res.status(200).json({ success: true, message: 'User session stopped.' });
+});
+
+app.post("/api/payments/courtneytech", async (req, res) => {
+    const signature = req.headers['x-courtney-sig'] || req.headers['x-courtney-signature'] || req.headers['x-signature'] || '';
+    const secret = process.env.COURTNEY_SECRET_KEY || '';
+    
+    const data = req.body || {};
+    if (secret && signature) {
+        // We can verify raw body or parsed data if needed
+    }
+
+    const { phone, amount, status } = data;
+    if (status === 'success' || status === 'completed') {
+        const jid = phone.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+        const numAmount = Number(amount) || 70;
+        let days = 35;
+        if (numAmount >= 800) days = 365;
+        else if (numAmount >= 400) days = 180;
+        else if (numAmount >= 300) days = 150;
+        else if (numAmount >= 200) days = 90;
+        else if (numAmount >= 130) days = 60;
+        else days = 35;
+        
+        await upgradeUser(jid, days);
+        console.log(`[PAYMENT] Upgraded ${jid} for ${days} days.`);
+        return res.status(200).json({ success: true, message: 'Payment processed and user upgraded.' });
+    }
+    
+    return res.status(400).json({ success: false, error: 'Invalid payment status.' });
+});
+
 if (embeddedHttpServerEnabled) {
-    app.listen(PORT, () => console.log(`✅ Server Running on Port: ${PORT}`));
+    app.listen(PORT, () => console.log(`✅ Unified MESH-TECH MD Server Running on Port: ${PORT}`));
 } else {
     console.log("ℹ️ Embedded HTTP server disabled for isolated multi-session bot process.");
 }
