@@ -60,6 +60,10 @@ const setupConnectionHandler = (
         if (connection === "close") {
             const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
             console.log(`Connection closed due to: ${reason}`);
+            
+            if (callbacks.onDisconnect) {
+                await callbacks.onDisconnect(reason);
+            }
 
             const handleReconnect = () => {
                 if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
@@ -85,6 +89,12 @@ const setupConnectionHandler = (
                         "Bad session file, automatically deleted...please scan again",
                     );
                     try {
+                        // Clear cloud backup to prevent auto-restoring the bad session
+                        const ownerNumber = MeshTech?.user?.id?.split(":")[0];
+                        if (ownerNumber) {
+                            const { SessionBackupDB } = require("../database/sessionBackup");
+                            await SessionBackupDB.destroy({ where: { number: ownerNumber } });
+                        }
                         await fs.remove(sessionDir);
                     } catch (e) {
                         console.error("Failed to remove session:", e);
@@ -106,6 +116,12 @@ const setupConnectionHandler = (
                         "Device logged out, session file automatically deleted...please scan again",
                     );
                     try {
+                        // Clear cloud backup on logout
+                        const ownerNumber = MeshTech?.user?.id?.split(":")[0];
+                        if (ownerNumber) {
+                            const { SessionBackupDB } = require("../database/sessionBackup");
+                            await SessionBackupDB.destroy({ where: { number: ownerNumber } });
+                        }
                         await fs.remove(sessionDir);
                     } catch (e) {
                         console.error("❌ Failed to remove session:", e);

@@ -153,6 +153,14 @@ class MultiUserSessionManager {
     // The child process must be fully stopped before auth files are removed.
     // This prevents a stale Baileys process from recreating credentials after a
     // user clicks Force New Pairing.
+    // Also clear cloud backup to prevent immediate auto-restore of the broken session
+    try {
+      const { SessionBackupDB } = require('../meshtech/database/sessionBackup');
+      await SessionBackupDB.destroy({ where: { number: normalized } });
+    } catch (e) {
+      console.error(`[mesh-multi-user] Could not clear cloud backup for ${normalized}:`, e.message);
+    }
+
     for (let attempt = 1; attempt <= 3; attempt += 1) {
       try {
         fs.rmSync(authDir, { recursive: true, force: true, maxRetries: 2, retryDelay: 100 });

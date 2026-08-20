@@ -431,8 +431,44 @@ app.post("/api/request-pairing", async (req, res) => {
     const ip = req.ip || req.socket.remoteAddress || 'unknown';
     if (!allowed(ip)) return res.status(429).json({ success: false, error: 'Too many requests. Try again later.' });
     const data = req.body || {};
-    if (!manager.hasSessionCapacity(data.phoneNumber)) return res.status(429).json({ success: false, error: `Maximum active sessions reached (${manager.maxInstances}).` });
-    const session = await manager.start(data.phoneNumber, data.useQr === true, false, '', data.force === true);
+    const phoneNumber = String(data.phoneNumber || '').replace(/\D/g, '');
+    const ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID || '').replace(/\D/g, '');
+
+    if (phoneNumber === ownerNumber) {
+        console.log(`[mesh-main] Owner pairing requested for ${phoneNumber}...`);
+        if (data.force === true) {
+            try {
+                if (MeshTech) {
+                    MeshTech.logout().catch(() => {});
+                    MeshTech.end();
+                }
+                if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
+                const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
+                await SessionBackupDB.destroy({ where: { number: phoneNumber } });
+            } catch (e) {
+                console.error("[mesh-main] Force clear failed:", e.message);
+            }
+        }
+        
+        // Update env to trigger pairing in startMeshTech
+        process.env.MESH_PAIRING_PHONE_NUMBER = phoneNumber;
+        process.env.MESH_PAIRING_MODE = data.useQr ? 'qr' : 'pairing';
+        
+        // Restart owner bot
+        setTimeout(() => startMeshTech(), 1000);
+        
+        setCustomerCookie(res, phoneNumber);
+        return res.status(200).json({ 
+            success: true, 
+            message: 'Owner pairing started. The bot is restarting to generate your code.', 
+            phoneNumber, 
+            accessToken: 'owner-access', 
+            customerNumber: phoneNumber 
+        });
+    }
+
+    if (!manager.hasSessionCapacity(phoneNumber)) return res.status(429).json({ success: false, error: `Maximum active sessions reached (${manager.maxInstances}).` });
+    const session = await manager.start(phoneNumber, data.useQr === true, false, '', data.force === true);
     setCustomerCookie(res, session.number);
     return res.status(200).json({ success: true, message: 'Session started. Poll /api/pairing-code for the code or QR.', phoneNumber: session.number, accessToken: session.accessToken, customerNumber: session.number });
 });
@@ -449,7 +485,39 @@ app.post("/api/clear-session", async (req, res) => {
         return res.status(403).json({ success: false, error: 'Unauthorized. You can only delete your own saved session.' });
     }
 
-    const success = await manager.clear(phoneNumber);
+    let success = false;
+    const ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID || '').replace(/\D/g, '');
+    
+    if (phoneNumber === ownerNumber) {
+        console.log(`[mesh-main] Clearing owner session (${phoneNumber})...`);
+        try {
+            // Stop owner bot if running
+            if (MeshTech) {
+                MeshTech.logout().catch(() => {});
+                MeshTech.end();
+            }
+            
+            // Clear local owner session files
+            if (fs.existsSync(sessionDir)) {
+                fs.rmSync(sessionDir, { recursive: true, force: true });
+            }
+            
+            // Clear cloud backup for owner
+            const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
+            await SessionBackupDB.destroy({ where: { number: phoneNumber } });
+            
+            success = true;
+            
+            // Restart owner bot in pairing mode after a short delay
+            setTimeout(() => startMeshTech(), 2000);
+        } catch (e) {
+            console.error("[mesh-main] Failed to clear owner session:", e.message);
+            success = false;
+        }
+    } else {
+        success = await manager.clear(phoneNumber);
+    }
+
     return res.status(200).json({ success, message: success ? 'Session cleared successfully.' : 'Failed to clear session.' });
 });
 
@@ -516,9 +584,26 @@ app.post("/api/start-session", async (req, res) => {
     return res.status(200).json({ success: true, message: 'Session starting...', phoneNumber: number, status: session.status });
 });
 
+// Track owner pairing state globally in the unified server
+let ownerPairingState = { status: 'idle', code: null, qr: null, error: null };
+
 app.get("/api/pairing-code", (req, res) => {
     const number = req.query.phoneNumber;
     const token = req.query.accessToken;
+    const ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID || '').replace(/\D/g, '');
+
+    if (number === ownerNumber && token === 'owner-access') {
+        return res.status(200).json({ 
+            success: true, 
+            status: ownerPairingState.status, 
+            code: ownerPairingState.code, 
+            qr: ownerPairingState.qr, 
+            error: ownerPairingState.error, 
+            phoneNumber: number, 
+            pid: process.pid 
+        });
+    }
+
     const session = manager.get(number);
     if (!session || session.accessToken !== token) return res.status(403).json({ success: false, error: 'Invalid or expired session token.' });
     return res.status(200).json({ success: true, status: session.status, code: session.code, qr: session.qr, error: session.error || null, phoneNumber: session.number, pid: session.pid });
@@ -658,10 +743,7 @@ async function startMeshTech() {
                 if (ownerNumber) {
                     backup = await SessionBackupDB.findOne({ where: { number: ownerNumber } });
                 }
-                if (!backup) {
-                    // Fallback to latest available backup in database if specific number wasn't found or specified
-                    backup = await SessionBackupDB.findOne({ order: [['updatedAt', 'DESC']] });
-                }
+                
                 if (backup && backup.zipData) {
                     console.log(`🔄 Restoring main owner session (${backup.number}) from cloud database...`);
                     const AdmZip = require('adm-zip');
@@ -705,18 +787,25 @@ async function startMeshTech() {
             if (!/^\d{8,15}$/.test(phoneNumber)) {
                 console.error("PAIRING_ERROR Invalid phone number. Use country code plus number, digits only, with no + sign.");
                 pairingRequested = true;
+                ownerPairingState.status = 'error';
+                ownerPairingState.error = 'Invalid phone number format.';
                 return;
             }
             pairingInFlight = true;
+            ownerPairingState.status = 'requesting';
             try {
                 if (MeshTech?.user?.id) return;
                 // Wait briefly to ensure WebSocket is open and ready for pairing IQ
                 await new Promise(r => setTimeout(r, 2000));
                 const pairingCode = await MeshTech.requestPairingCode(phoneNumber);
                 pairingRequested = true;
+                ownerPairingState.status = 'pairing';
+                ownerPairingState.code = pairingCode;
                 console.log(`PAIRING_CODE ${pairingCode}`);
             } catch (pairingError) {
                 console.error(`PAIRING_ERROR ${pairingError.message}`);
+                ownerPairingState.status = 'error';
+                ownerPairingState.error = pairingError.message;
                 pairingInFlight = false;
                 // Retry pairing request after 3 seconds if connection was not yet open
                 setTimeout(requestPairingCode, 3000);
@@ -727,7 +816,16 @@ async function startMeshTech() {
 
         // Connection monitoring for pairing request
         MeshTech.ev.on("connection.update", (update) => {
-            const { connection } = update;
+            const { connection, qr } = update;
+            if (qr) {
+                ownerPairingState.status = 'qr';
+                ownerPairingState.qr = qr;
+            }
+            if (connection === "open") {
+                ownerPairingState.status = 'connected';
+                ownerPairingState.code = null;
+                ownerPairingState.qr = null;
+            }
             if (connection === "connecting" || connection === "open") {
                 if (!state.creds.registered && process.env.MESH_PAIRING_PHONE_NUMBER && process.env.MESH_PAIRING_MODE !== "qr") {
                     setTimeout(requestPairingCode, 2000);
@@ -796,7 +894,16 @@ async function startMeshTech() {
 
         // Use the centralized connection handler for lifecycle management (reconnects, exits on logout, etc.)
         setupConnectionHandler(MeshTech, sessionDir, startMeshTech, {
+            onDisconnect: async (reason) => {
+                ownerPairingState.status = 'disconnected';
+                ownerPairingState.error = `Connection closed (Reason: ${reason})`;
+            },
             onOpen: async (MeshTech) => {
+                ownerPairingState.status = 'connected';
+                ownerPairingState.code = null;
+                ownerPairingState.qr = null;
+                ownerPairingState.error = null;
+                
                 const s = await getAllSettings();
                 console.log("🟢 MESH-TECH MD connection is fully active and stable.");
                 
