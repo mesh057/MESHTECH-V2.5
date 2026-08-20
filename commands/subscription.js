@@ -3,7 +3,8 @@ const { gmd, getUserSubscription, upgradeUser, config, getSetting } = require(".
 const PLANS = {
     "1": { name: "Weekly Pro", price: 200, days: 7, description: "Full access to all AI & Research tools for 7 days." },
     "2": { name: "Monthly Pro", price: 600, days: 30, description: "Full access to all AI & Research tools for 30 days." },
-    "3": { name: "Lifetime Pro", price: 2500, days: 36500, description: "Unlimited access to all features forever." }
+    "3": { name: "Quarterly Pro", price: 1500, days: 90, description: "Full access to all AI & Research tools for 90 days (3 Months)." },
+    "4": { name: "Yearly Pro", price: 5000, days: 365, description: "Full access to all AI & Research tools for 1 Year." }
 };
 
 gmd({
@@ -92,7 +93,8 @@ gmd({
         if (res && (res.status === 'success' || res.status === 'completed')) {
             const amount = res.amount || 200;
             let days = 30;
-            if (amount >= 2500) days = 36500;
+            if (amount >= 5000) days = 365;
+            else if (amount >= 1500) days = 90;
             else if (amount >= 600) days = 30;
             else if (amount >= 200) days = 7;
             

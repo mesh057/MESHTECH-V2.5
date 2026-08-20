@@ -436,7 +436,8 @@ const server = http.createServer(async (req, res) => {
       if (status === 'success' || status === 'completed') {
           const jid = phone.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
           let days = 30; // Default
-          if (amount >= 2500) days = 36500;
+          if (amount >= 5000) days = 365;
+          else if (amount >= 1500) days = 90;
           else if (amount >= 600) days = 30;
           else if (amount >= 200) days = 7;
           
