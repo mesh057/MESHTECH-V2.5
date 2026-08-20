@@ -85,6 +85,7 @@ const {
     setupGroupEventsListeners,
     initializeLidStore,
     getJidFromParticipant,
+    getUserSubscription,
 } = require("./meshtech");
 
 const {
@@ -927,6 +928,9 @@ function setupCommandHandler(MeshTech) {
             }
         }
 
+        const userSub = await getUserSubscription(standardizedSender);
+        const isPremium = userSub.tier === "premium" || isSuperUser;
+
         const autoReadMode = settings.AUTO_READ_MESSAGES || "off";
         let shouldRead = false;
         if (autoReadMode === "all" || autoReadMode === "true") {
@@ -976,7 +980,11 @@ function setupCommandHandler(MeshTech) {
                     botId,
                     body,
                     command,
+                    isPremium,
                 });
+                if (bodyCmd.premium && !isPremium) {
+                    return await MeshTech.sendMessage(from, { text: `*💎 PREMIUM ONLY*\n\nThis command is reserved for Premium users. Use *${settings.PREFIX}plans* to upgrade!` }, { quoted: ms });
+                }
                 await bodyCmd.function(from, MeshTech, conText);
             } catch (error) {
                 console.error(`Body command error:`, error);
@@ -1035,10 +1043,13 @@ function setupCommandHandler(MeshTech) {
                     quotedUser,
                     MeshTech,
                     botId,
-                    body,
+                                        body,
                     command,
+                    isPremium,
                 });
-
+                if (gmd.premium && !isPremium) {
+                    return await MeshTech.sendMessage(from, { text: `*💎 PREMIUM ONLY*\n\nThis command is reserved for Premium users. Use *${settings.PREFIX}plans* to upgrade!` }, { quoted: ms });
+                }
                 await gmd.function(from, MeshTech, conText);
             } catch (error) {
                 console.error(`Command error [${command}]:`, error);
@@ -1198,6 +1209,7 @@ function buildContext(ms, settings, helpers, data) {
         packName: settings.PACK_NAME,
         packAuthor: settings.PACK_AUTHOR,
         isSuperAdmin: data.isSuperAdmin,
+        isPremium: data.isPremium,
         getMediaBuffer,
         getFileContentType,
         bufferToStream,

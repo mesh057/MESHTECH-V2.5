@@ -6,6 +6,8 @@ const { UpdateDB, setCommitHash, getCommitHash } = require('./database/autoUpdat
 const { SudoDB, getSudoNumbers, setSudo, delSudo } = require('./database/sudo');
 const { SettingsDB, initializeSettings, getSetting, setSetting, getAllSettings, resetSetting, resetAllSettings, DEFAULT_SETTINGS } = require('./database/settings');
 const { GroupSettingsDB, initializeGroupSettings, getGroupSetting, setGroupSetting, getAllGroupSettings, resetGroupSetting, GROUP_SETTING_DEFAULTS } = require('./database/groupSettings');
+const { SubscriptionDB, getUserSubscription, upgradeUser } = require('./database/subscription');
+const { PaymentDB } = require('./database/payment');
 const { createContext, createContext2 } = require('./gmdHelpers');
 const { getMediaBuffer, getFileContentType, bufferToStream, uploadToMeshTechCdn, uploadToGithubCdn, uploadToPixhost, uploadToImgBB, uploadToCatbox } = require('./gmdFunctions3');
 const { logger, emojis, MeshTechAutoReact, MeshTechApi, MeshTechApiKey, MeshTechAntiLink, MeshTechAntibad, MeshTechAntiGroupMention, MeshTechAutoBio, MeshTechChatBot, MeshTechPresence, MeshTechAntiDelete, MeshTechAnticall, MeshTechAntiViewOnce, MeshTechAntiEdit, antiStickerHandler } = require('./gmdFunctions2');
@@ -38,6 +40,7 @@ module.exports = {
     SudoDB, getSudoNumbers, setSudo, delSudo, 
     SettingsDB, initializeSettings, getSetting, setSetting, getAllSettings, resetSetting, resetAllSettings, DEFAULT_SETTINGS,
     GroupSettingsDB, initializeGroupSettings, getGroupSetting, setGroupSetting, getAllGroupSettings, resetGroupSetting, GROUP_SETTING_DEFAULTS, 
+    SubscriptionDB, getUserSubscription, upgradeUser, PaymentDB,
     MeshTechApi, MeshTechApiKey, 
     getMediaBuffer, getFileContentType, bufferToStream, uploadToPixhost, uploadToImgBB, uploadToCatbox, 
     MeshTechAutoReact, MeshTechChatBot, MeshTechAntiLink, MeshTechAntibad, MeshTechAntiGroupMention, MeshTechAntiDelete, MeshTechAnticall, MeshTechPresence, MeshTechAutoBio, MeshTechAntiViewOnce, MeshTechAntiEdit, antiStickerHandler, handleGameMessage, 

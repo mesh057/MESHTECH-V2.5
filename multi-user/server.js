@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { MultiUserSessionManager } = require('./session-manager');
+const { upgradeUser } = require('../meshtech');
 
 const ADMIN_PASSWORD = process.env.MESHTECH_ADMIN_PASSWORD || 'MESHTECH_ADMIN';
 const CUSTOMER_TOKEN_SECRET = process.env.MESHTECH_CUSTOMER_SECRET || process.env.MESHTECH_ADMIN_PASSWORD || 'MESHTECH_ADMIN';
@@ -401,6 +402,29 @@ const server = http.createServer(async (req, res) => {
       if (!session || session.accessToken !== data.accessToken) return json(res, 403, { success: false, error: 'Invalid session token.' });
       await manager.stopAndWait(data.phoneNumber);
       return json(res, 200, { success: true, message: 'User session stopped.' });
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/payments/courtneytech') {
+      const data = await readBody(req);
+      console.log('[PAYMENT] Webhook received:', data);
+      
+      // Verification logic for Courtney Tech
+      // Expected fields: phone, amount, status, transaction_id
+      const { phone, amount, status, transaction_id } = data;
+      
+      if (status === 'success' || status === 'completed') {
+          const jid = phone.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+          let days = 30; // Default
+          if (amount >= 2500) days = 36500;
+          else if (amount >= 600) days = 30;
+          else if (amount >= 200) days = 7;
+          
+          await upgradeUser(jid, days);
+          console.log(`[PAYMENT] Upgraded ${jid} for ${days} days.`);
+          return json(res, 200, { success: true, message: 'Payment processed and user upgraded.' });
+      }
+      
+      return json(res, 400, { success: false, error: 'Invalid payment status.' });
     }
 
     return json(res, 404, { success: false, error: 'Not found.' });

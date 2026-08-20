@@ -80,6 +80,7 @@ gmd(
     aliases: ["ai"],
     description: "Chat with Mesh Tech AI assistant",
     category: "Ai",
+    premium: true,
     filename: __filename,
   },
   async (from, MeshTech, conText) => {
@@ -92,6 +93,7 @@ gmd(
     pattern: "chatai",
     description: "General AI chat assistant",
     category: "Ai",
+    premium: true,
     filename: __filename,
   },
   async (from, MeshTech, conText) => {
@@ -105,6 +107,7 @@ gmd(
     aliases: ["chatgpt"],
     description: "Chat with GPT model",
     category: "Ai",
+    premium: true,
     filename: __filename,
   },
   async (from, MeshTech, conText) => {
@@ -118,6 +121,7 @@ gmd(
     aliases: ["chatgpt4"],
     description: "Chat with GPT-4 model",
     category: "Ai",
+    premium: true,
     filename: __filename,
   },
   async (from, MeshTech, conText) => {
@@ -131,6 +135,7 @@ gmd(
     aliases: ["chatgpt4o"],
     description: "Chat with GPT-4o model",
     category: "Ai",
+    premium: true,
     filename: __filename,
   },
   async (from, MeshTech, conText) => {
