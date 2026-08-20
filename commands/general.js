@@ -19,6 +19,7 @@ const { gmd, commands, monospace, formatBytes } = require("../meshtech"),
 const { sendButtons } = require("mesh-btns");
 const { getSetting } = require("../meshtech/database/settings");
 const { getActiveUserCount } = require("../meshtech/broadcastRegistry");
+const { getUserSubscription } = require("../meshtech/database/subscription");
 const MESHTECH_LOGO_URL = "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
 
 const COMMAND_EMOJIS = {
@@ -490,6 +491,15 @@ gmd(
       const deviceName = process.env.DEVICE_NAME || "ANDROID-CORE";
       const liveRam = `${formatBytes(process.memoryUsage().rss)}/${formatBytes(totalMemoryBytes)}`;
 
+      const sub = await getUserSubscription(sender);
+      let subInfo = sub.tier.toUpperCase();
+      if (sub.tier === "premium" && sub.expiresAt) {
+        const daysLeft = Math.ceil((new Date(sub.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+        subInfo += ` (${daysLeft > 0 ? daysLeft : 0} Days Left)`;
+      } else if (sub.tier === "premium") {
+        subInfo += " (Lifetime)";
+      }
+
       const categorized = {};
       for (const category of MENU_CATEGORY_ORDER) {
         categorized[category] = [];
@@ -525,6 +535,7 @@ gmd(
 ┃ 🤖 *${toBold("Bots Connected:")}* ${monospace(connectedBots)}
 ┃ 📱 *${toBold("Device:")}* ${monospace(deviceName)}
 ┃ 🧠 *${toBold("RAM:")}* ${monospace(liveRam)}
+┃ 💎 *${toBold("Subscription:")}* ${monospace(subInfo)}
 ╰━━━━━━━━━━━━━━━━━━╯`;
 
       const rows = sortedCategories.map((category) => {
