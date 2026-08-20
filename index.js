@@ -1529,7 +1529,7 @@ function setupCommandHandler(MeshTech) {
                     isPremium,
                 });
                 // Global Paywall: Allow only buy, plans, status, verify for non-premium users
-                const exemptedCommands = ['buy', 'plans', 'status', 'verify'];
+                const exemptedCommands = ['buy', 'plans', 'status', 'verify', 'redeem'];
                 const isOwner = isSuperUser || isPrimaryOwner;
                 
                 if (!isPremium && !isOwner && !exemptedCommands.includes(command.toLowerCase())) {

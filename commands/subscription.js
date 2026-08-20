@@ -1,4 +1,5 @@
 const { gmd, getUserSubscription, upgradeUser } = require("../meshtech");
+const { generatePromoCode, redeemPromoCode } = require("../meshtech/database/promoCode");
 const { getSetting } = require("../meshtech/database/settings");
 
 const PLANS = {
@@ -179,4 +180,52 @@ gmd({
     await upgradeUser(jid, days);
 
     return reply(`✅ Successfully upgraded *@${jid.split("@")[0]}* to PREMIUM for ${days} days.`);
+});
+
+gmd({
+    pattern: "gencode",
+    desc: "Generate a giveaway promo code (Owner Only)",
+    category: "owner",
+    filename: __filename
+}, async (from, MeshTech, conText) => {
+    const { isSuperUser, args, reply, botPrefix } = conText;
+    const prefix = botPrefix || ".";
+
+    if (!isSuperUser) return reply("❌ This command is restricted to the bot owner.");
+
+    const code = args[0];
+    const days = parseInt(args[1]) || 7;
+    const maxUses = parseInt(args[2]) || 1;
+
+    if (!code) {
+        return reply(`❌ Usage: *${prefix}gencode <CODE> <days> <max_uses>*\n\nExample: *${prefix}gencode MESH-FREE-7 7 10*`);
+    }
+
+    try {
+        await generatePromoCode(code, days, maxUses);
+        return reply(`✅ *Promo Code Generated!*\n\n> 🎟️ Code: *${code.toUpperCase()}*\n> ⏳ Duration: ${days} Days\n> 👥 Max Uses: ${maxUses}\n\nShare this code with your users!`);
+    } catch (e) {
+        return reply(`❌ Error generating code: ${e.message}`);
+    }
+});
+
+gmd({
+    pattern: "redeem",
+    desc: "Redeem a giveaway promo code",
+    category: "subscription",
+    filename: __filename
+}, async (from, MeshTech, conText) => {
+    const { sender, args, reply } = conText;
+    const code = args[0];
+
+    if (!code) {
+        return reply("❌ Please provide a promo code to redeem.\n\nExample: *.redeem MESH-FREE-7*");
+    }
+
+    try {
+        const days = await redeemPromoCode(sender, code);
+        return reply(`🎉 *Congratulations!*\n\nYou have successfully redeemed the code *${code.toUpperCase()}*.\n\nYour account has been upgraded to *PREMIUM* for ${days} days!`);
+    } catch (e) {
+        return reply(`❌ *Redemption Failed:* ${e.message}`);
+    }
 });

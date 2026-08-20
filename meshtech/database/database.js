@@ -65,6 +65,7 @@ async function syncDatabase() {
         // Ensure all models are registered before sync
         require("./subscription");
         require("./sessionBackup");
+        require("./promoCode");
         await DATABASE.sync();
         console.log("✅ Database Synchronized.");
     } catch (error) {
