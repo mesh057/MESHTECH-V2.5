@@ -435,11 +435,14 @@ const server = http.createServer(async (req, res) => {
       
       if (status === 'success' || status === 'completed') {
           const jid = phone.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
-          let days = 30; // Default
-          if (amount >= 5000) days = 365;
-          else if (amount >= 1500) days = 90;
-          else if (amount >= 600) days = 30;
-          else if (amount >= 200) days = 7;
+          const numAmount = Number(amount) || 70;
+          let days = 35; // Default (Starter)
+          if (numAmount >= 800) days = 365;
+          else if (numAmount >= 400) days = 180;
+          else if (numAmount >= 300) days = 150;
+          else if (numAmount >= 200) days = 90;
+          else if (numAmount >= 130) days = 60;
+          else days = 35;
           
           await upgradeUser(jid, days);
           console.log(`[PAYMENT] Upgraded ${jid} for ${days} days.`);

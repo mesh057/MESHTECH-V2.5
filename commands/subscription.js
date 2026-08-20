@@ -1,10 +1,12 @@
 const { gmd, getUserSubscription, upgradeUser, config, getSetting } = require("../meshtech");
 
 const PLANS = {
-    "1": { name: "Weekly Pro", price: 200, days: 7, description: "Full access to all AI & Research tools for 7 days." },
-    "2": { name: "Monthly Pro", price: 600, days: 30, description: "Full access to all AI & Research tools for 30 days." },
-    "3": { name: "Quarterly Pro", price: 1500, days: 90, description: "Full access to all AI & Research tools for 90 days (3 Months)." },
-    "4": { name: "Yearly Pro", price: 5000, days: 365, description: "Full access to all AI & Research tools for 1 Year." }
+    "1": { name: "Starter (35 Days)", price: 70, days: 35, description: "Full access to all AI & Research tools for 35 days." },
+    "2": { name: "Standard (2 Months)", price: 140, days: 60, description: "Full access to all AI & Research tools for 2 months." },
+    "3": { name: "Quarterly (3 Months)", price: 210, days: 90, description: "Full access to all AI & Research tools for 3 months." },
+    "4": { name: "Extended (5 Months)", price: 350, days: 150, description: "Full access to all AI & Research tools for 5 months." },
+    "5": { name: "Semi-Annual (6 Months)", price: 420, days: 180, description: "Full access to all AI & Research tools for 6 months." },
+    "6": { name: "Annual (1 Year)", price: 840, days: 365, description: "Full access to all AI & Research tools for 1 full year." }
 };
 
 gmd({
@@ -16,12 +18,11 @@ gmd({
     let msg = `*💎 MESH-TECH MD PREMIUM PLANS*\n\n`;
     for (const [id, plan] of Object.entries(PLANS)) {
         msg += `*${id}. ${plan.name}*\n`;
-        msg += `> 💰 Price: KES ${plan.price}\n`;
-        msg += `> ⏳ Duration: ${plan.days > 365 ? "Lifetime" : plan.days + " Days"}\n`;
+        msg += `> 💰 Price: KSH ${plan.price}\n`;
         msg += `> ✨ ${plan.description}\n\n`;
     }
     msg += `_To buy a plan, use: *${data.prefix}buy <plan_number>*_\n`;
-    msg += `_Example: *${data.prefix}buy 2*_`;
+    msg += `_Example: *${data.prefix}buy 1*_`;
     
     return await MeshTech.sendMessage(chat.chat, { text: msg }, { quoted: chat });
 });
@@ -45,13 +46,13 @@ gmd({
     msg += `You are about to upgrade your account to Premium status.\n\n`;
     msg += `*Plan Details:*\n`;
     msg += `> 📦 Plan: ${plan.name}\n`;
-    msg += `> 💰 Amount: KES ${plan.price}\n`;
-    msg += `> ⏳ Validity: ${plan.days > 365 ? "Lifetime" : plan.days + " Days"}\n\n`;
+    msg += `> 💰 Amount: KSH ${plan.price}\n\n`;
     msg += `*Payment Instructions:*\n`;
     msg += `1. Click the link below to pay via M-Pesa:\n`;
-    msg += `${paymentLink}\n\n`;
-    msg += `2. Once paid, your account will be upgraded automatically.\n`;
-    msg += `3. If it doesn't upgrade within 5 minutes, contact the owner.`;
+    msg += `👉 ${paymentLink}\n\n`;
+    msg += `2. Once paid, copy your Transaction ID and reply with:\n`;
+    msg += `👉 *${data.prefix}verify <TransactionID>*\n\n`;
+    msg += `_Your account will be upgraded instantly upon verification!_`;
 
     if (data.isOwner) {
         msg += `\n\n*🛠️ OWNER NOTE:*\nYour webhook URL for Courtney Tech is:\n` + 
@@ -63,7 +64,7 @@ gmd({
         contextInfo: {
             externalAdReply: {
                 title: "MESH-TECH MD PREMIUM",
-                body: `Upgrade to ${plan.name}`,
+                body: `Upgrade to ${plan.name} - KSH ${plan.price}`,
                 thumbnailUrl: await getSetting("BOT_PIC"),
                 sourceUrl: paymentLink,
                 mediaType: 1,
@@ -91,12 +92,14 @@ gmd({
         const res = await verifyTransactionApi(txId);
         
         if (res && (res.status === 'success' || res.status === 'completed')) {
-            const amount = res.amount || 200;
-            let days = 30;
-            if (amount >= 5000) days = 365;
-            else if (amount >= 1500) days = 90;
-            else if (amount >= 600) days = 30;
-            else if (amount >= 200) days = 7;
+            const amount = Number(res.amount) || 70;
+            let days = 35;
+            if (amount >= 800) days = 365;
+            else if (amount >= 400) days = 180;
+            else if (amount >= 300) days = 150;
+            else if (amount >= 200) days = 90;
+            else if (amount >= 130) days = 60;
+            else days = 35;
             
             await upgradeUser(chat.sender, days);
             return reply(`✅ *Payment Verified Successfully!*\n\nYour account has been upgraded to *PREMIUM* for ${days} days. Enjoy all high-speed AI and research features!`);
@@ -129,7 +132,10 @@ gmd({
         msg += `❌ You are currently on the FREE tier. Use *${data.prefix}plans* to upgrade and unlock all features!`;
     }
 
-    return await MeshTech.sendMessage(chat.chat, { text: msg, mentions: [chat.sender] }, { quoted: chat });
+    return await MeshTech.sendMessage(chat.chat, { 
+        text: msg,
+        mentions: [chat.sender]
+    }, { quoted: chat });
 });
 
 gmd({
@@ -138,19 +144,19 @@ gmd({
     category: "owner",
     filename: __filename
 }, async (MeshTech, chat, data) => {
-    if (!data.isOwner) return;
-
-    const target = chat.mentionedJid[0] || (chat.quoted ? chat.quoted.sender : null) || (data.args[0] ? data.args[0].replace(/[^0-9]/g, "") + "@s.whatsapp.net" : null);
-    const days = parseInt(data.args[1]) || 30;
-
-    if (!target) {
-        return await MeshTech.sendMessage(chat.chat, { text: `*❌ Usage:* ${data.prefix}upgrade @user <days>` }, { quoted: chat });
+    if (!data.isOwner) {
+        return await chat.reply("❌ This command is restricted to the bot owner.");
     }
 
-    await upgradeUser(target, days);
-    
-    return await MeshTech.sendMessage(chat.chat, { 
-        text: `*✅ SUCCESS!* @${target.split("@")[0]} has been upgraded to *PREMIUM* for ${days} days.`,
-        mentions: [target]
-    }, { quoted: chat });
+    const target = data.args[0];
+    const days = parseInt(data.args[1]) || 35;
+
+    if (!target) {
+        return await chat.reply(`❌ Please specify a user.\n\nExample: *${data.prefix}upgrade 2547XXXXXXXX 35*`);
+    }
+
+    const jid = target.replace(/[^0-9]/g, "") + "@s.whatsapp.net";
+    await upgradeUser(jid, days);
+
+    return await chat.reply(`✅ Successfully upgraded *@${jid.split("@")[0]}* to PREMIUM for ${days} days.`);
 });
