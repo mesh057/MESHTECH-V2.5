@@ -18,6 +18,7 @@ const {
     downloadContentFromMessage,
     getContentType,
     fetchLatestWaWebVersion,
+    DisconnectReason,
 } = require("mesh-baileys");
 
 const {
