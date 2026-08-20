@@ -229,3 +229,75 @@ gmd({
         return reply(`❌ *Redemption Failed:* ${e.message}`);
     }
 });
+
+gmd({
+    pattern: "wallet",
+    desc: "View your payment wallet and subscription history",
+    category: "subscription",
+    filename: __filename
+}, async (from, MeshTech, conText) => {
+    const { sender, botPrefix, mek } = conText;
+    const prefix = botPrefix || ".";
+    
+    try {
+        const sub = await getUserSubscription(sender);
+        const userPhone = sender.split("@")[0].replace(/[^0-9]/g, "");
+        
+        let msg = `*🏦 MESH-TECH MD DIGITAL WALLET*\n\n`;
+        msg += `> *Account:* @${userPhone}\n`;
+        msg += `> *Status:* ${sub.tier.toUpperCase()}\n`;
+        
+        if (sub.tier === "premium") {
+            const now = Date.now();
+            const expiry = sub.expiresAt ? new Date(sub.expiresAt) : null;
+            
+            if (expiry) {
+                const diff = expiry.getTime() - now;
+                const daysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
+                
+                msg += `> *Remaining:* ${daysLeft > 0 ? daysLeft : 0} Days\n`;
+                msg += `> *Expiry Date:* ${expiry.toLocaleDateString()}\n\n`;
+                
+                if (daysLeft <= 5) {
+                    msg += `⚠️ *Warning:* Your subscription is expiring soon! Use *${prefix}plans* to renew.\n\n`;
+                } else {
+                    msg += `✅ Your account is in good standing. Thank you for your support!\n\n`;
+                }
+            } else {
+                msg += `> *Remaining:* Lifetime Access\n\n`;
+            }
+        } else {
+            msg += `> *Remaining:* 0 Days\n\n`;
+            msg += `❌ Your wallet is currently empty of Premium days.\n\n`;
+            msg += `*How to add funds?*\n`;
+            msg += `1. Type *${prefix}plans* to see options.\n`;
+            msg += `2. Type *${prefix}buy <number>* to get a payment link.\n`;
+        }
+        
+        msg += `_All payments are securely processed via M-Pesa._`;
+
+        let thumbnailUrl;
+        try {
+            thumbnailUrl = await getSetting("BOT_PIC");
+        } catch (e) {
+            thumbnailUrl = "https://i.postimg.cc/vHZz7VWG/bot-logo.png";
+        }
+
+        return await MeshTech.sendMessage(from, { 
+            text: msg,
+            mentions: [sender],
+            contextInfo: {
+                externalAdReply: {
+                    title: "MESH-TECH MD WALLET",
+                    body: `Subscription Status: ${sub.tier.toUpperCase()}`,
+                    thumbnailUrl: thumbnailUrl,
+                    mediaType: 1,
+                    renderLargerThumbnail: false
+                }
+            }
+        }, { quoted: mek });
+    } catch (error) {
+        console.error("Wallet command error:", error);
+        return MeshTech.sendMessage(from, { text: "❌ Error accessing wallet data. Please try again later." }, { quoted: mek });
+    }
+});
