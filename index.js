@@ -16,17 +16,15 @@ require("events").EventEmitter.defaultMaxListeners = 960;
         }
     }
     
-    if (missing || !fs.existsSync(path.join(__dirname, 'node_modules', 'sequelize'))) {
-        console.log("📦 [SELF-REPAIR] Missing dependencies detected! Running low-memory install...");
+    if (missing || !fs.existsSync(path.join(__dirname, 'node_modules', 'sequelize')) || !fs.existsSync(path.join(__dirname, 'node_modules', 'sharp'))) {
+        console.log("📦 [KATABUMP/PANEL AUTO-FIX] Missing dependencies or sharp detected! Running full automated setup...");
         try {
-            // Install only what is absolutely missing to save RAM
-            execSync('npm install sequelize sqlite3 pg dotenv express axios pino --no-audit --no-fund --prefer-offline', { stdio: 'inherit', cwd: __dirname });
-            console.log("✅ [SELF-REPAIR] Essential dependencies installed!");
+            execSync('npm install --omit=dev --no-audit --no-fund', { stdio: 'inherit', cwd: __dirname });
+            console.log("🔧 [KATABUMP/PANEL AUTO-FIX] Rebuilding sharp for Linux x64...");
+            execSync('npm install --platform=linux --arch=x64 sharp --force', { stdio: 'inherit', cwd: __dirname });
+            console.log("✅ [KATABUMP/PANEL AUTO-FIX] All modules and binaries configured successfully!");
         } catch (e) {
-            console.error("❌ [SELF-REPAIR] Quick install failed, trying full install...");
-            try {
-                execSync('npm install --omit=dev --no-audit --no-fund --prefer-offline', { stdio: 'inherit', cwd: __dirname });
-            } catch (err) {}
+            console.error("❌ [KATABUMP/PANEL AUTO-FIX] Setup warning:", e.message);
         }
     }
 
