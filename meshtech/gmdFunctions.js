@@ -8,7 +8,13 @@ const cheerio = require("cheerio");
 const path = require("path");
 const util = require("util");
 const zlib = require("zlib");
-const sharp = require('sharp');
+let sharp;
+try {
+    sharp = require('sharp');
+} catch (e) {
+    console.warn("⚠️ [SAFE-BOOT] Sharp library failed to load or missing binary. Image/sticker processing will use fallback mode.");
+    sharp = null;
+}
 const config = require('../config');
 const FormData = require('form-data');
 const { fromBuffer } = require('file-type');
