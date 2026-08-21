@@ -866,15 +866,17 @@ async function startMeshTech(options = {}) {
 
         const socketConfig = createSocketConfig(version, state, logger);
         socketConfig.printQRInTerminal = false;
-        socketConfig.browser = ['Windows', 'Chrome', '120.0.0.0'];
-        socketConfig.syncFullHistory = false;
+        socketConfig.syncFullHistory = true;
+        socketConfig.shouldSyncHistoryMessage = () => true;
+        socketConfig.historyCacheSize = 100;
         socketConfig.markOnlineOnConnect = true;
+        socketConfig.browser = ['Ubuntu', 'Chrome', '125.0.0.0'];
         socketConfig.getMessage = async (key) => {
             if (store) {
                 const msg = await store.loadMessage(key.remoteJid, key.id);
                 return msg?.message || undefined;
             }
-            return { conversation: "Error occurred" };
+            return undefined;
         };
 
         MeshTech = meshtechConnect(socketConfig);
