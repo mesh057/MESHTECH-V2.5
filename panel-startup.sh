@@ -1,30 +1,35 @@
 #!/bin/bash
 echo "=================================================="
-echo "   🚀 MESH-TECH MD v2.5 - Pterodactyl Startup     "
+echo "   🚀 MESH-TECH MD v2.5 - Low-Power Startup       "
 echo "   Developed by Meshack Nzuki                     "
 echo "=================================================="
 
 # 1. Check for basic source code integrity
 if [ ! -f "index.js" ] || [ ! -f "package.json" ]; then
-    echo "❌ ERROR: Core files (index.js or package.json) are missing!"
-    echo "Please ensure you have uploaded and EXTRACTED the ZIP file in your File Manager."
-    echo "Current Disk Usage: $(du -sh .)"
+    echo "❌ ERROR: Core files missing! Ensure you EXTRACTED the ZIP."
     exit 1
 fi
 
-# 2. Install fs-extra and dotenv first (needed by config.js)
-if [ ! -d "node_modules/fs-extra" ] || [ ! -d "node_modules/dotenv" ]; then
-    echo "📦 Installing core dependencies..."
-    npm install fs-extra dotenv --no-audit --no-fund
+# 2. Low-Memory Installation Strategy
+# We install modules one by one to avoid exceeding the 128MB RAM limit
+if [ ! -d "node_modules" ]; then
+    echo "📦 [LOW-POWER] Starting chunked dependency installation..."
+    
+    # Essential Core
+    npm install dotenv express axios pino --no-audit --no-fund --prefer-offline --maxsockets 1
+    
+    # Database Core
+    npm install sequelize sqlite3 better-sqlite3 pg --no-audit --no-fund --prefer-offline --maxsockets 1
+    
+    # Media Core
+    npm install fs-extra jimp sharp ruhend-scraper --no-audit --no-fund --prefer-offline --maxsockets 1
+    
+    # Rest of the modules
+    echo "📦 [LOW-POWER] Finalizing installation..."
+    npm install --omit=dev --no-audit --no-fund --prefer-offline --maxsockets 1
 fi
 
-# 3. Install all other dependencies
-if [ ! -d "node_modules/@whiskeysockets/baileys" ] && [ ! -d "mesh-baileys" ]; then
-    echo "📦 Installing all bot dependencies (this may take a moment)..."
-    npm install --omit=dev --no-audit --no-fund
-fi
-
-# 4. Ensure local mesh-baileys symlink
+# 3. Ensure local mesh-baileys symlink
 if [ -d "mesh-baileys" ]; then
     echo "⚙️ Linking local mesh-baileys modules..."
     mkdir -p node_modules/@whiskeysockets
@@ -32,14 +37,14 @@ if [ -d "mesh-baileys" ]; then
     ln -s ../mesh-baileys node_modules/@whiskeysockets/baileys
 fi
 
-# 5. Create required directories
+# 4. Create required directories
 mkdir -p meshtech/database session
 
-echo "🔌 Starting MESH-TECH MD server..."
+echo "🔌 Starting MESH-TECH MD server (Memory Optimized)..."
 while true; do
-    # Run with memory limit flag for 512MB panels
-    node --max-old-space-size=450 index.js
+    # Force low memory usage for Node.js
+    node --max-old-space-size=90 --gc-interval=100 index.js
     EXIT_CODE=$?
-    echo "⚠️ Bot process exited with code $EXIT_CODE. Restarting in 5 seconds..."
-    sleep 5
+    echo "⚠️ Bot exited with code $EXIT_CODE. Restarting in 10 seconds..."
+    sleep 10
 done

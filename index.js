@@ -16,13 +16,17 @@ require("events").EventEmitter.defaultMaxListeners = 960;
         }
     }
     
-    if (missing || !fs.existsSync(path.join(__dirname, 'node_modules', '@whiskeysockets', 'baileys'))) {
-        console.log("📦 [SELF-REPAIR] Missing dependencies detected! Running automatic npm install...");
+    if (missing || !fs.existsSync(path.join(__dirname, 'node_modules', 'sequelize'))) {
+        console.log("📦 [SELF-REPAIR] Missing dependencies detected! Running low-memory install...");
         try {
-            execSync('npm install --omit=dev --no-audit --no-fund', { stdio: 'inherit', cwd: __dirname });
-            console.log("✅ [SELF-REPAIR] Dependencies installed successfully!");
+            // Install only what is absolutely missing to save RAM
+            execSync('npm install sequelize sqlite3 pg dotenv express axios pino --no-audit --no-fund --prefer-offline', { stdio: 'inherit', cwd: __dirname });
+            console.log("✅ [SELF-REPAIR] Essential dependencies installed!");
         } catch (e) {
-            console.error("❌ [SELF-REPAIR] npm install failed:", e.message);
+            console.error("❌ [SELF-REPAIR] Quick install failed, trying full install...");
+            try {
+                execSync('npm install --omit=dev --no-audit --no-fund --prefer-offline', { stdio: 'inherit', cwd: __dirname });
+            } catch (err) {}
         }
     }
 
