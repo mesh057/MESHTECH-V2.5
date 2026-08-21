@@ -485,60 +485,48 @@ app.post("/api/clear-session", async (req, res) => {
         return res.status(403).json({ success: false, error: 'Unauthorized. You can only delete your own saved session.' });
     }
 
-    let success = false;
-    console.log(`[mesh-main] Clearing session for number: ${phoneNumber} (Forcing complete wipe of owner and cloud backups)...`);
+    const configuredOwner = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID || '').replace(/\D/g, '');
+    const activeOwner = String(MeshTech?.user?.id || '').split(':')[0].replace(/\D/g, '');
+    const isOwnerSession = phoneNumber === configuredOwner || (activeOwner && phoneNumber === activeOwner);
+
     try {
-        // Stop owner bot if running
-        if (MeshTech) {
-            MeshTech.logout().catch(() => {});
-            MeshTech.end();
-            MeshTech = null;
+        if (isOwnerSession) {
+            console.log(`[mesh-main] Clearing only owner session ${phoneNumber}; customer sessions remain untouched.`);
+            if (MeshTech) {
+                try { await MeshTech.logout(); } catch (_) {}
+                try { MeshTech.end(); } catch (_) {}
+                MeshTech = null;
+            }
+            if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
+            const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
+            await SessionBackupDB.destroy({ where: { number: phoneNumber } });
+            ownerPairingState = { status: 'idle', code: null, qr: null, error: null };
+            return res.status(200).json({ success: true, owner: true, message: 'Owner session cleared. Request a new pairing code now.' });
         }
-        
-        // Clear local owner session files
-        if (fs.existsSync(sessionDir)) {
-            fs.rmSync(sessionDir, { recursive: true, force: true });
-            console.log("🔥 Wiped local sessionDir successfully.");
-        }
-        
-        // Clear all cloud backups to prevent any restore loops
-        const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
-        await SessionBackupDB.destroy({ where: {} });
-        console.log("🔥 Wiped ALL cloud session backups from PostgreSQL.");
 
-        // Also clear multi-user session if exists
-        await manager.clear(phoneNumber);
-
-        success = true;
-        ownerPairingState = { status: 'idle', code: null, qr: null, error: null };
-        
-        // Restart owner bot in fresh pairing mode
-        setTimeout(() => startMeshTech(), 2000);
+        const success = await manager.clear(phoneNumber);
+        return res.status(200).json({ success, owner: false, message: success ? 'Customer session cleared successfully.' : 'Failed to clear session.' });
     } catch (e) {
-        console.error("[mesh-main] Failed to clear session comprehensively:", e.message);
-        success = false;
+        console.error("[mesh-main] Failed to clear session:", e.message);
+        return res.status(500).json({ success: false, error: 'Session clear failed. Check server logs.' });
     }
-
-    return res.status(200).json({ success, message: success ? 'Session cleared successfully.' : 'Failed to clear session.' });
 });
 
 app.get("/api/force-nuclear-reset", async (req, res) => {
+    if (!adminToken(req)) return res.status(403).json({ success: false, error: 'Admin authentication required.' });
+    const ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID || '').replace(/\D/g, '');
+    if (!ownerNumber) return res.status(400).json({ success: false, error: 'Owner number is not configured.' });
     try {
-        console.log("💥 FORCE NUCLEAR RESET requested via HTTP endpoint...");
         if (MeshTech) {
-            try { MeshTech.logout(); } catch (e) {}
-            try { MeshTech.end(); } catch (e) {}
+            try { await MeshTech.logout(); } catch (_) {}
+            try { MeshTech.end(); } catch (_) {}
             MeshTech = null;
         }
-        if (fs.existsSync(sessionDir)) {
-            fs.rmSync(sessionDir, { recursive: true, force: true });
-        }
+        if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
         const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
-        await SessionBackupDB.destroy({ where: {} });
+        await SessionBackupDB.destroy({ where: { number: ownerNumber } });
         ownerPairingState = { status: 'idle', code: null, qr: null, error: null };
-        
-        setTimeout(() => startMeshTech(), 1500);
-        return res.status(200).send("<html><body style='background:#111;color:#fff;font-family:sans-serif;text-align:center;padding-top:50px;'><h1>💥 Nuclear Reset Successful!</h1><p>All local session files and cloud database backups have been completely wiped.</p><p><a href='/' style='color:#0ff;font-size:20px;'>Click here to return to Pairing Dashboard</a></p></body></html>");
+        return res.status(200).send("<html><body style='background:#111;color:#fff;font-family:sans-serif;text-align:center;padding-top:50px;'><h1>Owner session cleared</h1><p>Customer sessions were not touched. Return to the pairing page and request a new code.</p><p><a href='/' style='color:#0ff;font-size:20px;'>Return to Pairing Dashboard</a></p></body></html>");
     } catch (e) {
         return res.status(500).json({ success: false, error: e.message });
     }
@@ -752,53 +740,53 @@ async function loadBotSettings() {
 
 startCleanup();
 
-async function startMeshTech() {
+async function startMeshTech(options = {}) {
     try {
         const sessionDbPath = path.resolve(process.env.SESSION_DB_FILE || config.SESSION_DB_FILE || path.join(sessionDir, "session.db"));
         const authInfoDir = path.join(sessionDir, 'auth_info');
         
-        // Check if user requested a force clear / fresh pairing via env or marker
-        const forceFresh = process.env.MESH_FORCE_FRESH === 'true' || process.env.MESH_CLEAR_SESSION === 'true';
+        // A fresh pairing is always a one-shot, owner-only reset. Customer sessions live
+        // under MultiUserSessionManager and are never touched by this branch.
+        const envFreshRequested = process.env.MESH_FORCE_FRESH === 'true' || process.env.MESH_CLEAR_SESSION === 'true';
+        // Consume the environment reset only when the local owner store is absent. This
+        // prevents a newly paired session from being erased on every later restart.
+        const forceFresh = options.forceFresh === true || (envFreshRequested && !fs.existsSync(sessionDbPath));
         if (forceFresh) {
-            console.log("🧹 MESH_FORCE_FRESH active: wiping main owner session and owner cloud backup (customers protected)...");
+            console.log("🧹 Fresh owner pairing requested: wiping only the main owner session...");
             try {
                 if (fs.existsSync(sessionDir)) {
                     fs.rmSync(sessionDir, { recursive: true, force: true });
                 }
                 const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
-                let ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || '').replace(/\D/g, '');
+                const ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID || '').replace(/\D/g, '');
                 if (ownerNumber) {
                     await SessionBackupDB.destroy({ where: { number: ownerNumber } });
-                    console.log(`🔥 Purged cloud backup for owner number: ${ownerNumber}`);
+                    console.log(`🔥 Purged only the owner cloud backup for ${ownerNumber}.`);
                 } else {
-                    // If no specific owner number, wipe backups that don't match customer sessions
-                    await SessionBackupDB.destroy({ where: {} });
-                    console.log("🔥 Purged all owner cloud backups.");
+                    console.warn("⚠️ No owner number configured; local session was wiped but no cloud record was deleted.");
                 }
             } catch (err) {
-                console.error("Force fresh wipe error:", err.message);
+                console.error("Fresh owner wipe error:", err.message);
             }
         }
 
+        // Restore only the configured owner backup. Never fall back to a customer's
+        // most-recent record, because that can resurrect an unrelated old session.
         if (!forceFresh && !fs.existsSync(sessionDbPath)) {
             try {
                 const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
-                let ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID || '').replace(/\D/g, '');
-                let backup = null;
+                const ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID || '').replace(/\D/g, '');
                 if (ownerNumber) {
-                    backup = await SessionBackupDB.findOne({ where: { number: ownerNumber } });
-                }
-                if (!backup) {
-                    // Fallback to the most recent session backup in PostgreSQL
-                    backup = await SessionBackupDB.findOne({ order: [['updatedAt', 'DESC']] });
-                }
-                
-                if (backup && backup.zipData) {
-                    console.log(`🔄 Restoring main owner session (${backup.number}) from cloud PostgreSQL database...`);
-                    const AdmZip = require('adm-zip');
-                    const zip = new AdmZip(backup.zipData);
-                    fs.mkdirSync(sessionDir, { recursive: true });
-                    zip.extractAllTo(sessionDir, true);
+                    const backup = await SessionBackupDB.findOne({ where: { number: ownerNumber } });
+                    if (backup?.zipData) {
+                        console.log(`🔄 Restoring the configured owner session (${backup.number}) from PostgreSQL...`);
+                        const AdmZip = require('adm-zip');
+                        const zip = new AdmZip(backup.zipData);
+                        fs.mkdirSync(sessionDir, { recursive: true });
+                        zip.extractAllTo(sessionDir, true);
+                    }
+                } else {
+                    console.log("ℹ️ No owner number configured; starting without cloud session restore.");
                 }
             } catch (e) {
                 console.error("[mesh-main] Cloud restore failed:", e.message);

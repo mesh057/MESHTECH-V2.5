@@ -1265,7 +1265,7 @@
                     showError('PLEASE ENTER YOUR PHONE NUMBER TO CLEAR');
                     return;
                 }
-                if (!confirm(`Are you sure you want to clear the session for ${phoneNumber}? This will wipe existing local & cloud auth so you can link fresh.`)) {
+                if (!confirm(`Clear the owner session for ${phoneNumber}? Your customers' sessions will not be touched.`)) {
                     return;
                 }
                 clearBtn.disabled = true;
@@ -1279,7 +1279,14 @@
                     });
                     const data = await res.json();
                     if (data.success) {
-                        showSuccess('SESSION CLEARED SUCCESSFULLY. YOU CAN NOW PAIR FRESH.');
+                        if (data.owner) {
+                            showSuccess('OWNER SESSION CLEARED. REQUESTING A FRESH PAIRING CODE...');
+                            const forcePairing = document.getElementById('forcePairing');
+                            if (forcePairing) forcePairing.checked = true;
+                            setTimeout(() => form.requestSubmit(), 500);
+                        } else {
+                            showSuccess('SESSION CLEARED SUCCESSFULLY.');
+                        }
                     } else {
                         showError(data.error || 'FAILED TO CLEAR SESSION');
                     }
