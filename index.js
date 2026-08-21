@@ -754,6 +754,16 @@ async function startMeshTech() {
         }
 
         // Restore main session from cloud if local session.db is missing and not forcing fresh
+        if (forceFresh) {
+            try {
+                const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
+                await SessionBackupDB.destroy({ where: {} });
+                console.log("🔥 Successfully purged ALL cloud session backups from PostgreSQL.");
+            } catch (e) {
+                console.error("Failed to purge cloud backups:", e.message);
+            }
+        }
+
         if (!forceFresh && !fs.existsSync(sessionDbPath)) {
             try {
                 const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
