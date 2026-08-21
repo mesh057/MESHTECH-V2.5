@@ -23,12 +23,21 @@ const createSocketConfig = (version, state, logger) => {
         keepAliveIntervalMs: 20000,
         fireInitQueries: false,
         markOnlineOnConnect: true,
-        syncFullHistory: false,
-        shouldSyncHistoryMessage: () => false,
+        syncFullHistory: true,
+        shouldSyncHistoryMessage: () => true,
         retryRequestDelayMs: 500,
-        maxMsgRetryCount: 5,
+        maxMsgRetryCount: 10,
         generateHighQualityLinkPreview: false,
-        getMessage: async () => undefined,
+        getMessage: async (key) => {
+            // Provide message store retrieval so Baileys can decrypt incoming messages correctly
+            try {
+                if (global.messageStore && typeof global.messageStore.loadMessage === 'function') {
+                    const msg = await global.messageStore.loadMessage(key.remoteJid, key.id);
+                    if (msg) return msg;
+                }
+            } catch (e) {}
+            return { conversation: 'Hello, MESH-TECH MD is active!' };
+        },
         emitOwnEvents: true,
         patchMessageBeforeSending: (message) => {
             const requiresPatch = !!(
