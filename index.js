@@ -888,6 +888,11 @@ async function startMeshTech(options = {}) {
                 if (state.creds.registered) {
                     return resolve("");
                 }
+                // If running in a non-interactive environment (like Railway, Render, or Docker container without TTY), skip console prompt and return empty so web pairing dashboard can handle it
+                if (!process.stdin.isTTY || process.env.RAILWAY_STATIC_URL || process.env.RENDER || process.env.DYNO) {
+                    console.log("ℹ️ Non-interactive environment detected (Railway/Cloud). Skipping console prompt. Use the web pairing dashboard at /pairing.html");
+                    return resolve("");
+                }
                 const readline = require('readline').createInterface({
                     input: process.stdin,
                     output: process.stdout
