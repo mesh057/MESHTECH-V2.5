@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "=================================================="
-echo "   🚀 MESH-TECH MD v2.5 - Low-Power Startup       "
+echo "   🚀 MESH-TECH MD v2.5 - Katabump Startup        "
 echo "   Developed by Meshack Nzuki                     "
 echo "=================================================="
 
@@ -10,23 +10,13 @@ if [ ! -f "index.js" ] || [ ! -f "package.json" ]; then
     exit 1
 fi
 
-# 2. Low-Memory Installation Strategy
-# We install modules one by one to avoid exceeding the 128MB RAM limit
-if [ ! -d "node_modules" ]; then
-    echo "📦 [LOW-POWER] Starting chunked dependency installation..."
+# 2. Katabump installation with Sharp platform correction
+if [ ! -d "node_modules" ] || [ ! -d "node_modules/sharp" ]; then
+    echo "📦 [KATABUMP] Installing dependencies..."
+    npm install --omit=dev --no-audit --no-fund
     
-    # Essential Core
-    npm install dotenv express axios pino --no-audit --no-fund --prefer-offline --maxsockets 1
-    
-    # Database Core
-    npm install sequelize sqlite3 better-sqlite3 pg --no-audit --no-fund --prefer-offline --maxsockets 1
-    
-    # Media Core
-    npm install fs-extra jimp sharp ruhend-scraper --no-audit --no-fund --prefer-offline --maxsockets 1
-    
-    # Rest of the modules
-    echo "📦 [LOW-POWER] Finalizing installation..."
-    npm install --omit=dev --no-audit --no-fund --prefer-offline --maxsockets 1
+    echo "🔧 [KATABUMP] Rebuilding sharp binary for Linux x64..."
+    npm install --platform=linux --arch=x64 sharp --force
 fi
 
 # 3. Ensure local mesh-baileys symlink
@@ -40,11 +30,11 @@ fi
 # 4. Create required directories
 mkdir -p meshtech/database session
 
-echo "🔌 Starting MESH-TECH MD server (Memory Optimized)..."
+echo "🔌 Starting MESH-TECH MD server on Katabump..."
 while true; do
-    # Force low memory usage for Node.js
-    node --max-old-space-size=90 --gc-interval=100 index.js
+    # Katabump has generous RAM, use standard or slightly higher memory limit
+    node --max-old-space-size=768 index.js
     EXIT_CODE=$?
-    echo "⚠️ Bot exited with code $EXIT_CODE. Restarting in 10 seconds..."
-    sleep 10
+    echo "⚠️ Bot exited with code $EXIT_CODE. Restarting in 5 seconds..."
+    sleep 5
 done
