@@ -734,8 +734,27 @@ async function startMeshTech() {
         const sessionDbPath = path.resolve(process.env.SESSION_DB_FILE || config.SESSION_DB_FILE || path.join(sessionDir, "session.db"));
         const authInfoDir = path.join(sessionDir, 'auth_info');
         
-        // Restore main session from cloud if local session.db is missing
-        if (!fs.existsSync(sessionDbPath)) {
+        // Check if user requested a force clear / fresh pairing via env or marker
+        const forceFresh = process.env.MESH_FORCE_FRESH === 'true' || process.env.MESH_CLEAR_SESSION === 'true';
+        if (forceFresh) {
+            console.log("🧹 MESH_FORCE_FRESH active: wiping local session and cloud backup...");
+            try {
+                if (fs.existsSync(sessionDir)) {
+                    fs.rmSync(sessionDir, { recursive: true, force: true });
+                }
+                const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
+                let ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || '').replace(/\D/g, '');
+                if (ownerNumber) {
+                    await SessionBackupDB.destroy({ where: { number: ownerNumber } });
+                }
+                await SessionBackupDB.destroy({ where: {} }); // Wipes all cloud backups to ensure clean slate
+            } catch (err) {
+                console.error("Force fresh wipe error:", err.message);
+            }
+        }
+
+        // Restore main session from cloud if local session.db is missing and not forcing fresh
+        if (!forceFresh && !fs.existsSync(sessionDbPath)) {
             try {
                 const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
                 let ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID || '').replace(/\D/g, '');
