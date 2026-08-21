@@ -319,16 +319,26 @@ app.get("/health", (req, res) => {
     const active = manager.list();
     const childConnected = active.filter((item) => item.status === 'running').length;
     const isOwnerConnected = Boolean(MeshTech?.user?.id);
+    const ownerState = ownerPairingState?.status || 'unknown';
     
-    // Always return 200 for health checks to prevent Railway from killing the process during initialization
+    // Automated Health Check & Self-Recovery Hook
+    if (!isOwnerConnected && ownerState === 'connected' && typeof startMeshTech === 'function') {
+        console.log("⚠️ Health check detected silent disconnect on owner socket. Triggering auto-recovery...");
+        setTimeout(() => {
+            try { startMeshTech(); } catch (e) { console.error("Auto-recovery trigger failed:", e.message); }
+        }, 1000);
+    }
+
     return res.status(200).json({
-        status: 'alive',
+        status: isOwnerConnected ? 'healthy' : (ownerState === 'pairing' ? 'pairing' : 'degraded'),
+        botName: 'MESH-TECH MD',
         multiUser: true,
-        active: active.length + (isOwnerConnected ? 1 : 0),
-        connected: childConnected + (isOwnerConnected ? 1 : 0),
-        whatsapp: isOwnerConnected ? 'connected' : 'not_connected',
+        activeSessions: active.length + (isOwnerConnected ? 1 : 0),
+        connectedSessions: childConnected + (isOwnerConnected ? 1 : 0),
+        ownerWhatsApp: isOwnerConnected ? 'connected' : ownerState,
         persistentAuth: manager.usingPersistentPath,
         uptime: process.uptime(),
+        timestamp: new Date().toISOString()
     });
 });
 
