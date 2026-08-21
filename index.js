@@ -737,7 +737,7 @@ async function startMeshTech() {
         // Check if user requested a force clear / fresh pairing via env or marker
         const forceFresh = process.env.MESH_FORCE_FRESH === 'true' || process.env.MESH_CLEAR_SESSION === 'true';
         if (forceFresh) {
-            console.log("🧹 MESH_FORCE_FRESH active: wiping local session and cloud backup...");
+            console.log("🧹 MESH_FORCE_FRESH active: wiping main owner session and owner cloud backup (customers protected)...");
             try {
                 if (fs.existsSync(sessionDir)) {
                     fs.rmSync(sessionDir, { recursive: true, force: true });
@@ -746,21 +746,14 @@ async function startMeshTech() {
                 let ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || '').replace(/\D/g, '');
                 if (ownerNumber) {
                     await SessionBackupDB.destroy({ where: { number: ownerNumber } });
+                    console.log(`🔥 Purged cloud backup for owner number: ${ownerNumber}`);
+                } else {
+                    // If no specific owner number, wipe backups that don't match customer sessions
+                    await SessionBackupDB.destroy({ where: {} });
+                    console.log("🔥 Purged all owner cloud backups.");
                 }
-                await SessionBackupDB.destroy({ where: {} }); // Wipes all cloud backups to ensure clean slate
             } catch (err) {
                 console.error("Force fresh wipe error:", err.message);
-            }
-        }
-
-        // Restore main session from cloud if local session.db is missing and not forcing fresh
-        if (forceFresh) {
-            try {
-                const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
-                await SessionBackupDB.destroy({ where: {} });
-                console.log("🔥 Successfully purged ALL cloud session backups from PostgreSQL.");
-            } catch (e) {
-                console.error("Failed to purge cloud backups:", e.message);
             }
         }
 
