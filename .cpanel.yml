@@ -1,7 +1,7 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home3/tunupublsh/MESH-TECH-MD-BOT
+    - export DEPLOYPATH=/home3/tunupublsh/repositories/MESHTECH-V2.6
     - /bin/mkdir -p $DEPLOYPATH
     - /bin/cp -R * $DEPLOYPATH/
-    - cd $DEPLOYPATH && npm install --omit=dev
+    - cd $DEPLOYPATH && npm install --omit=dev --legacy-peer-deps
