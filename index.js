@@ -806,7 +806,7 @@ async function startMeshTech(options = {}) {
 
         const socketConfig = createSocketConfig(version, state, logger);
         socketConfig.printQRInTerminal = false;
-        socketConfig.browser = ['Ubuntu', 'Chrome', '20.0.04'];
+        socketConfig.browser = ['Windows', 'Chrome', '120.0.0.0'];
         socketConfig.syncFullHistory = false;
         socketConfig.markOnlineOnConnect = true;
         socketConfig.getMessage = async (key) => {

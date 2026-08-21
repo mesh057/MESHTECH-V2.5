@@ -42,7 +42,7 @@ async function runTest() {
         const { version } = await latestWaVersion().catch(() => ({ version: [2, 3000, 1015901307] }));
         const socketConfig = createSocketConfig(version, state, { level: 'silent' });
         
-        if (socketConfig.browser[0] !== 'Ubuntu' || socketConfig.auth.creds !== state.creds) {
+        if (socketConfig.browser[0] !== 'Windows' || socketConfig.auth.creds !== state.creds) {
             throw new Error("❌ Socket configuration mismatch.");
         }
         console.log("✅ Socket configuration generated correctly.");

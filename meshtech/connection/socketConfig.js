@@ -11,7 +11,7 @@ const createSocketConfig = (version, state, logger) => {
         logger: pino({ level: 'silent' }),
         // WhatsApp pairing is sensitive to the browser fingerprint. Keep this
         // on a stable Ubuntu/Chrome identity rather than the host OS version.
-        browser: ['Ubuntu', 'Chrome', '20.0.04'],
+        browser: ['Windows', 'Chrome', '120.0.0.0'],
         auth: {
             creds: state.creds,
             keys: makeCacheableSignalKeyStore(state.keys, logger)
