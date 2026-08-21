@@ -1417,8 +1417,9 @@ function setupCommandHandler(MeshTech) {
             if (!isGroupJid) return;
         }
 
-        const settings = await getAllSettings();
-        const botId = standardizeJid(MeshTech.user?.id);
+        // Use cached settings if available or fetch with fallback
+        const settings = await getAllSettings().catch(() => ({}));
+        const botId = standardizeJid(MeshTech?.user?.id);
 
         for (const ms of messages) {
             console.log(`[EMERGENCY-TRACE] Processing message ID: ${ms.key?.id}, remoteJid: ${ms.key?.remoteJid}`);
@@ -1507,6 +1508,7 @@ function setupCommandHandler(MeshTech) {
 
         rememberActivity(sender || rawSender || from);
 
+        // Cache superUsers or resolve efficiently
         const superUser = await buildSuperUsers(
             settings,
             getSudoNumbers,

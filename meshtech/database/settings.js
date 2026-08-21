@@ -74,6 +74,8 @@ const DEFAULT_SETTINGS = {
 };
 
 let initialized = false;
+let settingsCache = null;
+let settingsCacheTime = 0;
 
 const GROUP_ONLY_SETTINGS = [
     "WELCOME_MESSAGE",
@@ -139,10 +141,15 @@ async function setSetting(key, value) {
         await record.save();
     }
 
+    settingsCache = null; // Invalidate cache
     return true;
 }
 
 async function getAllSettings() {
+    const now = Date.now();
+    if (settingsCache && (now - settingsCacheTime < 10000)) {
+        return settingsCache;
+    }
     if (!initialized) await initializeSettings();
 
     const records = await SettingsDB.findAll();
@@ -150,6 +157,8 @@ async function getAllSettings() {
     for (const record of records) {
         settings[record.key] = record.value;
     }
+    settingsCache = settings;
+    settingsCacheTime = now;
     return settings;
 }
 
