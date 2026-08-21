@@ -63,11 +63,10 @@
     "ruhend-scraper": "^10.0.3",
     "sequelize": "*",
     "sharp": "^0.33.5",
-    "@img/sharp-wasm32": "^0.33.5",
-    "sqlite3": "5.1.7",
-    "stream": "*",
-    "util": "*",
-    "wa-sticker-formatter": "*"
+    "sqlite3": "5.1.7"
+  },
+  "optionalDependencies": {
+    "@img/sharp-wasm32": "^0.33.5"
   },
   "repository": {
     "type": "git",
