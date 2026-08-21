@@ -142,45 +142,13 @@ const getGroupInfo = async (MeshTech, from, botId, sender) => {
         };
     }
 
-    const participantIdentifiers = (participant) => {
-        const identifiers = new Set();
-        const values = [
-            participant?.id,
-            participant?.jid,
-            participant?.pn,
-            participant?.phoneNumber,
-            participant?.participant,
-            participant?.lid,
-        ];
-        for (const value of values) {
-            if (!value || typeof value !== 'string') continue;
-            const normalized = value.trim().toLowerCase();
-            identifiers.add(normalized);
-            if (normalized.includes('@')) identifiers.add(normalized.split('@')[0]);
-            if (normalized.endsWith('@lid')) {
-                const mapped = getLidMapping(normalized);
-                if (mapped) {
-                    const mappedNormalized = mapped.toLowerCase();
-                    identifiers.add(mappedNormalized);
-                    if (mappedNormalized.includes('@')) identifiers.add(mappedNormalized.split('@')[0]);
-                }
-            }
-        }
-        return identifiers;
-    };
-    const senderIdentifiers = participantIdentifiers({
-        id: sender,
-        jid: standardizeJid(sender),
-    });
-    const found = groupInfo.participants.find((participant) => {
-        const identifiers = participantIdentifiers(participant);
-        return [...senderIdentifiers].some((identifier) => identifiers.has(identifier));
+    // Fast O(1) or O(N) lookup without creating massive Set objects per message
+    const cleanSender = sender.trim().toLowerCase().split('@')[0];
+    const found = groupInfo.participants.find((p) => {
+        const pid = (p.id || p.jid || p.pn || p.phoneNumber || '').trim().toLowerCase().split('@')[0];
+        return pid === cleanSender;
     });
     let resolvedSender = found?.pn || found?.phoneNumber || found?.id || sender;
-    if (resolvedSender.endsWith('@lid')) {
-        const mapped = getLidMapping(resolvedSender);
-        if (mapped) resolvedSender = mapped;
-    }
 
     const isAdminParticipant = (participant) => (
         participant?.admin === 'admin' ||
