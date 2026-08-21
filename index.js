@@ -805,6 +805,10 @@ async function startMeshTech(options = {}) {
         store = new SQLiteStore();
 
         const socketConfig = createSocketConfig(version, state, logger);
+        socketConfig.printQRInTerminal = false;
+        socketConfig.browser = ['Ubuntu', 'Chrome', '20.0.04'];
+        socketConfig.syncFullHistory = false;
+        socketConfig.markOnlineOnConnect = true;
         socketConfig.getMessage = async (key) => {
             if (store) {
                 const msg = await store.loadMessage(key.remoteJid, key.id);
