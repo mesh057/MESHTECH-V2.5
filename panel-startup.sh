@@ -1,16 +1,16 @@
 #!/bin/bash
 echo "=================================================="
-echo "   🚀 MESH-TECH MD v2.5 - Safe-Boot Startup       "
+echo "   🚀 MESH-TECH MD v2.5 - Universal Panel Boot   "
 echo "   Developed by Meshack Nzuki                     "
 echo "=================================================="
 
-# Ensure node_modules exists
+# Ensure node_modules exists and is clean
 if [ ! -d "node_modules" ]; then
-    echo "📦 Installing core dependencies..."
-    npm install --omit=dev --no-audit --no-fund --ignore-scripts
+    echo "📦 Installing dependencies (Universal Mode)..."
+    npm install --omit=dev --no-audit --no-fund --ignore-scripts=false
 fi
 
-# Ensure local mesh-baileys symlink
+# Ensure local mesh-baileys symlink if present
 if [ -d "mesh-baileys" ]; then
     echo "⚙️ Linking local mesh-baileys modules..."
     mkdir -p node_modules/@whiskeysockets
@@ -20,10 +20,5 @@ fi
 
 mkdir -p meshtech/database session
 
-echo "🔌 Starting MESH-TECH MD in Safe-Boot Mode..."
-while true; do
-    node --max-old-space-size=512 index.js
-    EXIT_CODE=$?
-    echo "⚠️ Bot exited with code $EXIT_CODE. Restarting in 5 seconds..."
-    sleep 5
-done
+echo "🔌 Starting MESH-TECH MD server..."
+exec node index.js
