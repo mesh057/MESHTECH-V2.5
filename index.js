@@ -1,4 +1,47 @@
 require("events").EventEmitter.defaultMaxListeners = 960;
+// Self-repairing auto-installer for Pterodactyl panels
+(function() {
+    const fs = require('fs');
+    const path = require('path');
+    const execSync = require('child_process').execSync;
+    
+    console.log("🔍 [SELF-REPAIR] Checking dependency integrity...");
+    const requiredModules = ['express', 'axios', 'dotenv', 'fs-extra', 'pino'];
+    let missing = false;
+    
+    for (const mod of requiredModules) {
+        if (!fs.existsSync(path.join(__dirname, 'node_modules', mod))) {
+            missing = true;
+            break;
+        }
+    }
+    
+    if (missing || !fs.existsSync(path.join(__dirname, 'node_modules', '@whiskeysockets', 'baileys'))) {
+        console.log("📦 [SELF-REPAIR] Missing dependencies detected! Running automatic npm install...");
+        try {
+            execSync('npm install --omit=dev --no-audit --no-fund', { stdio: 'inherit', cwd: __dirname });
+            console.log("✅ [SELF-REPAIR] Dependencies installed successfully!");
+        } catch (e) {
+            console.error("❌ [SELF-REPAIR] npm install failed:", e.message);
+        }
+    }
+
+    // Ensure local mesh-baileys symlink
+    try {
+        if (fs.existsSync(path.join(__dirname, 'mesh-baileys'))) {
+            fs.mkdirSync(path.join(__dirname, 'node_modules', '@whiskeysockets'), { recursive: true });
+            const target = path.join(__dirname, 'node_modules', '@whiskeysockets', 'baileys');
+            if (fs.existsSync(target)) {
+                fs.rmSync(target, { recursive: true, force: true });
+            }
+            fs.symlinkSync(path.join(__dirname, 'mesh-baileys'), target, 'junction');
+            console.log("⚙️ [SELF-REPAIR] Linked mesh-baileys successfully.");
+        }
+    } catch (err) {
+        console.error("⚠️ [SELF-REPAIR] Symlink warning:", err.message);
+    }
+})();
+
 require("./meshtech/gmdHelpers");
 
 process.on('unhandledRejection', (reason, promise) => {
