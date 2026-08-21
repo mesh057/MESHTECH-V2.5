@@ -79,16 +79,28 @@ The menu now groups the complete 300+ command catalog into these branches: **AI*
 
 <a><img src='https://i.postimg.cc/vHZz7VWG/bot-logo.png'/></a>
 
-**(B) BOT HOSTING PANEL🔥(DISCORD) DEPLOYMENT**
+**(B) PTERODACTYL PANEL DEPLOYMENT (Legacy Bot Hosting, Katabump, etc.)**
 <details>
 <summary>TAP TO OPEN</summary>
-<a href="https://github.com/mesh057/MESHTECH-V2.5/archive/refs/heads/main.zip"><img src="https://img.shields.io/badge/DOWNLOAD%20FILES-yellow" alt="Bot Hosting Files" width="150"></a>
+<a href="https://github.com/mesh057/MESHTECH-V2.5/archive/refs/heads/main.zip"><img src="https://img.shields.io/badge/DOWNLOAD%20ZIP-yellow" alt="Panel Zip File" width="150"></a>
 
-<a href="https://bot-hosting.net/?aff=1357362933151305758"><img src="https://img.shields.io/badge/SIGNUP-gold" alt="Bot Hosting Signup" width="150"></a>
+- **Supported Panels:** Legacy Bot Hosting (`bot-hosting.net`), Katabump, and any standard Pterodactyl Node.js panel.
 
-<a href="https://bot-hosting.net/?aff=1357362933151305758"><img src="https://img.shields.io/badge/DEPLOY%20NOW-orange" alt="Bot Hosting Deploy" width="150"></a>
+**Steps to Deploy on Pterodactyl Panels:**
+1. **Download & Upload:** Download the ZIP file above or extract your forked repository. Upload the files directly to your panel file manager.
+2. **Startup Command:** Set your panel startup / run command to:
+   ```bash
+   bash panel-startup.sh
+   ```
+   *(Or standard: `npm install && node index.js`)*
+3. **Environment Variables / Configuration:** 
+   - Fill in your `.env` or panel Startup Environment Variables:
+     - `SESSION_ID` (if using single session) or use the built-in multi-user pairing server.
+     - `DATABASE_URL` (optional, defaults to local SQLite `session.db`).
+4. **Start Console:** Click **Start** on your panel. The bot will automatically handle module linking and boot up 24/7!
 
-<a href="https://youtu.be/5uefRCSJegU?feature=shared"><img src="https://img.shields.io/badge/WATCH%20TUTORIAL-red" alt="Bot Hosting Tutorial" width="150"></a>
+<a href="https://bot-hosting.net/?aff=1357362933151305758"><img src="https://img.shields.io/badge/LEGACY%20BOT%20HOSTING-gold" alt="Bot Hosting Signup" width="150"></a>
+<a href="https://katabump.com"><img src="https://img.shields.io/badge/KATABUMP-purple" alt="Katabump Panel" width="150"></a>
 </details>
 
 <a><img src='https://i.postimg.cc/vHZz7VWG/bot-logo.png'/></a>
