@@ -16,8 +16,10 @@ require("events").EventEmitter.defaultMaxListeners = 960;
         }
     }
     
+    // Skip heavy self-repair npm install on cloud hosts like Railway where dependencies are pre-installed
+    const isCloud = process.env.RAILWAY_STATIC_URL || process.env.PORT || process.env.NODE_ENV === 'production';
     const sharpBinaryPath = path.join(__dirname, 'node_modules', 'sharp', 'build', 'Release', 'sharp-linux-x64.node');
-    if (missing || !fs.existsSync(path.join(__dirname, 'node_modules', 'sequelize')) || !fs.existsSync(sharpBinaryPath)) {
+    if (!isCloud && (missing || !fs.existsSync(path.join(__dirname, 'node_modules', 'sequelize')) || !fs.existsSync(sharpBinaryPath))) {
         console.log("📦 [KATABUMP/PANEL AUTO-FIX] Missing modules or sharp binary detected! Rebuilding...");
         try {
             execSync('npm install --omit=dev --no-audit --no-fund', { stdio: 'inherit', cwd: __dirname });
@@ -27,6 +29,8 @@ require("events").EventEmitter.defaultMaxListeners = 960;
         } catch (e) {
             console.error("❌ [KATABUMP/PANEL AUTO-FIX] Setup warning:", e.message);
         }
+    } else if (isCloud) {
+        console.log("☁️ [CLOUD/RAILWAY] Skipping heavy panel auto-repair to ensure instant startup.");
     }
 
     // Ensure local mesh-baileys symlink
