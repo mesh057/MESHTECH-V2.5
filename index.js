@@ -486,39 +486,62 @@ app.post("/api/clear-session", async (req, res) => {
     }
 
     let success = false;
-    const ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID || '').replace(/\D/g, '');
-    
-    if (phoneNumber === ownerNumber) {
-        console.log(`[mesh-main] Clearing owner session (${phoneNumber})...`);
-        try {
-            // Stop owner bot if running
-            if (MeshTech) {
-                MeshTech.logout().catch(() => {});
-                MeshTech.end();
-            }
-            
-            // Clear local owner session files
-            if (fs.existsSync(sessionDir)) {
-                fs.rmSync(sessionDir, { recursive: true, force: true });
-            }
-            
-            // Clear cloud backup for owner
-            const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
-            await SessionBackupDB.destroy({ where: { number: phoneNumber } });
-            
-            success = true;
-            
-            // Restart owner bot in pairing mode after a short delay
-            setTimeout(() => startMeshTech(), 2000);
-        } catch (e) {
-            console.error("[mesh-main] Failed to clear owner session:", e.message);
-            success = false;
+    console.log(`[mesh-main] Clearing session for number: ${phoneNumber} (Forcing complete wipe of owner and cloud backups)...`);
+    try {
+        // Stop owner bot if running
+        if (MeshTech) {
+            MeshTech.logout().catch(() => {});
+            MeshTech.end();
+            MeshTech = null;
         }
-    } else {
-        success = await manager.clear(phoneNumber);
+        
+        // Clear local owner session files
+        if (fs.existsSync(sessionDir)) {
+            fs.rmSync(sessionDir, { recursive: true, force: true });
+            console.log("🔥 Wiped local sessionDir successfully.");
+        }
+        
+        // Clear all cloud backups to prevent any restore loops
+        const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
+        await SessionBackupDB.destroy({ where: {} });
+        console.log("🔥 Wiped ALL cloud session backups from PostgreSQL.");
+
+        // Also clear multi-user session if exists
+        await manager.clear(phoneNumber);
+
+        success = true;
+        ownerPairingState = { status: 'idle', code: null, qr: null, error: null };
+        
+        // Restart owner bot in fresh pairing mode
+        setTimeout(() => startMeshTech(), 2000);
+    } catch (e) {
+        console.error("[mesh-main] Failed to clear session comprehensively:", e.message);
+        success = false;
     }
 
     return res.status(200).json({ success, message: success ? 'Session cleared successfully.' : 'Failed to clear session.' });
+});
+
+app.get("/api/force-nuclear-reset", async (req, res) => {
+    try {
+        console.log("💥 FORCE NUCLEAR RESET requested via HTTP endpoint...");
+        if (MeshTech) {
+            try { MeshTech.logout(); } catch (e) {}
+            try { MeshTech.end(); } catch (e) {}
+            MeshTech = null;
+        }
+        if (fs.existsSync(sessionDir)) {
+            fs.rmSync(sessionDir, { recursive: true, force: true });
+        }
+        const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
+        await SessionBackupDB.destroy({ where: {} });
+        ownerPairingState = { status: 'idle', code: null, qr: null, error: null };
+        
+        setTimeout(() => startMeshTech(), 1500);
+        return res.status(200).send("<html><body style='background:#111;color:#fff;font-family:sans-serif;text-align:center;padding-top:50px;'><h1>💥 Nuclear Reset Successful!</h1><p>All local session files and cloud database backups have been completely wiped.</p><p><a href='/' style='color:#0ff;font-size:20px;'>Click here to return to Pairing Dashboard</a></p></body></html>");
+    } catch (e) {
+        return res.status(500).json({ success: false, error: e.message });
+    }
 });
 
 app.post("/api/restore-session", async (req, res) => {
