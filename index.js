@@ -16,13 +16,14 @@ require("events").EventEmitter.defaultMaxListeners = 960;
         }
     }
     
-    if (missing || !fs.existsSync(path.join(__dirname, 'node_modules', 'sequelize')) || !fs.existsSync(path.join(__dirname, 'node_modules', 'sharp'))) {
-        console.log("📦 [KATABUMP/PANEL AUTO-FIX] Missing dependencies or sharp detected! Running full automated setup...");
+    const sharpBinaryPath = path.join(__dirname, 'node_modules', 'sharp', 'build', 'Release', 'sharp-linux-x64.node');
+    if (missing || !fs.existsSync(path.join(__dirname, 'node_modules', 'sequelize')) || !fs.existsSync(sharpBinaryPath)) {
+        console.log("📦 [KATABUMP/PANEL AUTO-FIX] Missing modules or sharp binary detected! Rebuilding...");
         try {
             execSync('npm install --omit=dev --no-audit --no-fund', { stdio: 'inherit', cwd: __dirname });
-            console.log("🔧 [KATABUMP/PANEL AUTO-FIX] Rebuilding sharp for Linux x64...");
-            execSync('npm install --platform=linux --arch=x64 sharp --force', { stdio: 'inherit', cwd: __dirname });
-            console.log("✅ [KATABUMP/PANEL AUTO-FIX] All modules and binaries configured successfully!");
+            console.log("🔧 [KATABUMP/PANEL AUTO-FIX] Forcing sharp rebuild for Linux x64...");
+            execSync('npm rebuild sharp --platform=linux --arch=x64', { stdio: 'inherit', cwd: __dirname });
+            console.log("✅ [KATABUMP/PANEL AUTO-FIX] Sharp binary built successfully!");
         } catch (e) {
             console.error("❌ [KATABUMP/PANEL AUTO-FIX] Setup warning:", e.message);
         }
