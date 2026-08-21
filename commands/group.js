@@ -1680,48 +1680,56 @@ gmd(
     }
 
     try {
+      const { downloadMediaMessage } = require("../meshtech/connection/serializer");
       let statusPayload = {};
 
       if (quotedMsg) {
-        if (quoted?.imageMessage) {
-          const caption = q || quoted.imageMessage.caption || "";
+        const msgType = Object.keys(quotedMsg)[0];
+        if (msgType === "imageMessage") {
+          const caption = q || quotedMsg.imageMessage.caption || "";
           const buffer = await downloadMediaMessage(
             { message: quotedMsg },
             "buffer",
             {},
+            { logger: console, remsg: true }
           );
+          if (!buffer) return reply("❌ Failed to download image media!");
           statusPayload = { 
             image: buffer,
             mimetype: "image/jpeg"
           };
           if (caption) statusPayload.caption = caption;
-        } else if (quoted?.videoMessage) {
-          const caption = q || quoted.videoMessage.caption || "";
+        } else if (msgType === "videoMessage") {
+          const caption = q || quotedMsg.videoMessage.caption || "";
           let buffer = await downloadMediaMessage(
             { message: quotedMsg },
             "buffer",
             {},
+            { logger: console, remsg: true }
           );
+          if (!buffer) return reply("❌ Failed to download video media!");
           buffer = await formatVideo(buffer);
           statusPayload = { 
             video: buffer,
             mimetype: "video/mp4"
           };
           if (caption) statusPayload.caption = caption;
-        } else if (quoted?.audioMessage) {
+        } else if (msgType === "audioMessage") {
           let buffer = await downloadMediaMessage(
             { message: quotedMsg },
             "buffer",
             {},
+            { logger: console, remsg: true }
           );
+          if (!buffer) return reply("❌ Failed to download audio media!");
           buffer = await formatAudio(buffer);
           statusPayload = { 
             audio: buffer,
             mimetype: "audio/mp4",
             ptt: true
           };
-        } else if (quoted?.conversation || quoted?.extendedTextMessage?.text) {
-          statusPayload.text = quoted.conversation || quoted.extendedTextMessage.text;
+        } else if (quotedMsg.conversation || quotedMsg.extendedTextMessage?.text) {
+          statusPayload.text = quotedMsg.conversation || quotedMsg.extendedTextMessage.text;
         } else {
           return reply("❌ Unsupported media type for group status.");
         }
@@ -1736,43 +1744,57 @@ gmd(
       // Get participants for the target group to create a group-specific status
       const metadata = await MeshTech.groupMetadata(from);
       const participants = metadata.participants || [];
+      const { getJidFromParticipant } = require("../meshtech/connection/groupEvents");
       const jidList = [];
 
       for (const p of participants) {
-        // Try id, pn, phoneNumber, or jid
-        const candidate = p.id || p.pn || p.phoneNumber || p.jid;
-        if (candidate) {
-          if (candidate.endsWith('@s.whatsapp.net')) {
-            jidList.push(candidate);
-          } else if (candidate.includes('@')) {
-            // Convert any other JID type if possible
-            const cleaned = candidate.split('@')[0] + '@s.whatsapp.net';
-            jidList.push(cleaned);
-          } else {
-            jidList.push(candidate + '@s.whatsapp.net');
+        const rawId = p.id || p.jid || p.pn || p.phoneNumber;
+        if (rawId) {
+          const resolved = await getJidFromParticipant(MeshTech, rawId, metadata);
+          // WhatsApp status@broadcast only accepts @s.whatsapp.net JIDs
+          if (resolved && resolved.endsWith('@s.whatsapp.net')) {
+            jidList.push(resolved);
           }
         }
       }
 
-      // Fallback: If metadata participants yielded nothing, use the sender as target or general group broadcast
       let finalJids = [...new Set(jidList)];
       if (finalJids.length === 0) {
-        // Fallback to sending to the group sender or owner
-        finalJids = [conText.sender || from.replace('@g.us', '@s.whatsapp.net')];
+        const senderJid = conText.sender || (conText.messageAuthor && conText.messageAuthor.endsWith('@s.whatsapp.net') ? conText.messageAuthor : null);
+        finalJids = senderJid ? [senderJid] : [];
       }
 
-      // If it's a text status, add background and font for better look
+      if (finalJids.length === 0) {
+        return reply("❌ Could not find any valid participants to show this status to.");
+      }
+
       if (statusPayload.text && !statusPayload.image && !statusPayload.video && !statusPayload.audio) {
         statusPayload.backgroundColor = "#075e54";
         statusPayload.font = 1;
       }
 
-      await MeshTech.sendMessage(
+      console.log(`[togroupstatus] Sending status to ${finalJids.length} participants in group ${from}`);
+      
+      const sent = await MeshTech.sendMessage(
         "status@broadcast",
         statusPayload,
         { statusJidList: finalJids }
       );
-      await react("✅");
+      
+      if (sent) {
+        await react("✅");
+        const lidCount = finalJids.filter(j => j.endsWith('@lid')).length;
+        const pnCount = finalJids.length - lidCount;
+        return reply(
+          `✅ *Group Status Posted!*\n\n` +
+          `👥 *Recipients:* ${finalJids.length}\n` +
+          `📱 *Phone Numbers:* ${pnCount}\n` +
+          `🆔 *Privacy IDs:* ${lidCount}\n\n` +
+          `_Note: Recipients must have the bot's number saved to see the status._`
+        );
+      } else {
+        throw new Error("WhatsApp server did not return a success confirmation.");
+      }
     } catch (error) {
       console.error("togroupstatus error:", error);
       await react("❌");

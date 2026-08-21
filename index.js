@@ -869,25 +869,27 @@ async function startMeshTech() {
         setupStatusHandlers(MeshTech);
         setupGroupEventsListeners(MeshTech);
 
-        // Session Backup Heartbeat: Backup to cloud every 15 minutes to ensure zero-downtime recovery
-        setInterval(async () => {
-            if (MeshTech?.user?.id) {
-                const ownerNumber = MeshTech.user.id.split(":")[0];
-                try {
-                    const AdmZip = require('adm-zip');
-                    const zip = new AdmZip();
-                    if (fs.existsSync(sessionDir)) {
-                        zip.addLocalFolder(sessionDir);
-                        const buffer = zip.toBuffer();
-                        const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
-                        await SessionBackupDB.upsert({ number: ownerNumber, zipData: buffer });
-                        // console.log(`[mesh-heartbeat] Cloud backup synced for ${ownerNumber}`);
+        // Session Backup Heartbeat (Global singleton to prevent interval explosion)
+        if (!global._meshHeartbeatInterval) {
+            global._meshHeartbeatInterval = setInterval(async () => {
+                if (global._activeMeshTechSocket?.user?.id) {
+                    const ownerNumber = global._activeMeshTechSocket.user.id.split(":")[0];
+                    try {
+                        const AdmZip = require('adm-zip');
+                        const zip = new AdmZip();
+                        if (fs.existsSync(sessionDir)) {
+                            zip.addLocalFolder(sessionDir);
+                            const buffer = zip.toBuffer();
+                            const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
+                            await SessionBackupDB.upsert({ number: ownerNumber, zipData: buffer });
+                        }
+                    } catch (e) {
+                        console.error("[mesh-heartbeat] Cloud backup failed:", e.message);
                     }
-                } catch (e) {
-                    console.error("[mesh-heartbeat] Cloud backup failed:", e.message);
                 }
-            }
-        }, 15 * 60 * 1000);
+            }, 15 * 60 * 1000);
+        }
+        global._activeMeshTechSocket = MeshTech;
 
         // Setup command handler for the new socket
         setupCommandHandler(MeshTech);

@@ -74,7 +74,7 @@ gmd(
 
             await reply("✅ Update Complete! Bot is Restarting...");
             setTimeout(() => {
-                process.exit(0);
+                process.exit(1);
             }, 2000);
         } catch (error) {
             console.error("Update error:", error);

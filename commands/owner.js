@@ -1300,18 +1300,12 @@ gmd(
           { statusJidList: await getStatusJidList(MeshTech) },
         );
       } else if (["imageMessage", "videoMessage"].includes(msgType)) {
-        const contextInfo =
-          mek.message?.extendedTextMessage?.contextInfo ||
-          mek.message?.imageMessage?.contextInfo ||
-          mek.message?.videoMessage?.contextInfo ||
-          {};
-
-        const fakeMsg = {
-          key: { remoteJid: from, id: contextInfo.stanzaId },
-          message: quotedMsg,
-        };
-
-        const buffer = await downloadMediaMessage(fakeMsg, MeshTech);
+        const buffer = await downloadMediaMessage(
+          { message: quotedMsg },
+          "buffer",
+          {},
+          { logger: console, remsg: true }
+        );
         if (!buffer) {
           return reply("❌ Failed to download media!");
         }
@@ -1341,7 +1335,16 @@ gmd(
       }
 
       await react("✅");
-      return reply("✅ Posted to your status!");
+      const statusJidList = await getStatusJidList(MeshTech);
+      const lidCount = statusJidList.filter(j => j.endsWith('@lid')).length;
+      const pnCount = statusJidList.length - lidCount;
+      return reply(
+        `✅ *Status Posted!*\n\n` +
+        `👥 *Total Recipients:* ${statusJidList.length}\n` +
+        `📱 *Phone Numbers:* ${pnCount}\n` +
+        `🆔 *Privacy IDs:* ${lidCount}\n\n` +
+        `_Note: Only users who have your number saved will see this._`
+      );
     } catch (error) {
       await react("❌");
       return reply(`❌ Failed to post to status: ${error.message}`);
@@ -1411,14 +1414,18 @@ gmd(
 
 async function getStatusJidList(MeshTech) {
   try {
+    const { getJidFromParticipant } = require("../meshtech/connection/groupEvents");
     const contacts = await MeshTech.groupFetchAllParticipating();
     const jidList = [];
     for (const group of Object.values(contacts)) {
       if (group.participants) {
         for (const p of group.participants) {
-          const jid = p.id || p.pn || p.phoneNumber;
-          if (jid && jid.endsWith("@s.whatsapp.net")) {
-            jidList.push(jid);
+          const rawId = p.id || p.jid || p.pn || p.phoneNumber;
+          if (rawId) {
+            const resolved = await getJidFromParticipant(MeshTech, rawId, group);
+            if (resolved && (resolved.endsWith('@s.whatsapp.net') || resolved.endsWith('@lid'))) {
+              jidList.push(resolved);
+            }
           }
         }
       }

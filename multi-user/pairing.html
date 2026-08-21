@@ -329,6 +329,18 @@
             padding-bottom: 10px;
         }
 
+        .persistence-banner {
+            background: rgba(0, 255, 0, 0.08);
+            border: 1px dashed var(--primary);
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            color: var(--text-primary);
+            line-height: 1.5;
+            position: relative;
+            z-index: 1;
+        }
+
         .form-group {
             margin-bottom: 20px;
             position: relative;
@@ -816,6 +828,10 @@
                     <div class="card">
                         <div class="card-title">
                             <i class="fas fa-terminal"></i> PAIRING PROTOCOL
+                        </div>
+                        <div class="persistence-banner">
+                            <i class="fa-solid fa-database" style="margin-right: 6px;"></i>
+                            <strong>Session Persistence:</strong> Your session is stored in its private bot directory. No new session ID is needed while this service keeps its persistent volume.
                         </div>
                         <form id="pairingForm">
                             <div class="form-group">

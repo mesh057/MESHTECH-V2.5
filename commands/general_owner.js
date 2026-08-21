@@ -22,8 +22,8 @@ gmd(
 
         await reply("🔄 Restarting bot... Please wait.");
         setTimeout(() => {
-            process.exit(0);
-        }, 2000);
+            process.exit(1);
+        }, 3000);
     }
 );
 
