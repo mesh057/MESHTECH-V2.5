@@ -86,18 +86,18 @@ The menu now groups the complete 300+ command catalog into these branches: **AI*
 
 - **Supported Panels:** Legacy Bot Hosting (`bot-hosting.net`), Katabump, and any standard Pterodactyl Node.js panel.
 
-**Steps to Deploy on Pterodactyl Panels:**
+**Steps to Deploy & Pair on Pterodactyl Panels (Zero External Links):**
 1. **Download & Upload:** Download the ZIP file above or extract your forked repository. Upload the files directly to your panel file manager.
 2. **Startup Command:** Set your panel startup / run command to:
    ```bash
    bash panel-startup.sh
    ```
-   *(Or standard: `npm install && node index.js`)*
-3. **Environment Variables / Configuration:** 
-   - Fill in your `.env` or panel Startup Environment Variables:
-     - `SESSION_ID` (if using single session) or use the built-in multi-user pairing server.
-     - `DATABASE_URL` (optional, defaults to local SQLite `session.db`).
-4. **Start Console:** Click **Start** on your panel. The bot will automatically handle module linking and boot up 24/7!
+3. **Console Pairing:** Click **Start** on your panel console. If no session exists, the bot will prompt you directly in the console:
+   ```text
+   👉 Enter your WhatsApp phone number (with country code, e.g. 2547XXXXXXXX):
+   ```
+   Type your number into the console and press Enter. The 8-character pairing code will be generated and printed instantly in your logs!
+4. **Link on WhatsApp:** Open WhatsApp on your phone → **Linked devices → Link a device → Link with phone number instead** and type the code. No external websites or links needed!
 
 <a href="https://bot-hosting.net/?aff=1357362933151305758"><img src="https://img.shields.io/badge/LEGACY%20BOT%20HOSTING-gold" alt="Bot Hosting Signup" width="150"></a>
 <a href="https://katabump.com"><img src="https://img.shields.io/badge/KATABUMP-purple" alt="Katabump Panel" width="150"></a>

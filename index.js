@@ -832,14 +832,40 @@ async function startMeshTech(options = {}) {
 
         let pairingRequested = false;
         let pairingInFlight = false;
+        let resolvedPairingNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || "").replace(/\D/g, "");
+
+        const promptForPhoneNumber = () => {
+            return new Promise((resolve) => {
+                if (/^\d{8,15}$/.test(resolvedPairingNumber)) {
+                    return resolve(resolvedPairingNumber);
+                }
+                if (state.creds.registered) {
+                    return resolve("");
+                }
+                const readline = require('readline').createInterface({
+                    input: process.stdin,
+                    output: process.stdout
+                });
+                console.log("\n==================================================");
+                console.log("📱 MESH-TECH MD CONSOLE-NATIVE PAIRING");
+                console.log("==================================================");
+                readline.question("👉 Enter your WhatsApp phone number (with country code, e.g. 2547XXXXXXXX): ", (answer) => {
+                    readline.close();
+                    const cleaned = String(answer || "").replace(/\D/g, "");
+                    resolvedPairingNumber = cleaned;
+                    resolve(cleaned);
+                });
+            });
+        };
+
         const requestPairingCode = async () => {
             if (pairingRequested || pairingInFlight || state.creds.registered || process.env.MESH_PAIRING_MODE === "qr") return;
-            const phoneNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || "").replace(/\D/g, "");
+            
+            const phoneNumber = await promptForPhoneNumber();
             if (!/^\d{8,15}$/.test(phoneNumber)) {
-                console.error("PAIRING_ERROR Invalid phone number. Use country code plus number, digits only, with no + sign.");
-                pairingRequested = true;
-                ownerPairingState.status = 'error';
-                ownerPairingState.error = 'Invalid phone number format.';
+                if (phoneNumber !== "") {
+                    console.error("❌ PAIRING_ERROR: Invalid phone number format. Use digits only with country code.");
+                }
                 return;
             }
             pairingInFlight = true;
