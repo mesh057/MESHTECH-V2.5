@@ -743,9 +743,13 @@ async function startMeshTech() {
                 if (ownerNumber) {
                     backup = await SessionBackupDB.findOne({ where: { number: ownerNumber } });
                 }
+                if (!backup) {
+                    // Fallback to the most recent session backup in PostgreSQL
+                    backup = await SessionBackupDB.findOne({ order: [['updatedAt', 'DESC']] });
+                }
                 
                 if (backup && backup.zipData) {
-                    console.log(`🔄 Restoring main owner session (${backup.number}) from cloud database...`);
+                    console.log(`🔄 Restoring main owner session (${backup.number}) from cloud PostgreSQL database...`);
                     const AdmZip = require('adm-zip');
                     const zip = new AdmZip(backup.zipData);
                     fs.mkdirSync(sessionDir, { recursive: true });
