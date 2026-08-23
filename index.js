@@ -735,7 +735,7 @@ app.post("/api/payments/courtneytech", async (req, res) => {
 });
 
 if (embeddedHttpServerEnabled) {
-    app.listen(PORT, () => console.log(`✅ Unified MESH-TECH MD Server Running on Port: ${PORT}`));
+    app.listen(PORT, "0.0.0.0", () => console.log(`✅ Unified MESH-TECH MD Server Running on 0.0.0.0:${PORT}`));
 } else {
     console.log("ℹ️ Embedded HTTP server disabled for isolated multi-session bot process.");
 }
