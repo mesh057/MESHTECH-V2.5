@@ -25,18 +25,45 @@ gmd(
     await react("⏳");
 
     try {
-      const res = await axios.get(`${MeshTechApi}/api/s/bible`, {
-        params: { query: verse },
-      });
+      let r;
 
-      if (!res.data?.success || !res.data?.result) {
+      // Keep the configured MeshTech endpoint as the primary provider, but use
+      // a public no-key fallback when that endpoint is unavailable or returns
+      // 404. This prevents a provider outage from breaking .bible entirely.
+      try {
+        const res = await axios.get(`${MeshTechApi}/api/s/bible`, {
+          params: { query: verse },
+          timeout: 15000,
+        });
+        if (res.data?.success && res.data?.result) {
+          r = res.data.result;
+        }
+      } catch (primaryError) {
+        console.warn(`Primary Bible API unavailable (${primaryError.response?.status || primaryError.message}); using fallback.`);
+      }
+
+      if (!r) {
+        const fallback = await axios.get(
+          `https://bible-api.com/${encodeURIComponent(verse)}`,
+          { timeout: 15000 },
+        );
+        const data = fallback.data;
+        if (!data?.text) throw new Error("Bible verse was not found.");
+        r = {
+          verse: data.reference || verse,
+          versesCount: Array.isArray(data.verses) ? data.verses.length : 1,
+          data: data.text.trim(),
+        };
+      } 
+
+      if (!r?.data) {
         await react("❌");
         return reply(
           "Failed to fetch Bible verse. Please check the reference format.",
         );
-      }
+      } 
 
-      const r = res.data.result;
+      
 
       let txt = `*${botName} BIBLE*\n\n`;
       txt += `📖 *Verse:* ${r.verse || verse}\n`;
