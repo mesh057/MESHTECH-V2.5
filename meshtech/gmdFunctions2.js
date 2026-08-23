@@ -624,7 +624,7 @@ function isIdentityQuestion(query) {
 
 async function getAIResponse(query) {
 	    if (botRequestPatterns.some(p => typeof query === 'string' && p.test(query))) {
-	        return 'To get your own MESH-TECH MD WhatsApp bot up and running, please visit our official pairing and management portal:\n\n🔗 https://meshtech-v25-production.up.railway.app/\n\nSimply enter your WhatsApp number to generate your pairing code instantly!';
+	        return 'To get your own MESH-TECH MD WhatsApp bot up and running, please visit our official pairing portal:\n\n🔗 https://meshtechmd.up.railway.app/pairing.html\n\nOpen the link, enter your WhatsApp number with country code, and generate your pairing code. Then use WhatsApp → Linked devices → Link a device → Link with phone number instead.';
 	    }
 
 	    if (isIdentityQuestion(query)) {
