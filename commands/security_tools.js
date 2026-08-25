@@ -3,9 +3,9 @@
  * Inspired by Silent Wolf toolkit
  */
 
-import axios from 'axios';
+const axios = require('axios');
 
-export default {
+module.exports = {
   name: "security",
   commands: ["ipinfo", "whois", "dnslookup", "urlscan"],
   category: "Security",

@@ -1,6 +1,6 @@
 const fs = require('fs-extra');
 const path = require('path');
-const { evt, commands } = require('../gmdCmds');
+const { evt, commands, gmd } = require('../gmdCmds');
 const { standardizeJid } = require('./serializer');
 const { getGroupMetadata, getLidMapping } = require('./groupCache');
 
@@ -26,7 +26,26 @@ const loadPlugins = (pluginsPath) => {
             const ext = path.extname(fileName).toLowerCase();
             if (_pluginExts.has(ext)) {
                 try {
-                    require(path.join(pluginsPath, fileName));
+                    const loaded = require(path.join(pluginsPath, fileName));
+                    const legacy = loaded?.default || loaded;
+                    if (legacy && Array.isArray(legacy.commands) && typeof legacy.execute === 'function') {
+                        for (const pattern of legacy.commands) {
+                            gmd({
+                                pattern,
+                                aliases: [],
+                                category: legacy.category || 'general',
+                                description: legacy.description || '',
+                            }, async (from, MeshTech, context) => {
+                                const message = context?.mek || {};
+                                const text = context?.q || context?.body || '';
+                                return legacy.execute(
+                                    { chat: from, key: message.key, sender: context?.sender, ...message },
+                                    { client: MeshTech, text, command: pattern, reply: context.reply }
+                                );
+                            });
+                        }
+                        console.log(`✅ Loaded legacy plugin ${fileName} (${legacy.commands.length} commands)`);
+                    }
                 } catch (e) {
                     console.error(`Failed to load ${fileName}: ${e.message}`);
                 }

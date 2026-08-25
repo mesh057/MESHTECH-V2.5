@@ -3,9 +3,9 @@
  * Powered by ruhend-scraper (Silent Wolf style)
  */
 
-import { ytmp3, ytmp4, tiktok, instagram, facebook } from 'ruhend-scraper';
+const { ytmp3, ytmp4, tiktok, instagram, facebook } = require('ruhend-scraper');
 
-export default {
+module.exports = {
   name: "downloader",
   commands: ["tiktok", "tt", "instagram", "ig", "facebook", "fb", "ytmp3", "ytmp4"],
   category: "Download",
