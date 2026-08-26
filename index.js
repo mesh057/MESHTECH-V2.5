@@ -200,6 +200,23 @@ logger.level = "silent";
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// 🚀 Start health server immediately for Railway/Render
+if (embeddedHttpServerEnabled) {
+    app.listen(PORT, "0.0.0.0", () => console.log(`✅ Unified MESH-TECH MD Server Running on 0.0.0.0:${PORT}`));
+}
+
+app.get("/health", (req, res) => {
+    const isOwnerConnected = Boolean(MeshTech?.user?.id);
+    const ownerState = ownerPairingState?.status || 'unknown';
+    return res.status(200).json({
+        status: isOwnerConnected ? 'healthy' : (ownerState === 'pairing' ? 'pairing' : 'degraded'),
+        botName: 'MESH-TECH MD',
+        uptime: process.uptime(),
+        ownerWhatsApp: isOwnerConnected ? 'connected' : ownerState,
+        database: "connected"
+    });
+});
+
 // Priority Routes for Pairing Dashboard
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "multi-user", "pairing.html")));
 app.get("/dashboard", (req, res) => res.sendFile(path.join(__dirname, "multi-user", "dashboard.html")));
@@ -365,20 +382,13 @@ function writeRawCredentials(authDir, rawJson) {
   }
 }
 
-app.get("/health", (req, res) => {
+// Detailed health route moved here
+app.get("/health/details", (req, res) => {
     const active = manager.list();
     const childConnected = active.filter((item) => item.status === 'running').length;
     const isOwnerConnected = Boolean(MeshTech?.user?.id);
     const ownerState = ownerPairingState?.status || 'unknown';
     
-    // Automated Health Check & Self-Recovery Hook
-    if (!isOwnerConnected && ownerState === 'connected' && typeof startMeshTech === 'function') {
-        console.log("⚠️ Health check detected silent disconnect on owner socket. Triggering auto-recovery...");
-        setTimeout(() => {
-            try { startMeshTech(); } catch (e) { console.error("Auto-recovery trigger failed:", e.message); }
-        }, 1000);
-    }
-
     return res.status(200).json({
         status: isOwnerConnected ? 'healthy' : (ownerState === 'pairing' ? 'pairing' : 'degraded'),
         botName: 'MESH-TECH MD',
@@ -734,9 +744,8 @@ app.post("/api/payments/courtneytech", async (req, res) => {
     }
 });
 
-if (embeddedHttpServerEnabled) {
-    app.listen(PORT, "0.0.0.0", () => console.log(`✅ Unified MESH-TECH MD Server Running on 0.0.0.0:${PORT}`));
-} else {
+// Server already started at the top
+if (!embeddedHttpServerEnabled) {
     console.log("ℹ️ Embedded HTTP server disabled for isolated multi-session bot process.");
 }
 

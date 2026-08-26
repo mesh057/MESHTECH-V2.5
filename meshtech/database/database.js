@@ -51,6 +51,15 @@ class DatabaseManager {
                         ssl: { require: true, rejectUnauthorized: false },
                     },
                     logging: false,
+                    pool: {
+                        max: 5,
+                        min: 0,
+                        acquire: 15000,
+                        idle: 10000,
+                    },
+                    retry: {
+                        max: 3,
+                    },
                 });
             }
         }
