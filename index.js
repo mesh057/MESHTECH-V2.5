@@ -1099,6 +1099,8 @@ async function startMeshTech(options = {}) {
                     getAllSettings(),
                     new Promise(resolve => setTimeout(() => resolve(DEFAULT_SETTINGS), 5000))
                 ]).catch(() => DEFAULT_SETTINGS);
+                const effectiveSettings = { ...DEFAULT_SETTINGS, ...(s || {}) };
+                const ownerJid = standardizeJid(MeshTech?.user?.id) || MeshTech?.user?.id;
 
                 console.log("🟢 MESH-TECH MD connection is fully active and stable.");
                 
@@ -1121,7 +1123,7 @@ async function startMeshTech(options = {}) {
                     }
                 })();
 
-                setTimeout(async () => {
+                (async () => {
                     try {
                         if (!MeshTech?.user?.id) return;
                         const activeOwnerNumber = MeshTech.user.id.split(":")[0];
@@ -1130,10 +1132,13 @@ async function startMeshTech(options = {}) {
                         ).length;
                         console.log("💜 Connected to Whatsapp, Active!");
 
-                        if (s.STARTING_MESSAGE === "true") {
+                        // The connection notice is enabled by default. Only an explicit
+                        // false value disables it, so an incomplete/slow settings row cannot
+                        // make a healthy paired session appear silent.
+                        if (String(effectiveSettings.STARTING_MESSAGE).toLowerCase() !== "false") {
                             const d = DEFAULT_SETTINGS;
                             const md =
-                                s.MODE === "public" ? "public" : "private";
+                                String(effectiveSettings.MODE).toLowerCase() === "public" ? "public" : "private";
 	                        const connectionMsg = `
 ╭━━━〔 *MESH TECH MD V2.5* 〕━━━┈⊷
 ┃ ✅ *CONNECTION SUCCESSFUL*
@@ -1153,8 +1158,8 @@ async function startMeshTech(options = {}) {
 ┃ 📢 *Channel:* ${MESHTECH_CHANNEL_URL}
 ┃ 👥 *Community:* ${MESHTECH_GROUP_URL}
 ╰━━━━━━━━━━━━━━━━━━━━━━━━━━┈⊷`;
-		try {
-                    await sendButtons(MeshTech, MeshTech.user.id, {
+                        try {
+                    await sendButtons(MeshTech, ownerJid, {
                         image: { url: MESHTECH_LOGO_URL },
                         text: connectionMsg,
                         buttons: [
@@ -1165,17 +1170,18 @@ async function startMeshTech(options = {}) {
                 url: MESHTECH_PAIRING_URL,
             }),
         }] : []),
-        {
+                        {
             name: "cta_url",
             buttonParamsJson: JSON.stringify({
                 display_text: "📢 Updates",
                 url: MESHTECH_CHANNEL_URL,
             }),
+                        },
                         ],
                     });
                 } catch (sendErr) {
                     console.error("Failed to send fancy connection message, sending plain text:", sendErr.message);
-                    await MeshTech.sendMessage(MeshTech.user.id, { text: connectionMsg });
+                    await MeshTech.sendMessage(ownerJid, { text: connectionMsg });
                 }
 
                             
@@ -1183,7 +1189,7 @@ async function startMeshTech(options = {}) {
                     } catch (err) {
                         console.error("Post-connection setup error:", err);
                     }
-                }, 5000);
+                })();
             },
         });
 
