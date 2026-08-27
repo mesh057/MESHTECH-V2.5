@@ -13,6 +13,7 @@ module.exports = {
     SESSION_DB_FILE: process.env.SESSION_DB_FILE,
     DATA_FILE: process.env.DATA_FILE || process.env.MESH_DATA_FILE,
     MESSAGE_STORE_FILE: process.env.MESSAGE_STORE_FILE,
+    OWNER_NUMBER: process.env.OWNER_NUMBER || "254746844168",
 };
 
 let fileName = require.resolve(__filename);

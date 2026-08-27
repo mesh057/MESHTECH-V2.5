@@ -189,7 +189,17 @@ async function resolveMeshTechChannel(MeshTech) {
 
 const { sendButtons } = require("mesh-btns");
 const { setSetting } = require("./meshtech/database/settings");
-const { SESSION_ID: sessionId } = config;
+const { SESSION_ID: sessionId, OWNER_NUMBER: ownerNumber } = config;
+
+// Helper to identify if a number is the bot owner
+const isOwner = (number) => {
+    if (!number) return false;
+    const cleanNumber = String(number).replace(/\D/g, "");
+    const cleanOwner = String(ownerNumber).replace(/\D/g, "");
+    const cleanPairing = String(process.env.MESH_PAIRING_PHONE_NUMBER || "").replace(/\D/g, "");
+    return cleanNumber === cleanOwner || (cleanPairing && cleanNumber === cleanPairing);
+};
+
 const PORT = process.env.PORT || 8080;
 const embeddedHttpServerEnabled = process.env.MESH_DISABLE_HTTP_SERVER !== "true";
 const app = express();
@@ -213,7 +223,36 @@ app.get("/health", (req, res) => {
         botName: 'MESH-TECH MD',
         uptime: process.uptime(),
         ownerWhatsApp: isOwnerConnected ? 'connected' : ownerState,
-        database: "connected"
+        database: "check_details_route"
+    });
+});
+
+app.get("/health/details", async (req, res) => {
+    const { DATABASE } = require("./meshtech/database/database");
+    let dbStatus = "unknown";
+    try {
+        await DATABASE.authenticate();
+        dbStatus = "connected";
+    } catch (e) {
+        dbStatus = `error: ${e.message}`;
+    }
+
+    const active = manager.list();
+    const childConnected = active.filter((item) => item.status === 'running').length;
+    const isOwnerConnected = Boolean(MeshTech?.user?.id);
+    const ownerState = ownerPairingState?.status || 'unknown';
+    
+    return res.status(200).json({
+        status: isOwnerConnected ? 'healthy' : (ownerState === 'pairing' ? 'pairing' : 'degraded'),
+        botName: 'MESH-TECH MD',
+        multiUser: true,
+        database: dbStatus,
+        activeSessions: active.length + (isOwnerConnected ? 1 : 0),
+        connectedSessions: childConnected + (isOwnerConnected ? 1 : 0),
+        ownerWhatsApp: isOwnerConnected ? 'connected' : ownerState,
+        persistentAuth: manager.usingPersistentPath,
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
     });
 });
 
@@ -502,9 +541,8 @@ app.post("/api/request-pairing", async (req, res) => {
     if (!allowed(ip)) return res.status(429).json({ success: false, error: 'Too many requests. Try again later.' });
     const data = req.body || {};
     const phoneNumber = String(data.phoneNumber || '').replace(/\D/g, '');
-    const ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.OWNER_NUMBER || '').replace(/\D/g, '');
 
-    if (phoneNumber && phoneNumber === ownerNumber) {
+    if (phoneNumber && isOwner(phoneNumber)) {
         console.log(`[mesh-main] Owner pairing requested for ${phoneNumber}...`);
         if (data.force === true) {
             try {
@@ -560,9 +598,7 @@ app.post("/api/clear-session", async (req, res) => {
         return res.status(403).json({ success: false, error: 'Unauthorized. You can only delete your own saved session.' });
     }
 
-    const configuredOwner = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID || '').replace(/\D/g, '');
-    const activeOwner = String(MeshTech?.user?.id || '').split(':')[0].replace(/\D/g, '');
-    const isOwnerSession = phoneNumber === configuredOwner || (activeOwner && phoneNumber === activeOwner);
+    const isOwnerSession = isOwner(phoneNumber);
 
     try {
         if (isOwnerSession) {
@@ -676,9 +712,8 @@ let ownerPairingState = { status: 'idle', code: null, qr: null, error: null };
 app.get("/api/pairing-code", (req, res) => {
     const number = req.query.phoneNumber;
     const token = req.query.accessToken;
-    const ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.OWNER_NUMBER || '').replace(/\D/g, '');
 
-    if (number && number === ownerNumber && token === 'owner-access') {
+    if (number && isOwner(number) && token === 'owner-access') {
         return res.status(200).json({ 
             success: true, 
             status: ownerPairingState.status, 
@@ -1059,7 +1094,12 @@ async function startMeshTech(options = {}) {
                 ownerPairingState.qr = null;
                 ownerPairingState.error = null;
                 
-                const s = await getAllSettings();
+                // Get settings with a timeout to prevent hanging
+                const s = await Promise.race([
+                    getAllSettings(),
+                    new Promise(resolve => setTimeout(() => resolve(DEFAULT_SETTINGS), 5000))
+                ]).catch(() => DEFAULT_SETTINGS);
+
                 console.log("🟢 MESH-TECH MD connection is fully active and stable.");
                 
                 // Background task to avoid blocking connection
@@ -1113,11 +1153,11 @@ async function startMeshTech(options = {}) {
 ┃ 📢 *Channel:* ${MESHTECH_CHANNEL_URL}
 ┃ 👥 *Community:* ${MESHTECH_GROUP_URL}
 ╰━━━━━━━━━━━━━━━━━━━━━━━━━━┈⊷`;
-	await sendButtons(MeshTech, MeshTech.user.id, {
-	    image: { url: MESHTECH_LOGO_URL },
-	    text: connectionMsg,
-
-                    buttons: [
+		try {
+                    await sendButtons(MeshTech, MeshTech.user.id, {
+                        image: { url: MESHTECH_LOGO_URL },
+                        text: connectionMsg,
+                        buttons: [
         ...(MESHTECH_PAIRING_URL ? [{
             name: "cta_url",
             buttonParamsJson: JSON.stringify({
@@ -1131,9 +1171,12 @@ async function startMeshTech(options = {}) {
                 display_text: "📢 Updates",
                 url: MESHTECH_CHANNEL_URL,
             }),
-        },
-    ],
-});
+                        ],
+                    });
+                } catch (sendErr) {
+                    console.error("Failed to send fancy connection message, sending plain text:", sendErr.message);
+                    await MeshTech.sendMessage(MeshTech.user.id, { text: connectionMsg });
+                }
 
                             
                         }

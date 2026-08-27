@@ -42,23 +42,36 @@ class DatabaseManager {
                     },
                 });
             } else {
-                DatabaseManager.instance = new Sequelize(DATABASE_URL, {
+                // Ensure DATABASE_URL is in a format Sequelize likes (postgresql://)
+                const normalizedUrl = DATABASE_URL.replace(/^postgres:\/\//, 'postgresql://');
+                
+                DatabaseManager.instance = new Sequelize(normalizedUrl, {
                     dialect: "postgres",
-                    ssl: true,
                     protocol: "postgres",
                     dialectOptions: {
-                        // native: true, // Removed to avoid dependency on pg-native
-                        ssl: { require: true, rejectUnauthorized: false },
+                        ssl: {
+                            require: true,
+                            rejectUnauthorized: false
+                        }
                     },
                     logging: false,
                     pool: {
                         max: 5,
                         min: 0,
-                        acquire: 15000,
+                        acquire: 30000,
                         idle: 10000,
                     },
                     retry: {
-                        max: 3,
+                        max: 5,
+                        match: [
+                            /SequelizeConnectionError/,
+                            /SequelizeConnectionRefusedError/,
+                            /SequelizeHostNotFoundError/,
+                            /SequelizeHostNotReachableError/,
+                            /SequelizeInvalidConnectionError/,
+                            /SequelizeConnectionTimedOutError/,
+                            /TimeoutError/
+                        ]
                     },
                 });
             }
