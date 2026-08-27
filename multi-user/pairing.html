@@ -1486,19 +1486,21 @@
             }
         });
 
-        document.getElementById('qrCopyBtn').addEventListener('click', () => {
-            if (currentCode) {
-                navigator.clipboard.writeText(currentCode).then(() => {
-                    const btn = document.getElementById('qrCopyBtn');
-                    btn.textContent = '✓ COPIED!';
-                    btn.classList.add('copied');
-                    setTimeout(() => {
-                        btn.textContent = '📋 COPY CODE';
-                        btn.classList.remove('copied');
-                    }, 2000);
-                });
-            }
-        });
+        const qrCopyBtn = document.getElementById('qrCopyBtn');
+        if (qrCopyBtn) {
+            qrCopyBtn.addEventListener('click', () => {
+                if (currentCode) {
+                    navigator.clipboard.writeText(currentCode).then(() => {
+                        qrCopyBtn.textContent = '✓ COPIED!';
+                        qrCopyBtn.classList.add('copied');
+                        setTimeout(() => {
+                            qrCopyBtn.textContent = '📋 COPY CODE';
+                            qrCopyBtn.classList.remove('copied');
+                        }, 2000);
+                    });
+                }
+            });
+        }
 
         // Terminal typing effect
         const terminalHeader = document.querySelector('.terminal-header');

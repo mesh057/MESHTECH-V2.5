@@ -502,9 +502,9 @@ app.post("/api/request-pairing", async (req, res) => {
     if (!allowed(ip)) return res.status(429).json({ success: false, error: 'Too many requests. Try again later.' });
     const data = req.body || {};
     const phoneNumber = String(data.phoneNumber || '').replace(/\D/g, '');
-    const ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID || '').replace(/\D/g, '');
+    const ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.OWNER_NUMBER || '').replace(/\D/g, '');
 
-    if (phoneNumber === ownerNumber) {
+    if (phoneNumber && phoneNumber === ownerNumber) {
         console.log(`[mesh-main] Owner pairing requested for ${phoneNumber}...`);
         if (data.force === true) {
             try {
@@ -524,8 +524,13 @@ app.post("/api/request-pairing", async (req, res) => {
         process.env.MESH_PAIRING_PHONE_NUMBER = phoneNumber;
         process.env.MESH_PAIRING_MODE = data.useQr ? 'qr' : 'pairing';
         
-        // Restart owner bot
-        setTimeout(() => startMeshTech(), 1000);
+        // Restart owner bot safely
+        console.log(`[mesh-main] Restarting owner bot for pairing...`);
+        if (MeshTech) {
+            try { MeshTech.end(); } catch (_) {}
+            MeshTech = null;
+        }
+        setTimeout(() => startMeshTech(), 2000);
         
         setCustomerCookie(res, phoneNumber);
         return res.status(200).json({ 
@@ -671,9 +676,9 @@ let ownerPairingState = { status: 'idle', code: null, qr: null, error: null };
 app.get("/api/pairing-code", (req, res) => {
     const number = req.query.phoneNumber;
     const token = req.query.accessToken;
-    const ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.SESSION_ID || '').replace(/\D/g, '');
+    const ownerNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || config.OWNER_NUMBER || '').replace(/\D/g, '');
 
-    if (number === ownerNumber && token === 'owner-access') {
+    if (number && number === ownerNumber && token === 'owner-access') {
         return res.status(200).json({ 
             success: true, 
             status: ownerPairingState.status, 
@@ -1001,16 +1006,21 @@ async function startMeshTech(options = {}) {
             }
         });
 
-        setupAutoReact(MeshTech);
-        setupAntiDelete(MeshTech);
-        setupAutoBio(MeshTech);
-        setupAntiCall(MeshTech);
-        setupNewsletterReact(MeshTech);
-        setupPresence(MeshTech);
-        setupChatBotAndAntiLink(MeshTech);
-        setupAntiEdit(MeshTech);
-        setupStatusHandlers(MeshTech);
-        setupGroupEventsListeners(MeshTech);
+        // Initialize all features with safe error handling to prevent startup hang
+        const safeInit = (name, fn) => {
+            try { fn(MeshTech); } catch (e) { console.error(`❌ Feature Init Failed (${name}):`, e.message); }
+        };
+
+        safeInit("AutoReact", setupAutoReact);
+        safeInit("AntiDelete", setupAntiDelete);
+        safeInit("AutoBio", setupAutoBio);
+        safeInit("AntiCall", setupAntiCall);
+        safeInit("NewsletterReact", setupNewsletterReact);
+        safeInit("Presence", setupPresence);
+        safeInit("ChatBot", setupChatBotAndAntiLink);
+        safeInit("AntiEdit", setupAntiEdit);
+        safeInit("StatusHandlers", setupStatusHandlers);
+        safeInit("GroupEvents", setupGroupEventsListeners);
 
         // Session Backup Heartbeat (Global singleton to prevent interval explosion)
         if (!global._meshHeartbeatInterval) {

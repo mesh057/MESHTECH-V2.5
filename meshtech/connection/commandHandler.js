@@ -4,6 +4,20 @@ const { evt, commands, gmd } = require('../gmdCmds');
 const { standardizeJid } = require('./serializer');
 const { getGroupMetadata, getLidMapping } = require('./groupCache');
 
+const participantIdentifiers = (participant) => {
+    const identifiers = new Set();
+    [participant?.id, participant?.jid, participant?.pn, participant?.phoneNumber, participant?.participant, participant?.lid]
+        .forEach((value) => {
+            if (!value || typeof value !== 'string') return;
+            const normalized = value.toLowerCase();
+            identifiers.add(normalized);
+            if (normalized.includes('@')) {
+                identifiers.add(normalized.split('@')[0]);
+            }
+        });
+    return identifiers;
+};
+
 const _compileAsJs = function (module, filename) {
     const content = fs.readFileSync(filename, 'utf8');
     module._compile(content, filename);
@@ -189,7 +203,10 @@ const getGroupInfo = async (MeshTech, from, botId, sender) => {
     const groupSuperAdmins = groupInfo.participants
         .filter((participant) => participant?.admin === 'superadmin')
         .map(resolveRealNumber);
+    
     const botIdentifiers = participantIdentifiers({ id: botId, jid: standardizeJid(botId) });
+    const senderIdentifiers = participantIdentifiers({ id: sender, jid: standardizeJid(sender) });
+
     const isBotAdmin = groupInfo.participants.some((participant) => {
         if (!isAdminParticipant(participant)) return false;
         const identifiers = participantIdentifiers(participant);

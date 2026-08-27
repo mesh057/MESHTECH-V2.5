@@ -424,6 +424,15 @@ async function loadSession() {
             return;
         }
 
+        // Only clear and import if the local session is missing or empty.
+        // This prevents overwriting a newly paired session on every restart.
+        const dbPath = path.join(sessionDir, 'session.db');
+        const credsJsonPath = path.join(sessionDir, 'creds.json');
+        if (fs.existsSync(dbPath) || fs.existsSync(credsJsonPath)) {
+            console.log("ℹ️ Local session found; skipping SESSION_ID import to prevent overwriting.");
+            return;
+        }
+
         if (fs.existsSync(sessionDir)) {
             const allFiles = fs.readdirSync(sessionDir);
             allFiles.forEach(f => {
@@ -497,8 +506,9 @@ async function useSQLiteAuthState(databasePath) {
         }
     }
 
-    const db = new Database(dbPath);
+    const db = new Database(dbPath, { timeout: 10000 });
     db.pragma('journal_mode = WAL');
+    db.pragma('synchronous = NORMAL');
     db.exec(`
         CREATE TABLE IF NOT EXISTS session (
             id TEXT PRIMARY KEY,
