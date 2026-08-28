@@ -63,7 +63,8 @@
     "ruhend-scraper": "^10.0.3",
     "sequelize": "*",
     "sharp": "^0.33.5",
-    "sqlite3": "5.1.7"
+    "sqlite3": "5.1.7",
+    "wa-sticker-formatter": "^4.4.4"
   },
   "optionalDependencies": {
     "@img/sharp-wasm32": "^0.33.5"
