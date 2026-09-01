@@ -66,6 +66,11 @@
     "sqlite3": "5.1.7",
     "wa-sticker-formatter": "^4.4.4"
   },
+  "overrides": {
+    "wa-sticker-formatter": {
+      "sharp": "0.33.5"
+    }
+  },
   "optionalDependencies": {
     "@img/sharp-wasm32": "^0.33.5"
   },

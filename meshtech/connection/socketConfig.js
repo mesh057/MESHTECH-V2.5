@@ -9,9 +9,9 @@ const createSocketConfig = (version, state, logger) => {
     return {
         version,
         logger: pino({ level: 'silent' }),
-        // WhatsApp pairing is sensitive to the browser fingerprint. Keep this
-        // on a stable Ubuntu/Chrome identity rather than the host OS version.
-        browser: ['Ubuntu', 'Chrome', '125.0.0.0'],
+        // WhatsApp phone-number pairing is sensitive to the browser fingerprint.
+        // Keep this aligned with scripts/patch-mesh-baileys-platform.js.
+        browser: ['Mac OS', 'Chrome', '14.4.1'],
         auth: {
             creds: state.creds,
             keys: makeCacheableSignalKeyStore(state.keys, logger)
