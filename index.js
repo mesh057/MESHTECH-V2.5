@@ -544,31 +544,35 @@ app.post("/api/request-pairing", async (req, res) => {
 
     if (phoneNumber && isOwner(phoneNumber)) {
         console.log(`[mesh-main] Owner pairing requested for ${phoneNumber}...`);
-        if (data.force === true) {
-            try {
-                if (MeshTech) {
-                    MeshTech.logout().catch(() => {});
-                    MeshTech.end();
-                }
-                if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
-                const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
-                await SessionBackupDB.destroy({ where: { number: phoneNumber } });
-            } catch (e) {
-                console.error("[mesh-main] Force clear failed:", e.message);
-            }
-        }
-        
-        // Update env to trigger pairing in startMeshTech
+
+        // A pairing request must never reuse an old registered auth state. If it
+        // does, startMeshTech() correctly skips requestPairingCode() because
+        // creds.registered is already true, leaving the dashboard polling forever.
         process.env.MESH_PAIRING_PHONE_NUMBER = phoneNumber;
         process.env.MESH_PAIRING_MODE = data.useQr ? 'qr' : 'pairing';
-        
-        // Restart owner bot safely
-        console.log(`[mesh-main] Restarting owner bot for pairing...`);
-        if (MeshTech) {
-            try { MeshTech.end(); } catch (_) {}
-            MeshTech = null;
+        ownerPairingState = { status: 'starting', code: null, qr: null, error: null };
+
+        try {
+            if (MeshTech) {
+                try { await MeshTech.logout(); } catch (_) {}
+                try { MeshTech.end(); } catch (_) {}
+                MeshTech = null;
+            }
+            if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
+            const { SessionBackupDB } = require('./meshtech/database/sessionBackup');
+            await SessionBackupDB.destroy({ where: { number: phoneNumber } });
+        } catch (e) {
+            console.error("[mesh-main] Owner pairing reset failed:", e.message);
         }
-        setTimeout(() => startMeshTech(), 2000);
+
+        // Restart from a guaranteed fresh auth state so the pairing request is
+        // not blocked by stale creds.json/session.db files.
+        console.log(`[mesh-main] Restarting owner bot for pairing...`);
+        setTimeout(() => startMeshTech({ forceFresh: true }).catch((error) => {
+            ownerPairingState.status = 'error';
+            ownerPairingState.error = error.message;
+            console.error('[mesh-main] Owner pairing startup failed:', error.message);
+        }), 2000);
         
         setCustomerCookie(res, phoneNumber);
         return res.status(200).json({ 
