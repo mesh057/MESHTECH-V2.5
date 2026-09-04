@@ -948,6 +948,7 @@ async function startMeshTech(options = {}) {
         let pairingRequested = false;
         let pairingInFlight = false;
         let resolvedPairingNumber = String(process.env.MESH_PAIRING_PHONE_NUMBER || "").replace(/\D/g, "");
+        const pairingMode = String(process.env.MESH_PAIRING_MODE || "code").toLowerCase();
 
         const promptForPhoneNumber = () => {
             return new Promise((resolve) => {
@@ -979,7 +980,7 @@ async function startMeshTech(options = {}) {
         };
 
         const requestPairingCode = async () => {
-            if (pairingRequested || pairingInFlight || state.creds.registered || process.env.MESH_PAIRING_MODE === "qr") return;
+            if (pairingRequested || pairingInFlight || state.creds.registered || pairingMode === "qr") return;
             
             const phoneNumber = await promptForPhoneNumber();
             if (!/^\d{8,15}$/.test(phoneNumber)) {
@@ -1024,11 +1025,21 @@ async function startMeshTech(options = {}) {
                 ownerPairingState.qr = null;
             }
             if (connection === "connecting" || connection === "open") {
-                if (!state.creds.registered && process.env.MESH_PAIRING_PHONE_NUMBER && process.env.MESH_PAIRING_MODE !== "qr") {
+                if (!state.creds.registered && pairingMode !== "qr") {
                     setTimeout(requestPairingCode, 2000);
                 }
             }
         });
+
+        // A local single-session deployment may not define
+        // MESH_PAIRING_PHONE_NUMBER. In that case the existing interactive
+        // prompt must still be reached. Cloud/multi-user children already
+        // provide the number through their environment. Schedule a fallback
+        // because some Baileys versions can emit the first update before this
+        // listener is attached.
+        if (!state.creds.registered && pairingMode !== "qr") {
+            setTimeout(requestPairingCode, 1500);
+        }
 
         MeshTech.ev.process(async (events) => {
             if (events["creds.update"]) {
