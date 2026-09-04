@@ -6,26 +6,35 @@ require("events").EventEmitter.defaultMaxListeners = 960;
     const execSync = require('child_process').execSync;
     
     console.log("🔍 [SELF-REPAIR] Checking dependency integrity...");
-    const requiredModules = ['express', 'axios', 'dotenv', 'fs-extra', 'pino'];
-    let missing = false;
-    
-    for (const mod of requiredModules) {
-        if (!fs.existsSync(path.join(__dirname, 'node_modules', mod))) {
-            missing = true;
-            break;
+    const requiredModules = [
+        'express', 'axios', 'dotenv', 'fs-extra', 'pino',
+        'sequelize', 'sqlite3', 'better-sqlite3', 'pg',
+        'mesh-baileys', 'mesh-btns'
+    ];
+    const missing = requiredModules.some((mod) => {
+        try {
+            require.resolve(mod, { paths: [__dirname] });
+            return false;
+        } catch (_) {
+            return true;
         }
-    }
-    
-    // Skip heavy self-repair npm install on cloud hosts like Railway where dependencies are pre-installed
-    const isCloud = process.env.RAILWAY_STATIC_URL || process.env.PORT || process.env.NODE_ENV === 'production';
-    const sharpBinaryPath = path.join(__dirname, 'node_modules', 'sharp', 'build', 'Release', 'sharp-linux-x64.node');
-    if (!isCloud && (missing || !fs.existsSync(path.join(__dirname, 'node_modules', 'sequelize')) || !fs.existsSync(sharpBinaryPath))) {
+    });
+
+    // Skip heavy self-repair npm install on cloud hosts where the build step
+    // is responsible for installing dependencies. The old check required a
+    // hard-coded Sharp binary path that is not used by every Sharp release,
+    // causing npm install to run on every normal startup.
+    const isCloud = Boolean(process.env.RAILWAY_STATIC_URL || process.env.PORT || process.env.NODE_ENV === 'production');
+    const autoRepairRequested = process.env.MESH_AUTO_REPAIR === 'true';
+    if (!isCloud && (missing || autoRepairRequested)) {
         console.log("📦 [KATABUMP/PANEL AUTO-FIX] Missing modules or sharp binary detected! Rebuilding...");
         try {
             execSync('npm install --omit=dev --no-audit --no-fund', { stdio: 'inherit', cwd: __dirname });
-            console.log("🔧 [KATABUMP/PANEL AUTO-FIX] Forcing sharp rebuild for Linux x64...");
-            execSync('npm rebuild sharp --platform=linux --arch=x64', { stdio: 'inherit', cwd: __dirname });
-            console.log("✅ [KATABUMP/PANEL AUTO-FIX] Sharp binary built successfully!");
+            if (process.env.MESH_REBUILD_SHARP === 'true') {
+                console.log("🔧 [KATABUMP/PANEL AUTO-FIX] Rebuilding Sharp for Linux x64...");
+                execSync('npm rebuild sharp --platform=linux --arch=x64', { stdio: 'inherit', cwd: __dirname });
+                console.log("✅ [KATABUMP/PANEL AUTO-FIX] Sharp binary rebuilt successfully!");
+            }
         } catch (e) {
             console.error("❌ [KATABUMP/PANEL AUTO-FIX] Setup warning:", e.message);
         }
