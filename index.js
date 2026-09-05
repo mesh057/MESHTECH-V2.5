@@ -993,8 +993,17 @@ async function startMeshTech(options = {}) {
             ownerPairingState.status = 'requesting';
             try {
                 if (MeshTech?.user?.id) return;
-                // Wait briefly to ensure WebSocket is open and ready for pairing IQ
-                await new Promise(r => setTimeout(r, 2000));
+                // The pairing IQ must be sent after the WebSocket is open.
+                // A fixed delay is unreliable on cloud hosts and often causes
+                // `Connection Closed` before the code request reaches WhatsApp.
+                if (typeof MeshTech.waitForSocketOpen === "function") {
+                    await Promise.race([
+                        MeshTech.waitForSocketOpen(),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error("Timed out waiting for WhatsApp connection")), 15000))
+                    ]);
+                } else {
+                    await new Promise(r => setTimeout(r, 2000));
+                }
                 const pairingCode = await MeshTech.requestPairingCode(phoneNumber);
                 pairingRequested = true;
                 ownerPairingState.status = 'pairing';
@@ -1020,9 +1029,17 @@ async function startMeshTech(options = {}) {
                 ownerPairingState.qr = qr;
             }
             if (connection === "open") {
-                ownerPairingState.status = 'connected';
-                ownerPairingState.code = null;
-                ownerPairingState.qr = null;
+                // Pairing-code authentication can emit an `open` update while
+                // the code is still the authoritative state. Do not erase a
+                // code that was just generated; clear it only after the
+                // account is actually registered/connected.
+                if (ownerPairingState.code && !state.creds.registered) {
+                    ownerPairingState.status = 'pairing';
+                } else {
+                    ownerPairingState.status = 'connected';
+                    ownerPairingState.code = null;
+                    ownerPairingState.qr = null;
+                }
             }
             if (connection === "connecting" || connection === "open") {
                 if (!state.creds.registered && pairingMode !== "qr") {
