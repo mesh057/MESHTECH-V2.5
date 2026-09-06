@@ -932,8 +932,8 @@ async function startMeshTech(options = {}) {
         socketConfig.shouldSyncHistoryMessage = () => true;
         socketConfig.historyCacheSize = 100;
         socketConfig.markOnlineOnConnect = true;
-        // Keep owner pairing aligned with the macOS platform compatibility patch.
-        socketConfig.browser = ['Mac OS', 'Chrome', '14.4.1'];
+        // Use the stable Web/Ubuntu identity used by the working pairing flow.
+        socketConfig.browser = ['Ubuntu', 'Chrome', '22.04.4'];
         socketConfig.getMessage = async (key) => {
             if (store) {
                 const msg = await store.loadMessage(key.remoteJid, key.id);
