@@ -1143,8 +1143,15 @@ async function startMeshTech(options = {}) {
                 ]).catch(() => DEFAULT_SETTINGS);
                 const effectiveSettings = { ...DEFAULT_SETTINGS, ...(s || {}) };
                 const ownerJid = standardizeJid(MeshTech?.user?.id) || MeshTech?.user?.id;
-
-                console.log("🟢 MESH-TECH MD connection is fully active and stable.");
+                const connectionNoticeKey = String(ownerJid || MeshTech?.user?.id || '').toLowerCase();
+                const connectionNoticeKeys = global._meshConnectionNoticeKeys || (global._meshConnectionNoticeKeys = new Set());
+                const shouldAnnounceConnection = Boolean(connectionNoticeKey) && !connectionNoticeKeys.has(connectionNoticeKey);
+                if (shouldAnnounceConnection) {
+                    // Multiple sockets can overlap briefly during reconnects. Keep
+                    // the success announcement idempotent across those sockets.
+                    connectionNoticeKeys.add(connectionNoticeKey);
+                    console.log("🟢 MESH-TECH MD connection is fully active and stable.");
+                }
                 
                 // Background task to avoid blocking connection
                 (async () => {
@@ -1167,7 +1174,7 @@ async function startMeshTech(options = {}) {
 
                 (async () => {
                     try {
-                        if (!MeshTech?.user?.id) return;
+                        if (!MeshTech?.user?.id || !shouldAnnounceConnection) return;
                         const activeOwnerNumber = MeshTech.user.id.split(":")[0];
                         const totalCommands = commands.filter(
                             (c) => c.pattern && !c.dontAddCommandList,
