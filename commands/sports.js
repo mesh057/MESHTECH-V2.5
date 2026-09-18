@@ -3,7 +3,7 @@ const axios = require("axios");
 const {
   generateWAMessageContent,
   generateWAMessageFromContent,
-} = require("mesh-baileys");
+} = require("@whiskeysockets/baileys");
 const { getSetting } = require("../meshtech/database/settings");
 
 const SPORTS_API_BASE = "https://api.maher-zubair.tech";

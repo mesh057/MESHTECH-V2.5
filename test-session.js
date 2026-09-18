@@ -11,7 +11,7 @@ const {
     createSocketConfig, 
     latestWaVersion 
 } = require('./meshtech');
-const { default: meshtechConnect } = require('mesh-baileys');
+const { default: meshtechConnect } = require('@whiskeysockets/baileys');
 
 async function runTest() {
     console.log("🚀 Starting MESHTECH Session Verification...");

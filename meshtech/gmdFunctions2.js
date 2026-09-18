@@ -4,8 +4,8 @@ const axios = require("axios");
 const { pipeline } = require("stream/promises");
 const { createContext } = require("./gmdHelpers");
 const { getSetting, getAllSettings } = require("./database/settings");
-const logger = require("mesh-baileys/lib/Utils/logger").default.child({});
-const { isJidGroup, downloadMediaMessage } = require("mesh-baileys");
+const logger = require("@whiskeysockets/baileys/lib/Utils/logger").default.child({});
+const { isJidGroup, downloadMediaMessage } = require("@whiskeysockets/baileys");
 const { getGroupSetting } = require("../meshtech/database/groupSettings");
 
 
@@ -1361,7 +1361,7 @@ const MeshTechAntiEdit = async (MeshTech, updateData, findOriginal) => {
             await MeshTech.sendPresenceUpdate('available', targetJid);
             if (originalMediaObj) {
                 try {
-                    const { downloadMediaMessage } = require('mesh-baileys');
+                    const { downloadMediaMessage } = require('@whiskeysockets/baileys');
                     const buffer = await downloadMediaMessage(originalMediaObj, 'buffer', {});
                     if (origMsgType === 'imageMessage') {
                         await MeshTech.sendMessage(targetJid, { image: buffer, caption: alertText, mentions }, { quoted: null });

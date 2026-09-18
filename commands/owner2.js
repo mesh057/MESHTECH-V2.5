@@ -1,11 +1,11 @@
 const { gmd, commands, getSetting } = require("../meshtech");
-const { downloadContentFromMessage } = require("mesh-baileys");
+const { downloadContentFromMessage } = require("@whiskeysockets/baileys");
 const FormData = require("form-data");
 const { Blob } = require("buffer");
 const axios = require("axios");
 const fs = require("fs").promises;
 const fsA = require("node:fs");
-const { S_WHATSAPP_NET } = require("mesh-baileys");
+const { S_WHATSAPP_NET } = require("@whiskeysockets/baileys");
 const { Jimp } = require("jimp");
 const path = require("path");
 const moment = require("moment-timezone");

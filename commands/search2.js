@@ -3,7 +3,7 @@ const { gmd } = require("../meshtech"),
   {
     generateWAMessageContent,
     generateWAMessageFromContent,
-  } = require("mesh-baileys"),
+  } = require("@whiskeysockets/baileys"),
   { sendButtons } = require("mesh-btns");
 
 function extractButtonId(msg) {

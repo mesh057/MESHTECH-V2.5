@@ -1,4 +1,4 @@
-const { default: makeWASocket, useMultiFileAuthState } = require('mesh-baileys');
+const { default: makeWASocket, useMultiFileAuthState } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 
 async function test() {

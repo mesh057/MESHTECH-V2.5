@@ -23,7 +23,7 @@ const {
   downloadContentFromMessage,
   generateWAMessageFromContent,
   normalizeMessageContent,
-} = require("mesh-baileys");
+} = require("@whiskeysockets/baileys");
 const { sendButtons } = require("mesh-btns");
 
 

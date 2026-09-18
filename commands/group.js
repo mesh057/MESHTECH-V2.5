@@ -1665,7 +1665,7 @@ gmd(
   },
   async (from, MeshTech, conText) => {
     const { reply, react, isSuperUser, isGroup, q, quoted, quotedMsg, mek, formatAudio, formatVideo, botPrefix } = conText;
-    const { downloadMediaMessage } = require("mesh-baileys");
+    const { downloadMediaMessage } = require("@whiskeysockets/baileys");
 
     if (!isGroup) return reply("❌ Group only command!");
     if (!isSuperUser) return reply("❌ Owner Only Command!");

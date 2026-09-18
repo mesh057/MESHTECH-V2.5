@@ -1,7 +1,7 @@
 const { gmd, commands, getSetting } = require("../meshtech");
 const fs = require("fs").promises;
 const fsA = require("node:fs");
-const { S_WHATSAPP_NET } = require("mesh-baileys");
+const { S_WHATSAPP_NET } = require("@whiskeysockets/baileys");
 const { Jimp } = require("jimp");
 const path = require("path");
 const moment = require("moment-timezone");
@@ -960,7 +960,7 @@ gmd(
       mentionedJid,
       superUser,
     } = conText;
-    const { isJidGroup } = require("mesh-baileys");
+    const { isJidGroup } = require("@whiskeysockets/baileys");
     const { convertLidToJid } = require("../meshtech/connection/serializer");
 
     if (!isSuperUser) return reply("❌ Owner Only Command!");
@@ -1022,7 +1022,7 @@ gmd(
   async (from, MeshTech, conText) => {
     const { reply, react, isSuperUser, quotedUser, args, mentionedJid } =
       conText;
-    const { isJidGroup } = require("mesh-baileys");
+    const { isJidGroup } = require("@whiskeysockets/baileys");
     const { convertLidToJid } = require("../meshtech/connection/serializer");
 
     if (!isSuperUser) return reply("❌ Owner Only Command!");
@@ -1131,7 +1131,7 @@ gmd(
       botPrefix,
     } = conText;
     const { downloadMediaMessage } = require("../meshtech/connection/serializer");
-    const { isJidGroup } = require("mesh-baileys");
+    const { isJidGroup } = require("@whiskeysockets/baileys");
 
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     if (!quotedMsg) return reply("❌ Please quote a message to forward!");
@@ -1171,7 +1171,7 @@ gmd(
 
       const customCaption = args.slice(1).join(" ") || null;
       const msgType = Object.keys(quotedMsg)[0];
-      const { downloadContentFromMessage } = require("mesh-baileys");
+      const { downloadContentFromMessage } = require("@whiskeysockets/baileys");
 
       if (msgType === "conversation" || msgType === "extendedTextMessage") {
         const text =

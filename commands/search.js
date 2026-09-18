@@ -12,7 +12,7 @@ const { gmd, gmdSticker } = require("../meshtech"),
   {
     generateWAMessageContent,
     generateWAMessageFromContent,
-  } = require("mesh-baileys"),
+  } = require("@whiskeysockets/baileys"),
   { sendButtons } = require("mesh-btns"),
   { StickerTypes } = require("wa-sticker-formatter");
 

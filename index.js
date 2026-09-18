@@ -9,7 +9,7 @@ require("events").EventEmitter.defaultMaxListeners = 960;
     const requiredModules = [
         'express', 'axios', 'dotenv', 'fs-extra', 'pino',
         'sequelize', 'sqlite3', 'better-sqlite3', 'pg',
-        'mesh-baileys', 'mesh-btns'
+        '@whiskeysockets/baileys', 'mesh-btns'
     ];
     const missing = requiredModules.some((mod) => {
         try {
@@ -42,20 +42,6 @@ require("events").EventEmitter.defaultMaxListeners = 960;
         console.log("☁️ [CLOUD/RAILWAY] Skipping heavy panel auto-repair to ensure instant startup.");
     }
 
-    // Ensure local mesh-baileys symlink
-    try {
-        if (fs.existsSync(path.join(__dirname, 'mesh-baileys'))) {
-            fs.mkdirSync(path.join(__dirname, 'node_modules', '@whiskeysockets'), { recursive: true });
-            const target = path.join(__dirname, 'node_modules', '@whiskeysockets', 'baileys');
-            if (fs.existsSync(target)) {
-                fs.rmSync(target, { recursive: true, force: true });
-            }
-            fs.symlinkSync(path.join(__dirname, 'mesh-baileys'), target, 'junction');
-            console.log("⚙️ [SELF-REPAIR] Linked mesh-baileys successfully.");
-        }
-    } catch (err) {
-        console.error("⚠️ [SELF-REPAIR] Symlink warning:", err.message);
-    }
 })();
 
 require("./meshtech/gmdHelpers");
@@ -78,7 +64,7 @@ const {
     getContentType,
     fetchLatestWaWebVersion,
     DisconnectReason,
-} = require("mesh-baileys");
+} = require("@whiskeysockets/baileys");
 
 const {
     evt,

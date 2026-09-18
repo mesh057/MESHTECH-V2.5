@@ -1,4 +1,4 @@
-const { DisconnectReason } = require("mesh-baileys");
+const { DisconnectReason } = require("@whiskeysockets/baileys");
 const { Boom } = require("@hapi/boom");
 const fs = require("fs-extra");
 const path = require("path");
