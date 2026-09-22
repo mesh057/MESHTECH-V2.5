@@ -88,6 +88,53 @@ gmd(
 
 gmd(
   {
+    pattern: "jid",
+    aliases: ["chatid", "chatjid", "ids"],
+    react: "🆔",
+    category: "owner",
+    description: "Show the current chat, sender, bot, and group JIDs.",
+  },
+  async (from, MeshTech, conText) => {
+    const {
+      mek,
+      reply,
+      react,
+      isSuperUser,
+      sender,
+      botId,
+      isGroup,
+      groupName,
+      quotedKey,
+    } = conText;
+
+    if (!isSuperUser) {
+      await react("❌");
+      return reply("Owner Only Command!");
+    }
+
+    const botJid = botId || MeshTech?.user?.id || "Unavailable";
+    const quotedChatJid = quotedKey?.remoteJid || "None";
+    const quotedParticipant = quotedKey?.participant || quotedKey?.participantAlt || "None";
+    const chatType = isGroup ? `Group${groupName ? `: ${groupName}` : ""}` : "Private chat";
+
+    const message = [
+      "🆔 *JID INFORMATION*",
+      "",
+      `*Chat type:* ${chatType}`,
+      `*Chat JID:* ${from || mek?.key?.remoteJid || "Unavailable"}`,
+      `*Sender JID:* ${sender || "Unavailable"}`,
+      `*Bot JID:* ${botJid}`,
+      `*Quoted chat JID:* ${quotedChatJid}`,
+      `*Quoted participant:* ${quotedParticipant}`,
+    ].join("\n");
+
+    await react("✅");
+    return reply(message);
+  },
+);
+
+gmd(
+  {
     pattern: "gcpp",
     aliases: ["setgcpp", "gcfullpp", "fullgcpp"],
     react: "🔮",
