@@ -1,4 +1,4 @@
-const { gmd, commands, getSetting } = require("../meshtech");
+const { gmd, commands, getSetting, setSetting } = require("../meshtech");
 const fs = require("fs").promises;
 const fsA = require("node:fs");
 const { S_WHATSAPP_NET } = require("@whiskeysockets/baileys");
@@ -130,6 +130,43 @@ gmd(
 
     await react("✅");
     return reply(message);
+  },
+);
+
+gmd(
+  {
+    pattern: "subscription",
+    aliases: ["subcontrol", "planswitch", "subscriptiongate"],
+    react: "💎",
+    category: "owner",
+    description: "Enable or disable the subscription requirement.",
+  },
+  async (from, MeshTech, conText) => {
+    const { reply, react, isSuperUser, args = [] } = conText;
+
+    if (!isSuperUser) {
+      await react("❌");
+      return reply("Owner Only Command!");
+    }
+
+    const action = String(args[0] || "status").toLowerCase();
+    if (!["on", "off", "status"].includes(action)) {
+      return reply("Usage:\n.subscription on\n.subscription off\n.subscription status");
+    }
+
+    if (action === "status") {
+      const required = String(await getSetting("SUBSCRIPTION_REQUIRED") || "true").toLowerCase() !== "false";
+      return reply(`💎 Subscription requirement is currently *${required ? "ON" : "OFF"}*.`);
+    }
+
+    const required = action === "on";
+    await setSetting("SUBSCRIPTION_REQUIRED", required ? "true" : "false");
+    await react("✅");
+    return reply(
+      required
+        ? "✅ Subscription plans are ON. Premium commands require an active subscription."
+        : "✅ Subscription plans are OFF. Premium commands are available to all users. Existing subscription records were preserved.",
+    );
   },
 );
 

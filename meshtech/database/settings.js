@@ -34,6 +34,7 @@ const DEFAULT_SETTINGS = {
     OWNER_NAME: "MESHACK N",
     OWNER_NUMBER: config.OWNER_NUMBER || "254746844168",
     BOT_NAME: "MESH TECH MD",
+    SUBSCRIPTION_REQUIRED: "true",
     FOOTER: "| POWERED BY Mesh Tech",
     CAPTION: "©2026 MESHTECH MD BOT v2.5",
     BOT_PIC: "https://i.postimg.cc/vHZz7VWG/bot-logo.png",

@@ -1783,7 +1783,8 @@ function setupCommandHandler(MeshTech) {
         }
 
         const userSub = await getUserSubscription(standardizedSender);
-        const isPremium = userSub.tier === "premium" || isSuperUser;
+        const subscriptionsRequired = String(settings.SUBSCRIPTION_REQUIRED ?? "true").toLowerCase() !== "false";
+        const isPremium = !subscriptionsRequired || userSub.tier === "premium" || isSuperUser;
 
         const autoReadMode = settings.AUTO_READ_MESSAGES || "off";
         let shouldRead = false;
