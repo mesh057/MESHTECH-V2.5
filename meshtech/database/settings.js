@@ -57,7 +57,7 @@ const DEFAULT_SETTINGS = {
     STATUS_LIKE_EMOJIS: "💛,❤️,💜,🤍,💙",
     AUTO_REPLY_STATUS: "false",
     STATUS_REPLY_TEXT: "*ʏᴏᴜʀ sᴛᴀᴛᴜs ᴠɪᴇᴡᴇᴅ sᴜᴄᴄᴇssғᴜʟʟʏ ✅*",
-    AUTO_REACT: "false",
+    AUTO_REACT: process.env.AUTO_REACT || "false",
     AUTO_REPLY: "false",
     AUTO_READ_MESSAGES: "false",
     AUTO_BIO: "false",
@@ -128,6 +128,13 @@ async function initializeSettings() {
             const configuredOwner = String(process.env.OWNER_NUMBER).replace(/\D/g, "");
             if (configuredOwner && record.value !== configuredOwner) {
                 record.value = configuredOwner;
+                await record.save();
+            }
+        }
+        if (key === "AUTO_REACT" && process.env.AUTO_REACT !== undefined) {
+            const configuredAutoReact = String(process.env.AUTO_REACT).trim().toLowerCase();
+            if (configuredAutoReact && record.value !== configuredAutoReact) {
+                record.value = configuredAutoReact;
                 await record.save();
             }
         }
