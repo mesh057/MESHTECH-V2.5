@@ -32,7 +32,7 @@ const SettingsDB = DATABASE.define(
 const DEFAULT_SETTINGS = {
     PREFIX: ".",
     OWNER_NAME: "MESHACK N",
-    OWNER_NUMBER: "254746844168",
+    OWNER_NUMBER: config.OWNER_NUMBER || "254746844168",
     BOT_NAME: "MESH TECH MD",
     FOOTER: "| POWERED BY Mesh Tech",
     CAPTION: "©2026 MESHTECH MD BOT v2.5",
@@ -111,6 +111,13 @@ async function initializeSettings() {
         if (key === "MODE" && (process.env.MODE || process.env.MESH_MULTI_USER_SESSION_MODE)) {
             record.value = process.env.MODE || process.env.MESH_MULTI_USER_SESSION_MODE;
             await record.save();
+        }
+        if (key === "OWNER_NUMBER" && process.env.OWNER_NUMBER) {
+            const configuredOwner = String(process.env.OWNER_NUMBER).replace(/\D/g, "");
+            if (configuredOwner && record.value !== configuredOwner) {
+                record.value = configuredOwner;
+                await record.save();
+            }
         }
     }
     initialized = true;
