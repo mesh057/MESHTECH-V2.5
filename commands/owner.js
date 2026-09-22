@@ -135,6 +135,77 @@ gmd(
 
 gmd(
   {
+    pattern: "broadcast",
+    aliases: ["bc", "multicast"],
+    react: "📢",
+    category: "owner",
+    description: "Send one message to multiple WhatsApp JIDs.",
+  },
+  async (from, MeshTech, conText) => {
+    const { reply, react, isSuperUser, q = "" } = conText;
+
+    if (!isSuperUser) {
+      await react("❌");
+      return reply("Owner Only Command!");
+    }
+
+    const [rawTargets, ...messageParts] = String(q).split("|");
+    const message = messageParts.join("|").trim();
+    const targetTokens = rawTargets
+      .split(/[\s,]+/)
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    if (!rawTargets.trim() || !message) {
+      return reply(
+        "Usage:\n.broadcast JID1,JID2 | message\n\nExample:\n.broadcast 254700000000@s.whatsapp.net,120363012345678901@g.us | Hello everyone",
+      );
+    }
+
+    const normalizeTarget = (value) => {
+      if (/^\d{8,15}$/.test(value)) return `${value}@s.whatsapp.net`;
+      if (/^\d+@(s\.whatsapp\.net|g\.us)$/.test(value)) return value;
+      return null;
+    };
+
+    const targets = [...new Set(targetTokens.map(normalizeTarget).filter(Boolean))];
+    const invalidTargets = targetTokens.filter((value) => !normalizeTarget(value));
+    const maxTargets = 50;
+
+    if (invalidTargets.length > 0) {
+      return reply(
+        `❌ Invalid JID(s): ${invalidTargets.join(", ")}\n\nUse personal JIDs ending in @s.whatsapp.net or group JIDs ending in @g.us.`,
+      );
+    }
+    if (targets.length === 0) return reply("❌ No valid JIDs were provided.");
+    if (targets.length > maxTargets) {
+      return reply(`❌ Maximum ${maxTargets} recipients per broadcast.`);
+    }
+
+    await reply(`📢 Starting broadcast to ${targets.length} recipient(s)...`);
+    let sent = 0;
+    const failed = [];
+
+    for (const target of targets) {
+      try {
+        await MeshTech.sendMessage(target, { text: message });
+        sent++;
+      } catch (error) {
+        failed.push(`${target}: ${error.message}`);
+      }
+      // Pace messages to reduce connection pressure and accidental rate limits.
+      await new Promise((resolve) => setTimeout(resolve, 750));
+    }
+
+    await react(failed.length ? "⚠️" : "✅");
+    const result = [`📢 *BROADCAST COMPLETE*`, `✅ Sent: ${sent}`, `❌ Failed: ${failed.length}`];
+    if (failed.length) result.push("", `*Failures:*\n${failed.join("\n")}`);
+    return reply(result.join("\n"));
+  },
+);
+
+gmd(
+  {
     pattern: "gcpp",
     aliases: ["setgcpp", "gcfullpp", "fullgcpp"],
     react: "🔮",
