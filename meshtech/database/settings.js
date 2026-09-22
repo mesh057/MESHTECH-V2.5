@@ -34,7 +34,7 @@ const DEFAULT_SETTINGS = {
     OWNER_NAME: "MESHACK N",
     OWNER_NUMBER: config.OWNER_NUMBER || "254746844168",
     BOT_NAME: "MESH TECH MD",
-    SUBSCRIPTION_REQUIRED: "true",
+    SUBSCRIPTION_REQUIRED: "false",
     FOOTER: "| POWERED BY Mesh Tech",
     CAPTION: "©2026 MESHTECH MD BOT v2.5",
     BOT_PIC: "https://i.postimg.cc/vHZz7VWG/bot-logo.png",
@@ -46,9 +46,9 @@ const DEFAULT_SETTINGS = {
     GC_PRESENCE: "online",
     CHATBOT: "false",
     CHATBOT_MODE: "inbox",
-    STARTING_MESSAGE: "true",
+    STARTING_MESSAGE: "false",
     ANTIDELETE: "all",
-    ANTI_EDIT: "indm",
+    ANTI_EDIT: "false",
     ANTICALL: "false",
     ANTICALL_MSG: "*_📞 Auto Call Reject Mode Active. 📵 No Calls Allowed!_*",
     AUTO_LIKE_STATUS: config.AUTO_LIKE_STATUS || "true",
@@ -57,9 +57,9 @@ const DEFAULT_SETTINGS = {
     STATUS_LIKE_EMOJIS: "💛,❤️,💜,🤍,💙",
     AUTO_REPLY_STATUS: "false",
     STATUS_REPLY_TEXT: "*ʏᴏᴜʀ sᴛᴀᴛᴜs ᴠɪᴇᴡᴇᴅ sᴜᴄᴄᴇssғᴜʟʟʏ ✅*",
-    AUTO_REACT: "all",
+    AUTO_REACT: "false",
     AUTO_REPLY: "false",
-    AUTO_READ_MESSAGES: "true",
+    AUTO_READ_MESSAGES: "false",
     AUTO_BIO: "false",
     AUTO_BLOCK: "",
     YT: "https://whatsapp.com/channel/0029VbDeTrNEKyZ9GlUude2R",
@@ -106,6 +106,17 @@ async function initializeSettings() {
             await record.save();
         }
         if (key === "GC_JID" && record.value === legacyGroupInviteCode) {
+            record.value = defaultValue;
+            await record.save();
+        }
+        const legacyDefaults = {
+            SUBSCRIPTION_REQUIRED: "true",
+            STARTING_MESSAGE: "true",
+            AUTO_REACT: "all",
+            AUTO_READ_MESSAGES: "true",
+            ANTI_EDIT: "indm",
+        };
+        if (legacyDefaults[key] !== undefined && record.value === legacyDefaults[key]) {
             record.value = defaultValue;
             await record.save();
         }
