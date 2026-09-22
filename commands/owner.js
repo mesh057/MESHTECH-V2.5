@@ -182,7 +182,11 @@ gmd(
       return reply(`❌ Maximum ${maxTargets} recipients per broadcast.`);
     }
 
-    await reply(`📢 Starting broadcast to ${targets.length} recipient(s)...`);
+    const configuredDelay = Number(process.env.BROADCAST_DELAY_MS || 5000);
+    const delayMs = Number.isFinite(configuredDelay)
+      ? Math.min(Math.max(configuredDelay, 3000), 30000)
+      : 5000;
+    await reply(`📢 Starting broadcast to ${targets.length} recipient(s)...\n⏱️ Delay: ${delayMs} ms per recipient`);
     let sent = 0;
     const failed = [];
 
@@ -194,7 +198,7 @@ gmd(
         failed.push(`${target}: ${error.message}`);
       }
       // Pace messages to reduce connection pressure and accidental rate limits.
-      await new Promise((resolve) => setTimeout(resolve, 750));
+      await new Promise((resolve) => setTimeout(resolve, delayMs + Math.floor(Math.random() * 2001)));
     }
 
     await react(failed.length ? "⚠️" : "✅");
