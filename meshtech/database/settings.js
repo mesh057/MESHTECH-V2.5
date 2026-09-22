@@ -46,7 +46,7 @@ const DEFAULT_SETTINGS = {
     GC_PRESENCE: "online",
     CHATBOT: "false",
     CHATBOT_MODE: "inbox",
-    STARTING_MESSAGE: "false",
+    STARTING_MESSAGE: "true",
     ANTIDELETE: "all",
     ANTI_EDIT: "false",
     ANTICALL: "false",
