@@ -77,12 +77,21 @@ const MeshTechAntiLink = async (MeshTech, message, getGroupMetadata) => {
         const { getGroupSetting, addAntilinkWarning, resetAntilinkWarnings } = require('./database/groupSettings');
         const { getLidMapping } = require('./connection/groupCache');
         const antiLink = await getGroupSetting(from, 'ANTILINK');
-        if (!antiLink || antiLink === 'false' || antiLink === 'off') return;
+        const regexEnabled = ['true', 'on'].includes(String(await getGroupSetting(from, 'ANTILINK_REGEX_ENABLED')).toLowerCase());
         const messageType = Object.keys(message.message)[0];
         const body = messageType === 'conversation'
             ? message.message.conversation
             : message.message[messageType]?.text || message.message[messageType]?.caption || '';
-        if (!body || !isAnyLink(body)) return;
+        let customWords = [];
+        if (regexEnabled) {
+            try {
+                const parsed = JSON.parse(await getGroupSetting(from, 'ANTILINK_REGEX_WORDS') || '[]');
+                customWords = Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+            } catch (_) {}
+        }
+        const customMatch = customWords.some((word) => String(body).toLowerCase().includes(String(word).toLowerCase()));
+        const normalEnabled = antiLink && antiLink !== 'false' && antiLink !== 'off';
+        if (!body || (!normalEnabled && !customMatch)) return;
         let sender = message.key.participantPn || message.key.participant || message.key.participantAlt || message.participant;
         if (!sender || sender.endsWith('@g.us')) {
             return;
@@ -124,7 +133,7 @@ const MeshTechAntiLink = async (MeshTech, message, getGroupMetadata) => {
         const isSuperUser = isActiveSessionOwner(sender, MeshTech);
         
         if (isSuperUser) {
-            const action = antiLink.toLowerCase();
+            const action = (normalEnabled ? antiLink : 'delete').toLowerCase();
             const actionText = action === 'warn' ? 'warn' : action === 'kick' ? 'kick' : 'delete';
             await MeshTech.sendMessage(from, {
                 text: `⚠️ *${botName} Antilink Active!*\nAction: *${actionText}*\n\nLink detected from @${senderNum}, but they are a *SuperUser* on this bot and cannot be actioned.`,
@@ -165,7 +174,7 @@ const MeshTechAntiLink = async (MeshTech, message, getGroupMetadata) => {
         });
 
         if (isAdmin) {
-            const action = antiLink.toLowerCase();
+            const action = (normalEnabled ? antiLink : 'delete').toLowerCase();
             const actionText = action === 'warn' ? 'warn' : action === 'kick' ? 'kick' : 'delete';
             await MeshTech.sendMessage(from, {
                 text: `⚠️ *${botName} Antilink Active!*\nAction: *${actionText}*\n\nLink detected from @${senderNum}, but they are a *Group Admin* and cannot be actioned.`,
@@ -180,7 +189,7 @@ const MeshTechAntiLink = async (MeshTech, message, getGroupMetadata) => {
             console.error('Failed to delete message:', delErr.message);
         }
 
-        const action = antiLink.toLowerCase();
+        const action = (normalEnabled ? antiLink : 'delete').toLowerCase();
 
         if (action === 'kick') {
             try {

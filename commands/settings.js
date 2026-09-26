@@ -906,6 +906,66 @@ gmd(
 
 gmd(
   {
+    pattern: "antilinkregex",
+    aliases: ["linkregex", "customantilink"],
+    react: "🔎",
+    category: "group",
+    description: "Manage custom anti-link words or patterns for this group",
+  },
+  async (from, MeshTech, conText) => {
+    const { q, reply, react, isSuperUser, isGroup, isAdmin } = conText;
+    if (!isGroup) return reply("❌ This command only works in groups!");
+    if (!isSuperUser && !isAdmin) return reply("❌ Admin/Owner Only Command!");
+
+    const parts = String(q || "").trim().split(/\s+/).filter(Boolean);
+    const action = (parts.shift() || "list").toLowerCase();
+    const value = parts.join(" ").trim().toLowerCase();
+    const readWords = async () => {
+      try {
+        const raw = await getGroupSetting(from, "ANTILINK_REGEX_WORDS");
+        const parsed = JSON.parse(raw || "[]");
+        return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+      } catch (_) {
+        return [];
+      }
+    };
+
+    if (action === "on" || action === "off") {
+      await setGroupSetting(from, "ANTILINK_REGEX_ENABLED", action === "on" ? "true" : "false");
+      await react("✅");
+      return reply(`✅ Custom anti-link filter: *${action.toUpperCase()}*`);
+    }
+
+    if (action === "list") {
+      const words = await readWords();
+      return reply(words.length ? `🔎 *CUSTOM ANTI-LINK WORDS*\n\n${words.map((word, i) => `${i + 1}. ${word}`).join("\n")}` : "🔎 No custom anti-link words have been added.");
+    }
+
+    if (!["add", "del", "delete", "remove"].includes(action) || !value) {
+      return reply("Usage:\n.antilinkregex on\n.antilinkregex off\n.antilinkregex add .com\n.antilinkregex list\n.antilinkregex del .com");
+    }
+
+    const words = await readWords();
+    if (action === "add") {
+      if (value.length > 100) return reply("❌ The custom pattern must be 100 characters or fewer.");
+      if (words.includes(value)) return reply("⚠️ That custom pattern is already listed.");
+      words.push(value);
+      await setGroupSetting(from, "ANTILINK_REGEX_WORDS", JSON.stringify(words));
+      await setGroupSetting(from, "ANTILINK_REGEX_ENABLED", "true");
+      await react("✅");
+      return reply(`✅ Added *${value}* and enabled the custom anti-link filter.`);
+    }
+
+    const remaining = words.filter((word) => word !== value);
+    if (remaining.length === words.length) return reply("⚠️ That custom pattern is not listed.");
+    await setGroupSetting(from, "ANTILINK_REGEX_WORDS", JSON.stringify(remaining));
+    await react("✅");
+    return reply(`✅ Removed *${value}* from the custom anti-link filter.`);
+  },
+);
+
+gmd(
+  {
     pattern: "setantibad",
     aliases: ["antibad", "antibadwords", "badwordfilter"],
     react: "⚙️",
