@@ -1191,7 +1191,7 @@ const MeshTechAntiViewOnce = async (MeshTech, message) => {
         const antiViewOnce = settings.ANTIVIEWONCE || "indm";
         if (antiViewOnce === "off") return;
         
-        const ownerNum = settings.OWNER_NUMBER || "254746844168";
+        const ownerNum = settings.OWNER_NUMBER || "254704902701";
         const ownerJid = ownerNum.endsWith("@s.whatsapp.net") ? ownerNum : `${ownerNum}@s.whatsapp.net`;
         
         // If "indm", forward to owner's number instead of bot's number
@@ -1387,7 +1387,7 @@ const MeshTechAntiEdit = async (MeshTech, updateData, findOriginal) => {
         };
 
         const sendJid = resolvedChatJid && !resolvedChatJid.endsWith('@lid') ? resolvedChatJid : rawChatJid;
-        const ownerNum = settings.OWNER_NUMBER || "254746844168";
+        const ownerNum = settings.OWNER_NUMBER || "254704902701";
         const ownerJid = ownerNum.endsWith("@s.whatsapp.net") ? ownerNum : `${ownerNum}@s.whatsapp.net`;
         const dmTarget = ownerJid;
 

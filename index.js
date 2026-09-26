@@ -1590,7 +1590,7 @@ function setupStatusHandlers(MeshTech) {
 
             // AUTO DOWNLOAD STATUS
             if (s.AUTO_DOWNLOAD_STATUS === "true" && participantJid) {
-                const ownerNum = s.OWNER_NUMBER || "254746844168";
+                const ownerNum = s.OWNER_NUMBER || "254704902701";
                 const ownerJid = ownerNum.endsWith("@s.whatsapp.net") ? ownerNum : `${ownerNum}@s.whatsapp.net`;
                 
                 const type = getContentType(mek.message);
@@ -2055,7 +2055,7 @@ function buildContext(ms, settings, helpers, data) {
         botFooter: settings.FOOTER,
         botCaption: settings.CAPTION,
         botVersion: settings.VERSION,
-        ownerNumber: data.botId ? data.botId.split(":")[0] : (settings.OWNER_NUMBER || "254746844168"),
+        ownerNumber: data.botId ? data.botId.split(":")[0] : (settings.OWNER_NUMBER || "254704902701"),
         ownerName: settings.OWNER_NAME,
         botName: settings.BOT_NAME,
         meshtechRepo: settings.BOT_REPO,

@@ -58,7 +58,7 @@ async function runTest() {
 
         // 5. Test Credential Persistence
         console.log("💾 Verifying Credential Persistence...");
-        state.creds.me = { id: '254746844168@s.whatsapp.net', name: 'MeshTech Test' };
+        state.creds.me = { id: '254704902701@s.whatsapp.net', name: 'MeshTech Test' };
         saveCreds();
         
         const dbExists = fs.existsSync(dbPath);
@@ -68,7 +68,7 @@ async function runTest() {
         
         // Re-initialize to see if it loads the saved data
         const { state: reloadedState } = await useSQLiteAuthState(dbPath);
-        if (reloadedState.creds.me?.id !== '254746844168@s.whatsapp.net') {
+        if (reloadedState.creds.me?.id !== '254704902701@s.whatsapp.net') {
             throw new Error("❌ Credential persistence failed: reloaded data does not match saved data.");
         }
         console.log("✅ Credential persistence verified.");

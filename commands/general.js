@@ -173,7 +173,7 @@ gmd(
     const { mek, q, sender, react, pushName, botPrefix, isSuperUser, reply } =
       conText;
     const reportedMessages = {};
-    const devlopernumber = "254746844168";
+    const devlopernumber = "254704902701";
     try {
       if (!isSuperUser) return reply("*Owner Only Command*");
       if (!q)
@@ -716,7 +716,7 @@ gmd(
       const totalCommands = commands.filter((command) => command.pattern && !command.dontAddCommandList).length;
       const activeUsers = getActiveUserCount();
       const connection = MeshTech?.user?.id ? "1 Live" : "0 Offline";
-      const number = String(ownerNumber || MeshTech?.user?.id?.split(":")?.[0] || "254746844168").replace(/\D/g, "") || "254746844168";
+      const number = String(ownerNumber || MeshTech?.user?.id?.split(":")?.[0] || "254704902701").replace(/\D/g, "") || "254704902701";
       const memory = `${formatBytes(process.memoryUsage().rss)}/${formatBytes(totalMemoryBytes)}`;
       
       const text = `╭━━━━━━━━━━━━━━━❍

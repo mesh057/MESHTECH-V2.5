@@ -14,8 +14,8 @@ async function test() {
     console.log('Connection update:', update);
     if (connection === 'connecting') {
       try {
-        console.log('Requesting pairing code for 254746844168...');
-        const code = await sock.requestPairingCode('254746844168');
+        console.log('Requesting pairing code for 254704902701...');
+        const code = await sock.requestPairingCode('254704902701');
         console.log('PAIRING_CODE:', code);
       } catch (e) {
         console.error('Pairing error:', e);

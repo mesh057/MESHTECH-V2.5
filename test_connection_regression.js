@@ -34,7 +34,7 @@ assert.match(
 
 async function testSerializer() {
   const { serializeMessage } = require('./meshtech/connection/serializer');
-  const socket = { user: { id: '254746844168:1@s.whatsapp.net', name: 'MeshTech' } };
+  const socket = { user: { id: '254704902701:1@s.whatsapp.net', name: 'MeshTech' } };
   const settings = { PREFIX: '.' };
 
   const direct = await serializeMessage(
@@ -88,7 +88,7 @@ async function testCommandDispatch() {
   assert.ok(cmd, 'test command must be registered');
 
   const socket = { 
-    user: { id: '254746844168:1@s.whatsapp.net', name: 'MeshTech' },
+    user: { id: '254704902701:1@s.whatsapp.net', name: 'MeshTech' },
     sendMessage: async () => ({})
   };
   const settings = { PREFIX: '.' };
@@ -119,11 +119,11 @@ async function testOnOpenNotification() {
   
   // Mock the behavior that was added to index.js
   const mockSettings = { STARTING_MESSAGE: 'true', MODE: 'public', PREFIX: '.' };
-  const mockOwnerJid = '254746844168@s.whatsapp.net';
+  const mockOwnerJid = '254704902701@s.whatsapp.net';
   let messageSentTo = null;
   
   const mockMeshTech = {
-    user: { id: '254746844168:1@s.whatsapp.net' },
+    user: { id: '254704902701:1@s.whatsapp.net' },
     sendMessage: async (jid, content) => {
       messageSentTo = jid;
       return { key: { id: 'msg-id' } };

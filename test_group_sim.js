@@ -4,7 +4,7 @@ async function runSimulation() {
     console.log("🧪 Starting MESH-TECH MD Group Command Simulation (Private Mode Bypass Check)...");
 
     const mockMesh = {
-        user: { id: '254746844168:0@s.whatsapp.net' }
+        user: { id: '254704902701:0@s.whatsapp.net' }
     };
 
     const mockMessage = {

@@ -84,7 +84,7 @@ async function isSuperUser(jid, MeshTech) {
     }
     
     // Check owner number from settings/env
-    const ownerNum = process.env.OWNER_NUMBER || "254746844168";
+    const ownerNum = process.env.OWNER_NUMBER || "254704902701";
     if (num === String(ownerNum).replace(/\D/g, "")) return true;
     
     // Check persisted sudo numbers

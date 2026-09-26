@@ -1,7 +1,7 @@
 const { gmd, commands } = require('../meshtech/gmdCmds');
 
 // Number examples use the reference number supplied in the user's screenshot.
-const REFERENCE_NUMBER = '254746844168';
+const REFERENCE_NUMBER = '254704902701';
 
 const USAGE_OVERRIDES = {
   accept: `accept ${REFERENCE_NUMBER}`,

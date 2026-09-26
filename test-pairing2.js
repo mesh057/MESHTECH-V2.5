@@ -15,7 +15,7 @@ async function test() {
     if (connection === 'open') {
       try {
         console.log('Requesting pairing code after open...');
-        const code = await sock.requestPairingCode('254746844168');
+        const code = await sock.requestPairingCode('254704902701');
         console.log('PAIRING_CODE:', code);
       } catch (e) {
         console.error('Pairing error after open:', e);
@@ -27,7 +27,7 @@ async function test() {
   setTimeout(async () => {
     try {
       console.log('Requesting pairing code after 2s timeout...');
-      const code = await sock.requestPairingCode('254746844168');
+      const code = await sock.requestPairingCode('254704902701');
       console.log('PAIRING_CODE after 2s:', code);
     } catch (e) {
       console.error('Pairing error after 2s:', e.message);
