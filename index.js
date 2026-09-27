@@ -113,6 +113,7 @@ const {
     initializeSettings,
     initializeGroupSettings,
     getAllSettings,
+    SettingsDB,
     getSetting,
     DEFAULT_SETTINGS,
     standardizeJid,
