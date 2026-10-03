@@ -302,6 +302,10 @@ class MultiUserSessionManager {
       const wasRunning = record.status === 'running';
       // If it was running and exited with 0, we treat it as a requested restart
       const isRestart = wasRunning && code === 0;
+      // A linked session can exit while it is still connecting or retrying.
+      // Treat that as an unexpected failure too; otherwise the manager leaves
+      // a valid WhatsApp account inactive until somebody manually starts it.
+      const hasRegisteredAuth = isRegisteredSession(path.join(record.authDir, 'auth_info'));
       
       if (record.status !== 'stopped') {
         record.status = (code === 0 && !isRestart) ? 'stopped' : 'error';
@@ -314,8 +318,11 @@ class MultiUserSessionManager {
         record.error = record.lastOutput || 'The WhatsApp pairing session stopped unexpectedly.';
       }
 
-      // Auto-restart if it was running and didn't stop intentionally, or if it's a requested restart
-      if ((wasRunning && record.status !== 'stopped') || isRestart) {
+      // Auto-restart any linked session that did not stop intentionally. A
+      // fresh, unpaired process is left alone so the pairing UI can report its
+      // error instead of creating an endless pairing crash loop.
+      const shouldAutoRestart = record.status !== 'stopped' && (wasRunning || hasRegisteredAuth);
+      if (shouldAutoRestart || isRestart) {
         const delay = isRestart ? 2000 : 5000;
         console.log(`[mesh-multi-user] Session ${normalized} ${isRestart ? 'restarting' : 'exited unexpectedly'}. Restarting in ${delay}ms...`);
         setTimeout(() => {
