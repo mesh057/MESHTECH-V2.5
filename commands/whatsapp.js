@@ -2,6 +2,7 @@ const { gmd } = require("../meshtech");
 const {
     getLidMapping,
     getGroupMetadata,
+    updateGroupCache,
 } = require("../meshtech/connection/groupCache");
 const { getJidFromParticipant } = require("../meshtech/connection/groupEvents");
 
@@ -108,7 +109,18 @@ gmd(
         await react("⏳");
 
         try {
-            const groupMetadata = await getGroupMetadata(MeshTech, from);
+            let groupMetadata = await getGroupMetadata(MeshTech, from);
+            // Do not export from a possibly stale five-minute cache. WhatsApp
+            // can update the participant list without emitting a cache event.
+            try {
+                const freshMetadata = await MeshTech.groupMetadata(from);
+                if (freshMetadata?.participants?.length) {
+                    groupMetadata = freshMetadata;
+                    updateGroupCache(from, freshMetadata);
+                }
+            } catch (metadataError) {
+                console.warn("[vcf] Fresh group metadata unavailable; using cache:", metadataError.message);
+            }
             const participants = groupMetadata?.participants || [];
             const groupName = groupMetadata?.subject || "Group";
 
@@ -129,7 +141,11 @@ gmd(
                     member.pn,
                     member.phoneNumber,
                     member.participantPn,
+                    member.userJid,
+                    member.phone,
                     member.jid,
+                    member.lid,
+                    member.participant,
                     member.id,
                 ].filter((value, position, values) =>
                     typeof value === "string" && value && values.indexOf(value) === position,
