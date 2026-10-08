@@ -15,17 +15,13 @@ WORKDIR /app
 
 COPY package*.json ./
 
-# The postinstall hook patches a file under scripts/, which is not present
-# until the application source is copied into the image.
 RUN npm install --omit=dev --ignore-scripts
 
 COPY . .
 
-# Build native SQLite bindings inside this image. The dependency install above
-# skips lifecycle scripts because the project postinstall needs source files
-# copied only in this layer.
+# Build native SQLite bindings inside this image after the source and native
+# module dependencies are available.
 RUN npm rebuild better-sqlite3 sqlite3 --build-from-source
-RUN npm run postinstall
 
 EXPOSE 8080
 
