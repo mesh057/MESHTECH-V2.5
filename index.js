@@ -937,6 +937,10 @@ async function startMeshTech(options = {}) {
             return undefined;
         };
 
+        // Invalidate lifecycle callbacks from any socket replaced during a
+        // deliberate pairing reset. Without this, the old socket can schedule
+        // a second reconnect and invalidate the newly generated link code.
+        global._meshSocketGeneration = (global._meshSocketGeneration || 0) + 1;
         MeshTech = meshtechConnect(socketConfig);
         store.bind(MeshTech.ev);
 

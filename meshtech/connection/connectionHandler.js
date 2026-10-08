@@ -30,6 +30,9 @@ const safeGroupAcceptInvite = async (MeshTech, groupJid) => {
 };
 
 const setupConnectionHandler = (MeshTech, sessionDir, startMeshTech, callbacks = {}) => {
+    const socketGeneration = global._meshSocketGeneration || 0;
+    const isCurrentSocket = () => socketGeneration === (global._meshSocketGeneration || 0);
+
     // Keep reconnect state per socket. A module-global counter/timer can let a
     // previous socket consume the retry budget of a newly created socket.
     const lifecycle = {
@@ -38,9 +41,11 @@ const setupConnectionHandler = (MeshTech, sessionDir, startMeshTech, callbacks =
     };
 
     const scheduleStart = (delay, label = "reconnect") => {
+        if (!isCurrentSocket()) return;
         if (lifecycle.reconnectTimer) return;
         lifecycle.reconnectTimer = setTimeout(async () => {
             lifecycle.reconnectTimer = null;
+            if (!isCurrentSocket()) return;
             try {
                 await startMeshTech();
             } catch (error) {
@@ -51,6 +56,7 @@ const setupConnectionHandler = (MeshTech, sessionDir, startMeshTech, callbacks =
     };
 
     const handleReconnect = () => {
+        if (!isCurrentSocket()) return;
         if (lifecycle.reconnectTimer) return;
         if (lifecycle.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
             console.error("Max reconnection attempts reached. Exiting for a clean supervisor restart...");
@@ -67,6 +73,9 @@ const setupConnectionHandler = (MeshTech, sessionDir, startMeshTech, callbacks =
     };
 
     MeshTech.ev.on("connection.update", async (update) => {
+        // A deliberate pairing reset replaces the socket. Ignore lifecycle
+        // events from the old socket so it cannot invalidate the new code.
+        if (!isCurrentSocket()) return;
         const { connection, lastDisconnect } = update;
 
         if (connection === "connecting") {
