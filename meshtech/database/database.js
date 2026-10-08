@@ -9,7 +9,12 @@ class DatabaseManager {
     static getInstance() {
         if (!DatabaseManager.instance) {
             const DATABASE_URL = config.DATABASE_URL;
-            const DEFAULT_SQLITE_PATH = path.resolve(config.DATA_FILE || process.env.DATA_FILE || path.join(__dirname, "database.db"));
+            const persistentDataRoot = config.AUTH_DIR ? path.dirname(path.resolve(config.AUTH_DIR)) : null;
+            const DEFAULT_SQLITE_PATH = path.resolve(
+                config.DATA_FILE ||
+                process.env.DATA_FILE ||
+                (persistentDataRoot ? path.join(persistentDataRoot, "database.db") : path.join(__dirname, "database.db")),
+            );
 
             if (!DATABASE_URL) {
                 console.log("ℹ️  DATABASE_URL Empty, Using Path");
