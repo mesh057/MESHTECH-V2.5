@@ -1,26 +1,19 @@
 const { DisconnectReason } = require("@whiskeysockets/baileys");
 const { Boom } = require("@hapi/boom");
 const fs = require("fs-extra");
-const path = require("path");
 const { setupGroupCacheListeners } = require("./groupCache");
 const { setupGroupEventsListeners } = require("./groupEvents");
 
 const RECONNECT_DELAY = 3000;
 const MAX_RECONNECT_ATTEMPTS = 100;
 
-let reconnectAttempts = 0;
-
 const safeNewsletterFollow = async (MeshTech, newsletterJid) => {
     if (!newsletterJid) return false;
     try {
         await MeshTech.newsletterFollow(newsletterJid);
-        // console.log(`✅ Followed Channel: ${newsletterJid}`);
         return true;
     } catch (error) {
-        console.error(
-            `❌ Channel follow failed for ${newsletterJid}:`,
-            error.message,
-        );
+        console.error(`❌ Channel follow failed for ${newsletterJid}:`, error.message);
         return false;
     }
 };
@@ -29,7 +22,6 @@ const safeGroupAcceptInvite = async (MeshTech, groupJid) => {
     if (!groupJid) return false;
     try {
         await MeshTech.groupAcceptInvite(groupJid);
-        // console.log(`✅ Joined Group: ${groupJid}`);
         return true;
     } catch (error) {
         console.error(`❌ Group join failed for ${groupJid}:`, error.message);
@@ -37,13 +29,53 @@ const safeGroupAcceptInvite = async (MeshTech, groupJid) => {
     }
 };
 
-const setupConnectionHandler = (
-    MeshTech,
-    sessionDir,
-    startMeshTech,
-    callbacks = {},
-) => {
+const setupConnectionHandler = (MeshTech, sessionDir, startMeshTech, callbacks = {}) => {
+    const socketGeneration = global._meshSocketGeneration || 0;
+    const isCurrentSocket = () => socketGeneration === (global._meshSocketGeneration || 0);
+
+    // Keep reconnect state per socket. A module-global counter/timer can let a
+    // previous socket consume the retry budget of a newly created socket.
+    const lifecycle = {
+        reconnectAttempts: 0,
+        reconnectTimer: null,
+    };
+
+    const scheduleStart = (delay, label = "reconnect") => {
+        if (!isCurrentSocket()) return;
+        if (lifecycle.reconnectTimer) return;
+        lifecycle.reconnectTimer = setTimeout(async () => {
+            lifecycle.reconnectTimer = null;
+            if (!isCurrentSocket()) return;
+            try {
+                await startMeshTech();
+            } catch (error) {
+                console.error(`[mesh-connection] ${label} startup failed:`, error.message);
+                scheduleStart(RECONNECT_DELAY, "retry");
+            }
+        }, delay);
+    };
+
+    const handleReconnect = () => {
+        if (!isCurrentSocket()) return;
+        if (lifecycle.reconnectTimer) return;
+        if (lifecycle.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+            console.error("Max reconnection attempts reached. Exiting for a clean supervisor restart...");
+            process.exit(1);
+            return;
+        }
+        lifecycle.reconnectAttempts += 1;
+        const delay = Math.min(
+            RECONNECT_DELAY * Math.pow(2, lifecycle.reconnectAttempts - 1),
+            60000,
+        );
+        console.log(`🕗 Reconnection attempt ${lifecycle.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms...`);
+        scheduleStart(delay);
+    };
+
     MeshTech.ev.on("connection.update", async (update) => {
+        // A deliberate pairing reset replaces the socket. Ignore lifecycle
+        // events from the old socket so it cannot invalidate the new code.
+        if (!isCurrentSocket()) return;
         const { connection, lastDisconnect } = update;
 
         if (connection === "connecting") {
@@ -51,103 +83,87 @@ const setupConnectionHandler = (
         }
 
         if (connection === "open") {
-            reconnectAttempts = 0;
+            lifecycle.reconnectAttempts = 0;
+            if (lifecycle.reconnectTimer) {
+                clearTimeout(lifecycle.reconnectTimer);
+                lifecycle.reconnectTimer = null;
+            }
             if (callbacks.onOpen) {
-                await callbacks.onOpen(MeshTech);
+                try {
+                    await callbacks.onOpen(MeshTech);
+                } catch (error) {
+                    console.error("[mesh-connection] onOpen callback failed:", error.message);
+                }
             }
         }
 
-        if (connection === "close") {
-            const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
-            console.log(`Connection closed due to: ${reason}`);
-            
-            if (callbacks.onDisconnect) {
+        if (connection !== "close") return;
+
+        const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
+        console.log(`Connection closed due to: ${reason}`);
+
+        if (callbacks.onDisconnect) {
+            try {
                 await callbacks.onDisconnect(reason);
+            } catch (error) {
+                console.error("[mesh-connection] onDisconnect callback failed:", error.message);
             }
+        }
 
-            const handleReconnect = () => {
-                if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-                    console.error(
-                        "Max reconnection attempts reached. Exiting...",
-                    );
-                    process.exit(1);
+        switch (reason) {
+            case DisconnectReason.badSession:
+                console.log("Bad session file, automatically deleted...please scan again");
+                try {
+                    const ownerNumber = MeshTech?.user?.id?.split(":")[0];
+                    if (ownerNumber) {
+                        const { SessionBackupDB } = require("../database/sessionBackup");
+                        await SessionBackupDB.destroy({ where: { number: ownerNumber } });
+                    }
+                    await fs.remove(sessionDir);
+                } catch (error) {
+                    console.error("Failed to remove session:", error.message);
                 }
-                reconnectAttempts++;
-                const delay = Math.min(
-                    RECONNECT_DELAY * Math.pow(2, reconnectAttempts - 1),
-                    60000, // Max 1 minute delay to ensure bot doesn't stay dead too long
-                );
-                console.log(
-                    `🕗 Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms...`,
-                );
-                setTimeout(() => startMeshTech(), delay);
-            };
+                scheduleStart(5000, "bad-session");
+                break;
 
-            switch (reason) {
-                case DisconnectReason.badSession:
-                    console.log(
-                        "Bad session file, automatically deleted...please scan again",
-                    );
-                    try {
-                        // Clear cloud backup to prevent auto-restoring the bad session
-                        const ownerNumber = MeshTech?.user?.id?.split(":")[0];
-                        if (ownerNumber) {
-                            const { SessionBackupDB } = require("../database/sessionBackup");
-                            await SessionBackupDB.destroy({ where: { number: ownerNumber } });
-                        }
-                        await fs.remove(sessionDir);
-                    } catch (e) {
-                        console.error("Failed to remove session:", e);
+            case DisconnectReason.connectionReplaced:
+                console.log("Connection replaced, another new session opened");
+                scheduleStart(5000, "connection-replaced");
+                break;
+
+            case DisconnectReason.loggedOut:
+                console.log("Device logged out, session file automatically deleted...please scan again");
+                try {
+                    const ownerNumber = MeshTech?.user?.id?.split(":")[0];
+                    if (ownerNumber) {
+                        const { SessionBackupDB } = require("../database/sessionBackup");
+                        await SessionBackupDB.destroy({ where: { number: ownerNumber } });
                     }
-                    // Instead of exiting, we wait and retry to allow the dashboard to stay alive
-                    setTimeout(() => startMeshTech(), 5000);
-                    break;
+                    await fs.remove(sessionDir);
+                } catch (error) {
+                    console.error("❌ Failed to remove session:", error.message);
+                }
+                // A logged-out account needs a fresh pairing, but the process
+                // must remain alive so the dashboard can request it.
+                scheduleStart(5000, "logged-out");
+                break;
 
-                case DisconnectReason.connectionReplaced:
-                    console.log(
-                        "Connection replaced, another new session opened",
-                    );
-                    // Connection replaced shouldn't kill the whole server
-                    setTimeout(() => startMeshTech(), 5000);
-                    break;
+            case DisconnectReason.connectionClosed:
+            case DisconnectReason.connectionLost:
+            case DisconnectReason.restartRequired:
+                console.log("🕗 Reconnecting...");
+                handleReconnect();
+                break;
 
-                case DisconnectReason.loggedOut:
-                    console.log(
-                        "Device logged out, session file automatically deleted...please scan again",
-                    );
-                    try {
-                        // Clear cloud backup on logout
-                        const ownerNumber = MeshTech?.user?.id?.split(":")[0];
-                        if (ownerNumber) {
-                            const { SessionBackupDB } = require("../database/sessionBackup");
-                            await SessionBackupDB.destroy({ where: { number: ownerNumber } });
-                        }
-                        await fs.remove(sessionDir);
-                    } catch (e) {
-                        console.error("❌ Failed to remove session:", e);
-                    }
-                    // Log out shouldn't kill the dashboard
-                    setTimeout(() => startMeshTech(), 5000);
-                    break;
+            case DisconnectReason.timedOut:
+                console.log("Connection timed out, reconnecting...");
+                scheduleStart(RECONNECT_DELAY * 2, "timeout");
+                break;
 
-                case DisconnectReason.connectionClosed:
-                case DisconnectReason.connectionLost:
-                case DisconnectReason.restartRequired:
-                    console.log("🕗 Reconnecting...");
-                    handleReconnect();
-                    break;
-
-                case DisconnectReason.timedOut:
-                    console.log("Connection timed out, reconnecting...");
-                    setTimeout(() => handleReconnect(), RECONNECT_DELAY * 2);
-                    break;
-
-                default:
-                    console.log(
-                        `Unknown disconnect reason: ${reason}, attempting reconnection...`,
-                    );
-                    handleReconnect();
-            }
+            default:
+                console.log(`Unknown disconnect reason: ${reason}, attempting reconnection...`);
+                handleReconnect();
+                break;
         }
     });
 

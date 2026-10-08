@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { MultiUserSessionManager } = require('./session-manager');
-const { upgradeUser } = require('../meshtech');
+const { upgradeUser, syncDatabase } = require('../meshtech');
 
 const ADMIN_PASSWORD = process.env.MESHTECH_ADMIN_PASSWORD || 'MESHTECH_ADMIN';
 const CUSTOMER_TOKEN_SECRET = process.env.MESHTECH_CUSTOMER_SECRET || process.env.MESHTECH_ADMIN_PASSWORD || 'MESHTECH_ADMIN';
@@ -205,8 +205,9 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && url.pathname === '/health') {
       const active = manager.list();
       const connected = active.filter((item) => item.status === 'running').length;
-      return json(res, 200, {
-        status: 'alive',
+      const dead = active.length > 0 && connected === 0 && active.every((item) => ['error', 'stopped'].includes(item.status));
+      return json(res, dead ? 503 : 200, {
+        status: dead ? 'degraded' : 'alive',
         multiUser: true,
         active: active.length,
         connected,
@@ -506,6 +507,9 @@ async function startServer() {
   if (!manager.usingPersistentPath) {
     console.warn('[mesh-multi-user] Persistent storage is not configured; updates can remove WhatsApp auth state.');
   }
+  // Multi-user mode has its own entrypoint, so it must perform the database
+  // sync that the single-session entrypoint performs before restoration.
+  await syncDatabase();
   const restorable = manager.listRestorableSessions();
   const restored = await manager.restoreSavedSessions();
   console.log(`[mesh-multi-user] Found ${restorable.length} registered session(s); restored ${restored.length}.`);
