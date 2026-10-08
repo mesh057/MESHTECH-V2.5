@@ -3,6 +3,7 @@ const {
     getLidMapping,
     getGroupMetadata,
 } = require("../meshtech/connection/groupCache");
+const { getJidFromParticipant } = require("../meshtech/connection/groupEvents");
 
 function getUserName(jid) {
     return jid.split("@")[0];
@@ -118,18 +119,42 @@ gmd(
 
             let vcfContent = "";
             let index = 1;
+            const exportedNumbers = new Set();
 
             for (const member of participants) {
-                const jid = member.jid || member.pn || member.id;
-                if (!jid || typeof jid !== "string") continue;
+                // WhatsApp may expose the same member as a LID, PN, or JID.
+                // Prefer phone-number fields, then resolve every available
+                // identifier against the current group metadata.
+                const candidates = [
+                    member.pn,
+                    member.phoneNumber,
+                    member.participantPn,
+                    member.jid,
+                    member.id,
+                ].filter((value, position, values) =>
+                    typeof value === "string" && value && values.indexOf(value) === position,
+                );
 
-                const phoneJid = jid.includes("@s.whatsapp.net")
-                    ? jid
-                    : normalizeUserJid(jid);
+                let phoneJid = "";
+                for (const candidate of candidates) {
+                    const resolved = await getJidFromParticipant(
+                        MeshTech,
+                        candidate,
+                        groupMetadata,
+                    );
+                    const normalized = normalizeUserJid(resolved);
+                    if (normalized.endsWith("@s.whatsapp.net")) {
+                        phoneJid = normalized;
+                        break;
+                    }
+                }
+
                 if (!phoneJid || !phoneJid.includes("@s.whatsapp.net"))
                     continue;
 
                 const id = phoneJid.split("@")[0];
+                if (!/^\d+$/.test(id) || exportedNumbers.has(id)) continue;
+                exportedNumbers.add(id);
                 vcfContent += `BEGIN:VCARD\nVERSION:3.0\nFN:MESH-TECH MD CONTACT ${index++}\nTEL;type=CELL;type=VOICE;waid=${id}:+${id}\nEND:VCARD\n`;
             }
 
