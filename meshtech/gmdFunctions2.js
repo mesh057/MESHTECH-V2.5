@@ -1213,7 +1213,15 @@ const MeshTechAntiViewOnce = async (MeshTech, message) => {
         };
         
         try {
-            const buffer = await MeshTech.downloadMediaMessage(message);
+            // Baileys' media downloader expects the concrete media message.
+            // Passing viewOnceMessage as the top-level payload can trigger
+            // "waiting for this message" because the encrypted media key is
+            // looked up against the wrapper instead of the inner message.
+            const downloadableMessage = {
+                ...message,
+                message: viewOnceContent,
+            };
+            const buffer = await MeshTech.downloadMediaMessage(downloadableMessage);
             
             const originalCaption = mediaMessage.caption || "";
             // Professional caption for forwarding
