@@ -923,9 +923,11 @@ async function startMeshTech(options = {}) {
 
         const socketConfig = createSocketConfig(version, state, logger);
         socketConfig.printQRInTerminal = false;
-        socketConfig.syncFullHistory = true;
-        socketConfig.shouldSyncHistoryMessage = () => true;
-        socketConfig.historyCacheSize = 100;
+        // Do not replay the account's entire WhatsApp history after a fresh
+        // link. History replay can occupy the event loop for several minutes
+        // and delays commands, while new messages continue to work normally.
+        socketConfig.syncFullHistory = false;
+        socketConfig.shouldSyncHistoryMessage = () => false;
         socketConfig.markOnlineOnConnect = true;
         // Use the stable Web/Ubuntu identity used by the working pairing flow.
         socketConfig.browser = ['Ubuntu', 'Chrome', '22.04.4'];
@@ -1345,7 +1347,8 @@ function setupAntiDelete(MeshTech) {
         );
     };
 
-    MeshTech.ev.on("messages.upsert", async ({ messages }) => {
+    MeshTech.ev.on("messages.upsert", async ({ messages, type }) => {
+        if (type && type !== "notify") return;
         const configuredOwner = String((await getSetting("OWNER_NUMBER")) || "").replace(/\D/g, "");
         botOwnerJid = configuredOwner ? `${configuredOwner}@s.whatsapp.net` : botJid;
         for (const ms of messages) {
