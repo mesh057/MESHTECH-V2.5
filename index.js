@@ -920,6 +920,9 @@ async function startMeshTech(options = {}) {
 
         if (store) store.destroy();
         store = new SQLiteStore();
+        // Let Baileys retrieve original messages when it retries a missing
+        // encryption key or downloads media from a quoted message.
+        global.messageStore = store;
 
         const socketConfig = createSocketConfig(version, state, logger);
         socketConfig.printQRInTerminal = false;

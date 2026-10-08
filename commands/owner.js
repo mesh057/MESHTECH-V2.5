@@ -742,11 +742,12 @@ gmd(
     description: "Reveal View Once Media",
   },
   async (from, MeshTech, conText) => {
-    const { mek, reply, quoted, react, botName, isSuperUser } = conText;
+    const { mek, reply, quoted, quotedKey, react, botName, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     if (!quoted) return reply(`Please reply to/quote a ViewOnce message`);
 
-    const extracted = extractViewOnceMedia(quoted);
+    const storedOriginal = quotedKey && global.messageStore?.loadMessage(quotedKey.remoteJid, quotedKey.id);
+    const extracted = extractViewOnceMedia(storedOriginal?.message || quoted);
     if (!extracted) {
       return reply("Please reply to a view once media message.");
     }
@@ -821,11 +822,12 @@ gmd(
     description: "Reveal View Once Media",
   },
   async (from, MeshTech, conText) => {
-    const { mek, reply, quoted, react, botName, sender, isSuperUser } = conText;
+    const { mek, reply, quoted, quotedKey, react, botName, sender, isSuperUser } = conText;
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     if (!quoted) return reply(`Please reply to/quote a ViewOnce message`);
 
-    const extracted = extractViewOnceMedia(quoted);
+    const storedOriginal = quotedKey && global.messageStore?.loadMessage(quotedKey.remoteJid, quotedKey.id);
+    const extracted = extractViewOnceMedia(storedOriginal?.message || quoted);
     if (!extracted) {
       return reply("Please reply to a view once media message.");
     }
