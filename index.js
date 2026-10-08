@@ -1423,7 +1423,10 @@ const isSticker =
 
                 const _jid = key.remoteJid;
                 const _entry = { ...ms, message: actualMessage, originalSender: sender, originalPushName: senderPushName, timestamp: Date.now() };
-                setImmediate(() => saveAntiDelete(_jid, _entry));
+                // Persist before awaiting any feature handler. A delete
+                // protocol message can arrive immediately after delivery;
+                // setImmediate() allowed that revoke event to beat storage.
+                saveAntiDelete(_jid, _entry);
             } catch (error) {
                 logger.error("Anti-delete system error:", error);
             }
