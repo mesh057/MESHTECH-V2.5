@@ -205,8 +205,9 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && url.pathname === '/health') {
       const active = manager.list();
       const connected = active.filter((item) => item.status === 'running').length;
-      return json(res, 200, {
-        status: 'alive',
+      const dead = active.length > 0 && connected === 0 && active.every((item) => ['error', 'stopped'].includes(item.status));
+      return json(res, dead ? 503 : 200, {
+        status: dead ? 'degraded' : 'alive',
         multiUser: true,
         active: active.length,
         connected,

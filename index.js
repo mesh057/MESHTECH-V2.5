@@ -52,6 +52,10 @@ process.on('unhandledRejection', (reason, promise) => {
 
 process.on('uncaughtException', (err) => {
     console.error('Uncaught Exception thrown:', err);
+    // Continuing after an uncaught exception can leave Baileys' socket and
+    // event loop half-dead while the HTTP health endpoint still returns 200.
+    // Exit deliberately so Railway/Render/Koyeb/PM2 can start a clean process.
+    setTimeout(() => process.exit(1), 250);
 });
 
 const {
@@ -212,10 +216,12 @@ if (embeddedHttpServerEnabled) {
 }
 
 app.get("/health", (req, res) => {
-    const isOwnerConnected = Boolean(MeshTech?.user?.id);
     const ownerState = ownerPairingState?.status || 'unknown';
-    return res.status(200).json({
-        status: isOwnerConnected ? 'healthy' : (ownerState === 'pairing' ? 'pairing' : 'degraded'),
+    const isOwnerConnected = Boolean(MeshTech?.user?.id) && ownerState === 'connected';
+    const healthStatus = isOwnerConnected ? 'healthy' : (ownerState === 'pairing' ? 'pairing' : 'degraded');
+    const httpStatus = ['disconnected', 'error'].includes(ownerState) ? 503 : 200;
+    return res.status(httpStatus).json({
+        status: healthStatus,
         botName: 'MESH-TECH MD',
         uptime: process.uptime(),
         ownerWhatsApp: isOwnerConnected ? 'connected' : ownerState,
@@ -235,11 +241,12 @@ app.get("/health/details", async (req, res) => {
 
     const active = manager.list();
     const childConnected = active.filter((item) => item.status === 'running').length;
-    const isOwnerConnected = Boolean(MeshTech?.user?.id);
     const ownerState = ownerPairingState?.status || 'unknown';
+    const isOwnerConnected = Boolean(MeshTech?.user?.id) && ownerState === 'connected';
+    const healthStatus = isOwnerConnected ? 'healthy' : (ownerState === 'pairing' ? 'pairing' : 'degraded');
     
-    return res.status(200).json({
-        status: isOwnerConnected ? 'healthy' : (ownerState === 'pairing' ? 'pairing' : 'degraded'),
+    return res.status(['disconnected', 'error'].includes(ownerState) ? 503 : 200).json({
+        status: healthStatus,
         botName: 'MESH-TECH MD',
         multiUser: true,
         database: dbStatus,
@@ -421,11 +428,12 @@ function writeRawCredentials(authDir, rawJson) {
 app.get("/health/details", (req, res) => {
     const active = manager.list();
     const childConnected = active.filter((item) => item.status === 'running').length;
-    const isOwnerConnected = Boolean(MeshTech?.user?.id);
     const ownerState = ownerPairingState?.status || 'unknown';
+    const isOwnerConnected = Boolean(MeshTech?.user?.id) && ownerState === 'connected';
+    const healthStatus = isOwnerConnected ? 'healthy' : (ownerState === 'pairing' ? 'pairing' : 'degraded');
     
-    return res.status(200).json({
-        status: isOwnerConnected ? 'healthy' : (ownerState === 'pairing' ? 'pairing' : 'degraded'),
+    return res.status(['disconnected', 'error'].includes(ownerState) ? 503 : 200).json({
+        status: healthStatus,
         botName: 'MESH-TECH MD',
         multiUser: true,
         activeSessions: active.length + (isOwnerConnected ? 1 : 0),

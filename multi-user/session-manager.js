@@ -274,7 +274,9 @@ class MultiUserSessionManager {
       }
 
       if (/Connecting Bot|Connecting\.\.\./i.test(output)) record.status = 'connecting';
-      if (/Reconnection attempt/i.test(output)) record.status = 'retrying';
+      if (/Connection closed due to:|Connection Closed|Connection lost|Reconnecting|Reconnection attempt/i.test(output)) {
+        record.status = 'retrying';
+      }
       if (/Connection Instance is Online|Connected to Whatsapp/i.test(output)) {
         // Pairing output can remain in the rolling buffer after WhatsApp is online.
         // Clear it so the authoritative connected state triggers session export.
