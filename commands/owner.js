@@ -11,6 +11,21 @@ const {
   cachedGroupMetadata,
 } = require("../meshtech/connection/groupCache");
 
+function extractViewOnceMedia(message) {
+  let content = message;
+  while (content) {
+    if (content.ephemeralMessage) content = content.ephemeralMessage.message;
+    else if (content.viewOnceMessage) content = content.viewOnceMessage.message;
+    else if (content.viewOnceMessageV2) content = content.viewOnceMessageV2.message;
+    else if (content.viewOnceMessageV2Extension) content = content.viewOnceMessageV2Extension.message;
+    else break;
+  }
+  if (!content) return null;
+  const mediaType = Object.keys(content).find((key) =>
+    key.endsWith("Message") && ["image", "video", "audio"].some((type) => key.includes(type))
+  );
+  return mediaType ? { mediaType, media: content[mediaType] } : null;
+}
 
 gmd(
   {
@@ -731,38 +746,18 @@ gmd(
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     if (!quoted) return reply(`Please reply to/quote a ViewOnce message`);
 
-    let viewOnceContent, mediaType;
-
-    if (
-      quoted.imageMessage?.viewOnce ||
-      quoted.videoMessage?.viewOnce ||
-      quoted.audioMessage?.viewOnce
-    ) {
-      mediaType = Object.keys(quoted).find(
-        (key) =>
-          key.endsWith("Message") &&
-          ["image", "video", "audio"].some((t) => key.includes(t)),
-      );
-      viewOnceContent = { [mediaType]: quoted[mediaType] };
-    } else if (quoted.viewOnceMessage) {
-      viewOnceContent = quoted.viewOnceMessage.message;
-      mediaType = Object.keys(viewOnceContent).find(
-        (key) =>
-          key.endsWith("Message") &&
-          ["image", "video", "audio"].some((t) => key.includes(t)),
-      );
-    } else {
+    const extracted = extractViewOnceMedia(quoted);
+    if (!extracted) {
       return reply("Please reply to a view once media message.");
     }
-
-    if (!mediaType) return reply("Unsupported ViewOnce message type.");
+    const { mediaType, media } = extracted;
 
     let msg;
     let tempFilePath = null;
 
     try {
       const mediaMessage = {
-        ...viewOnceContent[mediaType],
+        ...media,
         viewOnce: false,
       };
 
@@ -830,38 +825,18 @@ gmd(
     if (!isSuperUser) return reply("❌ Owner Only Command!");
     if (!quoted) return reply(`Please reply to/quote a ViewOnce message`);
 
-    let viewOnceContent, mediaType;
-
-    if (
-      quoted.imageMessage?.viewOnce ||
-      quoted.videoMessage?.viewOnce ||
-      quoted.audioMessage?.viewOnce
-    ) {
-      mediaType = Object.keys(quoted).find(
-        (key) =>
-          key.endsWith("Message") &&
-          ["image", "video", "audio"].some((t) => key.includes(t)),
-      );
-      viewOnceContent = { [mediaType]: quoted[mediaType] };
-    } else if (quoted.viewOnceMessage) {
-      viewOnceContent = quoted.viewOnceMessage.message;
-      mediaType = Object.keys(viewOnceContent).find(
-        (key) =>
-          key.endsWith("Message") &&
-          ["image", "video", "audio"].some((t) => key.includes(t)),
-      );
-    } else {
+    const extracted = extractViewOnceMedia(quoted);
+    if (!extracted) {
       return reply("Please reply to a view once media message.");
     }
-
-    if (!mediaType) return reply("Unsupported ViewOnce message type.");
+    const { mediaType, media } = extracted;
 
     let msg;
     let tempFilePath = null;
 
     try {
       const mediaMessage = {
-        ...viewOnceContent[mediaType],
+        ...media,
         viewOnce: false,
       };
 
