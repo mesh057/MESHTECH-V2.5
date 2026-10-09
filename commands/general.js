@@ -446,8 +446,8 @@ gmd(
 gmd(
   {
     pattern: "menu",
-    aliases: ["help", "h", "m"],
-    description: "Show command categories and help menu",
+    aliases: ["m"],
+    description: "Show command categories and the command menu. Use .help <command> for detailed usage.",
     react: "📂",
     category: "general",
   },

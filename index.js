@@ -1929,13 +1929,19 @@ function setupCommandHandler(MeshTech) {
             } catch (error) {
                 console.error(`Command error [${command}]:`, error);
                 try {
+                    const usage = gmd.usage || `${settings.PREFIX || '.'}${command} ${gmd.pattern === command ? '<arguments>' : ''}`.trim();
                     await MeshTech.sendMessage(
                         from,
                         {
-                            text: `🚨 Command failed: ${error.message}`,
+                            text: `❌ *${settings.PACK_NAME || 'MESH TECH'}*
+
+I could not complete *${settings.PREFIX || '.'}${command}*.
+Please try again, or check the format:
+*Usage:* ${usage}
+*Help:* ${settings.PREFIX || '.'}help ${command}`,
                             ...(await createContext(messageAuthor, {
                                 title: "Error",
-                                body: "Command execution failed",
+                                body: "Please try the command again or open its help.",
                             })),
                         },
                         { quoted: ms },
