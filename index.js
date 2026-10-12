@@ -558,6 +558,10 @@ app.post("/api/request-pairing", async (req, res) => {
 
         try {
             if (MeshTech) {
+                // Invalidate the old socket before closing it. Otherwise its
+                // connection.update(close) handler can schedule a competing
+                // reconnect while the fresh pairing socket is starting.
+                global._meshSocketGeneration = (global._meshSocketGeneration || 0) + 1;
                 try { await MeshTech.logout(); } catch (_) {}
                 try { MeshTech.end(); } catch (_) {}
                 MeshTech = null;
