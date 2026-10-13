@@ -94,11 +94,16 @@ const findBodyCommand = (body) => {
 };
 
 const createHelpers = (MeshTech, ms, from) => {
-    const reply = (text, options = {}) => {
-        if (typeof text === 'string') {
-            MeshTech.sendMessage(from, { text, ...options }, { quoted: ms });
-        } else {
-            MeshTech.sendMessage(from, { ...text, ...options }, { quoted: ms });
+    const reply = async (text, options = {}) => {
+        const payload = typeof text === 'string' ? { text, ...options } : { ...text, ...options };
+        if (!payload || (!payload.text && !payload.image && !payload.video && !payload.audio && !payload.document && !payload.sticker)) {
+            return null;
+        }
+        try {
+            return await MeshTech.sendMessage(from, payload, { quoted: ms });
+        } catch (error) {
+            console.error('Reply error:', error.message);
+            return null;
         }
     };
 

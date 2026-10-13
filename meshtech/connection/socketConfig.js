@@ -17,6 +17,9 @@ const createSocketConfig = (version, state, logger) => {
         },
         cachedGroupMetadata,
         userDevicesCache: _userDevicesCache,
+        // Track retry receipts so missing-message retries can be requested
+        // without relaying a fabricated placeholder message.
+        msgRetryCounterCache: new NodeCache({ stdTTL: 600, useClones: false }),
         connectTimeoutMs: 60000,
         defaultQueryTimeoutMs: 30000,
         keepAliveIntervalMs: 20000,
@@ -35,7 +38,9 @@ const createSocketConfig = (version, state, logger) => {
                     if (msg) return msg;
                 }
             } catch (e) {}
-            return { conversation: 'Hello, MESH-TECH MD is active!' };
+            // Returning a truthy fake message consumes the retry attempt and
+            // can leave recipients stuck on “Waiting for this message”.
+            return undefined;
         },
         emitOwnEvents: true,
         patchMessageBeforeSending: (message) => {

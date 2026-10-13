@@ -558,6 +558,10 @@ app.post("/api/request-pairing", async (req, res) => {
 
         try {
             if (MeshTech) {
+                // Invalidate the old socket before closing it. Otherwise its
+                // connection.update(close) handler can schedule a competing
+                // reconnect while the fresh pairing socket is starting.
+                global._meshSocketGeneration = (global._meshSocketGeneration || 0) + 1;
                 try { await MeshTech.logout(); } catch (_) {}
                 try { MeshTech.end(); } catch (_) {}
                 MeshTech = null;
@@ -920,12 +924,17 @@ async function startMeshTech(options = {}) {
 
         if (store) store.destroy();
         store = new SQLiteStore();
+        // Let Baileys retrieve original messages when it retries a missing
+        // encryption key or downloads media from a quoted message.
+        global.messageStore = store;
 
         const socketConfig = createSocketConfig(version, state, logger);
         socketConfig.printQRInTerminal = false;
-        socketConfig.syncFullHistory = true;
-        socketConfig.shouldSyncHistoryMessage = () => true;
-        socketConfig.historyCacheSize = 100;
+        // Do not replay the account's entire WhatsApp history after a fresh
+        // link. History replay can occupy the event loop for several minutes
+        // and delays commands, while new messages continue to work normally.
+        socketConfig.syncFullHistory = false;
+        socketConfig.shouldSyncHistoryMessage = () => false;
         socketConfig.markOnlineOnConnect = true;
         // Use the stable Web/Ubuntu identity used by the working pairing flow.
         socketConfig.browser = ['Ubuntu', 'Chrome', '22.04.4'];
@@ -1345,7 +1354,8 @@ function setupAntiDelete(MeshTech) {
         );
     };
 
-    MeshTech.ev.on("messages.upsert", async ({ messages }) => {
+    MeshTech.ev.on("messages.upsert", async ({ messages, type }) => {
+        if (type && type !== "notify") return;
         const configuredOwner = String((await getSetting("OWNER_NUMBER")) || "").replace(/\D/g, "");
         botOwnerJid = configuredOwner ? `${configuredOwner}@s.whatsapp.net` : botJid;
         for (const ms of messages) {
@@ -1923,13 +1933,19 @@ function setupCommandHandler(MeshTech) {
             } catch (error) {
                 console.error(`Command error [${command}]:`, error);
                 try {
+                    const usage = gmd.usage || `${settings.PREFIX || '.'}${command} ${gmd.pattern === command ? '<arguments>' : ''}`.trim();
                     await MeshTech.sendMessage(
                         from,
                         {
-                            text: `🚨 Command failed: ${error.message}`,
+                            text: `❌ *${settings.PACK_NAME || 'MESH TECH'}*
+
+I could not complete *${settings.PREFIX || '.'}${command}*.
+Please try again, or check the format:
+*Usage:* ${usage}
+*Help:* ${settings.PREFIX || '.'}help ${command}`,
                             ...(await createContext(messageAuthor, {
                                 title: "Error",
-                                body: "Command execution failed",
+                                body: "Please try the command again or open its help.",
                             })),
                         },
                         { quoted: ms },
