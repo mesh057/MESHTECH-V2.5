@@ -76,6 +76,7 @@ function getDb() {
 
     _stmts.saveMsg    = _db.prepare('INSERT OR REPLACE INTO msg_store (id, jid, data, ts) VALUES (?, ?, ?, unixepoch())');
     _stmts.loadMsg    = _db.prepare('SELECT data FROM msg_store WHERE jid = ? AND id = ?');
+    _stmts.loadMsgById = _db.prepare('SELECT data FROM msg_store WHERE id = ? ORDER BY ts DESC LIMIT 1');
     _stmts.saveAD     = _db.prepare('INSERT OR REPLACE INTO antidelete_store (id, jid, sender, push_name, data, ts) VALUES (?, ?, ?, ?, ?, unixepoch())');
     _stmts.findAD     = _db.prepare('SELECT data FROM antidelete_store WHERE jid = ? AND id = ?');
     _stmts.delAD      = _db.prepare('DELETE FROM antidelete_store WHERE jid = ? AND id = ?');
@@ -102,7 +103,7 @@ function saveMsg(jid, message) {
 function loadMsg(jid, id) {
     try {
         getDb();
-        const row = _stmts.loadMsg.get(jid, id);
+        const row = _stmts.loadMsg.get(jid, id) || _stmts.loadMsgById.get(id);
         return row ? safeParse(row.data) : null;
     } catch (e) {
         return null;
@@ -166,13 +167,14 @@ class SQLiteStore {
 
     bind(ev) {
         this._handler = ({ messages }) => {
-            setImmediate(() => {
-                for (const msg of messages) {
-                    if (msg.key?.remoteJid && msg.key?.id) {
-                        this.saveMessage(msg.key.remoteJid, msg);
-                    }
+            for (const msg of messages) {
+                if (msg.key?.remoteJid && msg.key?.id && msg.message) {
+                    // Persist before other event listeners can request a
+                    // retry. Delaying this with setImmediate caused a race
+                    // where Baileys looked up a message before it was stored.
+                    this.saveMessage(msg.key.remoteJid, msg);
                 }
-            });
+            }
         };
         ev.on('messages.upsert', this._handler);
     }

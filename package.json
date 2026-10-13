@@ -28,6 +28,7 @@
     "@ffmpeg-installer/ffmpeg": "*",
     "@hapi/boom": "*",
     "@vitalets/google-translate-api": "^9.2.0",
+    "@whiskeysockets/baileys": "6.7.24",
     "acrcloud": "*",
     "adm-zip": "*",
     "audio-decode": "^2.2.3",
@@ -62,8 +63,7 @@
     "sequelize": "*",
     "sharp": "^0.33.5",
     "sqlite3": "5.1.7",
-    "wa-sticker-formatter": "^4.4.4",
-    "@whiskeysockets/baileys": "6.7.22"
+    "wa-sticker-formatter": "^4.4.4"
   },
   "overrides": {
     "wa-sticker-formatter": {
