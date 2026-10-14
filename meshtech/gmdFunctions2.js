@@ -652,7 +652,42 @@ const isUsefulAIResult = (value) => {
     const text = value.trim();
     if (!text || ["{}", "[]", "null", "undefined", "none", "n/a"].includes(text.toLowerCase())) return false;
     if (/^[\[\{]\s*[\]\}]$/.test(text)) return false;
+    if (/^(?:4\d{2}|5\d{2})(?:\s|$)/.test(text) || /^(?:not found|service unavailable|bad gateway)$/i.test(text)) return false;
     return !text.toLowerCase().includes("error") && !text.includes("402");
+};
+
+const getConfiguredAIProviders = () => {
+    const providers = [];
+    for (let index = 1; index <= 10; index += 1) {
+        const apiKey = process.env[`AI_PROVIDER_${index}_API_KEY`];
+        const baseURL = process.env[`AI_PROVIDER_${index}_BASE_URL`];
+        const model = process.env[`AI_PROVIDER_${index}_MODEL`];
+        if (apiKey && baseURL && model) providers.push({ name: `provider-${index}`, apiKey, baseURL, model });
+    }
+    if (!providers.length && process.env.OPENAI_API_KEY) {
+        providers.push({
+            name: "openai",
+            apiKey: process.env.OPENAI_API_KEY,
+            baseURL: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
+            model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+        });
+    }
+    return providers;
+};
+
+const queryConfiguredAIProvider = async (provider, prompt) => {
+    const baseURL = provider.baseURL.replace(/\/+$/, "");
+    const response = await axios.post(`${baseURL}/chat/completions`, {
+        model: provider.model,
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+    }, {
+        headers: { Authorization: `Bearer ${provider.apiKey}`, "Content-Type": "application/json" },
+        timeout: 15000,
+    });
+    const result = response.data?.choices?.[0]?.message?.content || response.data?.choices?.[0]?.text;
+    if (!isUsefulAIResult(result)) throw new Error("provider returned no useful response");
+    return result.trim();
 };
 
 async function getAIResponse(query, history = []) {
@@ -665,27 +700,26 @@ async function getAIResponse(query, history = []) {
     }
 
     const prompt = buildAssistantPrompt(query, history);
+    for (const provider of getConfiguredAIProviders()) {
+        try {
+            return await queryConfiguredAIProvider(provider, prompt);
+        } catch (e) {
+            console.error(`AI ${provider.name} failed; trying next provider:`, e.message);
+        }
+    }
     const endpoints = [
         { url: "https://api.siputzx.my.id/api/ai/gptoss120b", param: "prompt", type: "siputzx" },
         { url: "https://api.siputzx.my.id/api/ai/duckai", param: "message", type: "siputzx" },
-        { url: "https://gpt-3-5.apis-bj-devs.workers.dev/", param: "prompt", type: "bj" },
-        { url: "https://itzpire.com/ai/gpt-custom", param: "q", type: "itzpire" }
+        { url: "https://gpt-3-5.apis-bj-devs.workers.dev/", param: "prompt", type: "bj" }
     ];
 
     for (const ep of endpoints) {
         try {
-            let res;
-            if (ep.type === "itzpire") {
-                res = await axios.get(ep.url, { params: { q: query, prompt }, timeout: 12000 });
-            } else {
-                res = await axios.get(ep.url, { params: { [ep.param]: prompt }, timeout: 12000 });
-            }
+            const res = await axios.get(ep.url, { params: { [ep.param]: prompt }, timeout: 12000 });
             const data = res.data;
             let result = ep.type === "bj"
                 ? data?.reply
-                : ep.type === "itzpire"
-                    ? data?.result || data?.data
-                    : data?.data?.response || data?.data?.message || data?.result || data?.data;
+                : data?.data?.response || data?.data?.message || data?.result || data?.data;
             if (isUsefulAIResult(result)) {
                 return result.trim();
             }

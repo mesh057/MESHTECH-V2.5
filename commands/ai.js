@@ -7,6 +7,32 @@ const FALLBACKS = [
   { url: "https://api.siputzx.my.id/api/ai/duckai", param: "message", type: "siputzx" }
 ];
 
+function isUsefulResult(value) {
+  if (typeof value !== "string") return false;
+  const text = value.trim().toLowerCase();
+  return Boolean(text) && !["{}", "[]", "null", "undefined", "none", "n/a"].includes(text)
+    && !/^(?:4\d{2}|5\d{2})(?:\s|$)/.test(text)
+    && !/error|service unavailable|not found|bad gateway/.test(text);
+}
+
+function configuredProviders() {
+  const providers = [];
+  for (let index = 1; index <= 10; index += 1) {
+    const apiKey = process.env[`AI_PROVIDER_${index}_API_KEY`];
+    const baseURL = process.env[`AI_PROVIDER_${index}_BASE_URL`];
+    const model = process.env[`AI_PROVIDER_${index}_MODEL`];
+    if (apiKey && baseURL && model) providers.push({ apiKey, baseURL, model });
+  }
+  if (!providers.length && process.env.OPENAI_API_KEY) {
+    providers.push({
+      apiKey: process.env.OPENAI_API_KEY,
+      baseURL: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+    });
+  }
+  return providers;
+}
+
 async function queryFallback(query) {
   for (const fallback of FALLBACKS) {
     try {
@@ -22,7 +48,7 @@ async function queryFallback(query) {
         result = data?.data?.response || data?.data?.message || data?.result;
       }
       
-      if (result) return result;
+      if (isUsefulResult(result)) return result.trim();
     } catch (e) {
       console.error(`Fallback ${fallback.url} failed:`, e.message);
     }
@@ -56,7 +82,7 @@ async function queryAI(endpoint, query, conText) {
 
     const result = res.data?.data?.response || res.data?.data?.message || res.data?.result;
 
-    if (!res.data || !res.data.status || !result) {
+    if (!res.data || !res.data.status || !isUsefulResult(result)) {
       throw new Error("Primary AI endpoint returned no result");
     }
 
@@ -65,6 +91,23 @@ async function queryAI(endpoint, query, conText) {
     console.error(`AI ${endpoint} primary endpoint error:`, err.message);
     
     try {
+      for (const provider of configuredProviders()) {
+        try {
+          const baseURL = provider.baseURL.replace(/\/+$/, "");
+          const { data } = await axios.post(`${baseURL}/chat/completions`, {
+            model: provider.model,
+            messages: [{ role: "user", content: query }],
+            temperature: 0.7,
+          }, {
+            headers: { Authorization: `Bearer ${provider.apiKey}`, "Content-Type": "application/json" },
+            timeout: 15000,
+          });
+          const providerResult = data?.choices?.[0]?.message?.content || data?.choices?.[0]?.text;
+          if (isUsefulResult(providerResult)) return reply(providerResult.trim());
+        } catch (providerError) {
+          console.error("Configured AI provider failed:", providerError.message);
+        }
+      }
       const fallback = await queryFallback(query);
       return reply(fallback);
     } catch (fallbackError) {
