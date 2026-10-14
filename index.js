@@ -946,6 +946,21 @@ async function startMeshTech(options = {}) {
             return undefined;
         };
 
+        // Refresh pre-keys before outbound messages. After relinking or
+        // restoring auth on Railway, this prevents linked devices from
+        // receiving an undecryptable stanza shown as “Waiting for this
+        // message” even though WhatsApp accepted the send.
+        socketConfig.patchMessageBeforeSending = async (message) => {
+            try {
+                if (typeof MeshTech?.uploadPreKeysToServerIfRequired === "function") {
+                    await MeshTech.uploadPreKeysToServerIfRequired();
+                }
+            } catch (error) {
+                console.warn("[mesh-crypto] Pre-key refresh failed; continuing send:", error.message);
+            }
+            return message;
+        };
+
         // Invalidate lifecycle callbacks from any socket replaced during a
         // deliberate pairing reset. Without this, the old socket can schedule
         // a second reconnect and invalidate the newly generated link code.
