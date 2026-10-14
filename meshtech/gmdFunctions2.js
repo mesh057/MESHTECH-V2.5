@@ -647,6 +647,14 @@ Response rules:
 ${recent ? `Recent conversation:\n${recent}\n\n` : ""}User's latest message: ${query}`;
 };
 
+const isUsefulAIResult = (value) => {
+    if (typeof value !== "string") return false;
+    const text = value.trim();
+    if (!text || ["{}", "[]", "null", "undefined", "none", "n/a"].includes(text.toLowerCase())) return false;
+    if (/^[\[\{]\s*[\]\}]$/.test(text)) return false;
+    return !text.toLowerCase().includes("error") && !text.includes("402");
+};
+
 async function getAIResponse(query, history = []) {
     if (botRequestPatterns.some(p => typeof query === 'string' && p.test(query))) {
         return 'To get your own MESH-TECH MD WhatsApp bot up and running, please visit our official pairing portal:\n\nhttps://meshtech-v25-production-pairing.up.railway.app/\n\nEnter your WhatsApp number with country code, generate a pairing code, then use WhatsApp → Linked devices → Link with phone number instead.';
@@ -678,7 +686,7 @@ async function getAIResponse(query, history = []) {
                 : ep.type === "itzpire"
                     ? data?.result || data?.data
                     : data?.data?.response || data?.data?.message || data?.result || data?.data;
-            if (result && typeof result === "string" && !result.toLowerCase().includes("error") && !result.includes("402") && result.trim()) {
+            if (isUsefulAIResult(result)) {
                 return result.trim();
             }
         } catch (e) {
